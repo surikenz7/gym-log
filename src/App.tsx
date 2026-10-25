@@ -87,7 +87,7 @@ function InstallHint() {
 /** Shown instead of the app when the phone is turned sideways (iOS doesn't let web apps lock rotation). */
 function RotateLock() {
   return (
-    <div className="rotate-lock to-edge fixed inset-0 z-[95] flex-col items-center justify-center gap-4 bg-bg text-center">
+    <div className="rotate-lock fixed inset-0 z-[95] flex-col items-center justify-center gap-4 bg-bg text-center">
       <motion.div animate={{ rotate: [-90, -90, 0, 0] }} transition={{ duration: 2.2, times: [0, 0.3, 0.6, 1], repeat: Infinity }}>
         <Smartphone size={56} className="text-accent" />
       </motion.div>

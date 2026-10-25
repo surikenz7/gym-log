@@ -92,7 +92,7 @@ export function Sheet({
           <>
             <motion.div
               key="backdrop"
-              className="to-edge fixed inset-0 z-50 bg-black/60"
+              className="fixed inset-0 z-50 bg-black/60"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -100,7 +100,7 @@ export function Sheet({
             />
             <motion.div
               key="sheet"
-              className={`to-edge fixed inset-x-0 bottom-0 z-[51] flex flex-col rounded-t-3xl bg-card pb-safe shadow-2xl ${tall ? 'h-[88dvh]' : 'max-h-[88dvh]'}`}
+              className={`fixed inset-x-0 bottom-0 z-[51] flex flex-col rounded-t-3xl bg-card pb-safe shadow-2xl ${tall ? 'h-[88dvh]' : 'max-h-[88dvh]'}`}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -160,7 +160,7 @@ export function DialogHost() {
         {current && (
           <motion.div
             key={current.id}
-            className={`to-edge fixed inset-0 z-[60] flex bg-black/60 px-6 ${current.kind === 'sheet' ? 'items-end pb-6' : 'items-center justify-center'}`}
+            className={`fixed inset-0 z-[60] flex bg-black/60 px-6 ${current.kind === 'sheet' ? 'items-end pb-6' : 'items-center justify-center'}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

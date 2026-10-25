@@ -96,8 +96,7 @@ function ScreenInfo() {
     probe.style.cssText = 'position:fixed;padding-bottom:env(safe-area-inset-bottom);padding-top:env(safe-area-inset-top);visibility:hidden';
     document.body.appendChild(probe);
     const cs = getComputedStyle(probe);
-    const gap = getComputedStyle(document.documentElement).getPropertyValue('--vgap').trim();
-    setInfo(`screen ${screen.width}×${screen.height} · view ${innerWidth}×${innerHeight} · safe ${parseInt(cs.paddingTop)}/${parseInt(cs.paddingBottom)} · gap ${gap}`);
+    setInfo(`screen ${screen.width}×${screen.height} · view ${innerWidth}×${innerHeight} · safe ${parseInt(cs.paddingTop)}/${parseInt(cs.paddingBottom)}`);
     probe.remove();
   }, []);
   return <span className="opacity-60">{info}</span>;

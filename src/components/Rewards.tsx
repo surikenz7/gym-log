@@ -84,7 +84,7 @@ export function RankUpOverlay({ items, onDone }: { items: RankUp[]; onDone: () =
     <Portal>
       <motion.div
         key={i}
-        className="to-edge fixed inset-0 z-[80] flex flex-col items-center justify-center overflow-hidden bg-[#060606] px-6 text-center"
+        className="fixed inset-0 z-[80] flex flex-col items-center justify-center overflow-hidden bg-[#060606] px-6 text-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         onClick={next}

@@ -20,28 +20,6 @@ import './index.css';
 
 document.addEventListener('pointerdown', unlockAudio, { capture: true });
 
-/**
- * Some iOS versions give Home Screen web apps a layout viewport that stops above the home indicator,
- * leaving an empty strip under fixed elements. Measure how much of the screen is left over and let
- * the layout (body, overlays, tab bar) extend into it via --vgap.
- */
-function fitScreen() {
-  const standalone = matchMedia('(display-mode: standalone)').matches || (navigator as unknown as { standalone?: boolean }).standalone;
-  const translucent = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.getAttribute('content') === 'black-translucent';
-  const portrait = innerHeight > innerWidth;
-  const typing = document.activeElement?.matches('input, textarea, select');
-  if (typing) return;
-  let gap = 0;
-  if (standalone && translucent && portrait) {
-    const full = Math.max(screen.width, screen.height);
-    gap = full - innerHeight;
-    if (gap < 1 || gap > 60) gap = 0;
-  }
-  document.documentElement.style.setProperty('--vgap', `${gap}px`);
-}
-fitScreen();
-addEventListener('resize', fitScreen);
-addEventListener('orientationchange', () => setTimeout(fitScreen, 300));
 void navigator.storage?.persist?.();
 
 Promise.all([loadSettings(), loadActiveWorkout(), useLibrary.getState().reload()]).finally(() => {

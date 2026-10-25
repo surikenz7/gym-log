@@ -18,8 +18,6 @@
   --line: 58 36 36;
   --fg: 255 255 255;
   --muted: 142 142 142;
-  /* how far the screen reaches below the layout viewport (iOS home-screen apps, see main.tsx) */
-  --vgap: 0px;
 
   /* style: Raw (default) */
   --font-display: Oswald, Impact, 'Arial Narrow', sans-serif;
@@ -84,21 +82,26 @@ body {
   -webkit-touch-callout: none;
   overflow: hidden;
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: calc(-1 * var(--vgap));
+  inset: 0;
+}
+
+/*
+ * iOS 26 bug (WebKit 301108): with viewport-fit=cover + a translucent status bar, an installed web app
+ * gets a viewport that is shorter than the screen whenever the page is shorter than the screen, and
+ * nothing is painted below it — the tab bar ends up above a blank strip. Making the page at least
+ * screen-tall makes iOS hand out the full viewport. The min() keeps it from scrolling when the status
+ * bar is opaque (light mode), where the top inset is 0.
+ */
+@media (display-mode: standalone) {
+  html {
+    min-height: min(100lvh, calc(100% + env(safe-area-inset-top)));
+  }
 }
 
 #root {
   height: 100%;
   position: relative;
   z-index: 1;
-}
-
-/* full-screen and bottom-anchored overlays reach the real bottom edge too */
-.to-edge {
-  bottom: calc(-1 * var(--vgap)) !important;
 }
 
 /* Theme glow bleeding in from the top of the screen */
@@ -220,7 +223,7 @@ input::-webkit-inner-spin-button {
     padding-top: env(safe-area-inset-top);
   }
   .pb-safe {
-    padding-bottom: max(env(safe-area-inset-bottom), var(--vgap));
+    padding-bottom: env(safe-area-inset-bottom);
   }
   .scroll-area {
     overflow-y: auto;

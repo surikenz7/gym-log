@@ -76,7 +76,7 @@ function RestBar() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 120, opacity: 0 }}
           transition={spring}
-          style={{ marginBottom: 'max(env(safe-area-inset-bottom), var(--vgap))' }}
+          style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
         >
           <div className="flex items-center gap-3 cut bg-card2/95 p-3 shadow-2xl ring-1 ring-line backdrop-blur-xl">
             <div className="relative h-14 w-14">
@@ -140,7 +140,7 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
   return (
     <AnimatePresence>
       {open && (
-        <motion.div className="to-edge fixed inset-0 z-40 flex flex-col bg-bg pt-safe" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={spring}>
+        <motion.div className="fixed inset-0 z-40 flex flex-col bg-bg pt-safe" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={spring}>
           <div className="flex h-12 items-center px-3">
             <button onClick={onBack} className="text-accent">
               <ChevronLeft size={26} />
@@ -228,7 +228,7 @@ export function ActiveWorkout() {
       <AnimatePresence>
         {open && w && (
           <motion.div
-            className="to-edge fixed inset-0 z-30 flex flex-col bg-bg"
+            className="fixed inset-0 z-30 flex flex-col bg-bg"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
