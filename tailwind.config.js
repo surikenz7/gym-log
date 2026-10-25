@@ -9,7 +9,9 @@ export default {
         card: 'rgb(var(--card) / <alpha-value>)',
         card2: 'rgb(var(--card2) / <alpha-value>)',
         line: 'rgb(var(--line) / <alpha-value>)',
-        muted: '#8e8e8e',
+        muted: 'rgb(var(--muted) / <alpha-value>)',
+        // "white" is the foreground colour, so text-white / bg-white/10 work in light mode too
+        white: 'rgb(var(--fg) / <alpha-value>)',
         accent: { DEFAULT: 'rgb(var(--accent) / <alpha-value>)', soft: 'rgb(var(--accent) / 0.16)' },
         accent2: 'rgb(var(--accent2) / <alpha-value>)',
         ink: 'rgb(var(--ink) / <alpha-value>)',
@@ -19,7 +21,8 @@ export default {
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', 'Inter', 'system-ui', 'sans-serif'],
-        display: ['Oswald', 'Impact', '"Arial Narrow"', 'sans-serif'],
+        // set per style (index.css)
+        display: ['var(--font-display)'],
       },
       // sharper, less pillowy corners than Hevy
       borderRadius: {

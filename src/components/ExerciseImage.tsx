@@ -35,7 +35,7 @@ export function ExerciseThumb({ ex, size = 44 }: { ex: Exercise; size?: number }
       decoding="async"
       alt=""
       onError={() => setFailed(true)}
-      className="shrink-0 rounded-full bg-white object-cover"
+      className="shrink-0 rounded-full bg-[#fff] object-cover"
       style={style}
     />
   );
@@ -57,7 +57,7 @@ export function ExerciseDemo({ ex }: { ex: Exercise }) {
     );
   }
   return (
-    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-white">
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#fff]">
       {loaded < 2 && <div className="absolute inset-0 animate-pulse bg-card2" />}
       {([0, 1] as const).map((f) => (
         <motion.img

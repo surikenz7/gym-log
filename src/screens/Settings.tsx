@@ -8,10 +8,10 @@ import { Header, Page, Sheet } from '../components/ui';
 import { db } from '../db/db';
 import { exportBackup, importBackup } from '../import/backup';
 import { BUILTIN, imageUrl, useLibrary } from '../lib/exercises';
-import { THEMES, themeLink } from '../lib/theme';
+import { MODES, paletteOf, STYLES, THEMES, themeLink } from '../lib/theme';
 import { fmtDurationLong, fmtNum, kgTo } from '../lib/units';
 import { useLatestBodyweight } from '../lib/useProgress';
-import type { ThemeId } from '../types';
+import type { ModeId, StyleId, ThemeId } from '../types';
 import { AvatarPicker } from './Profile';
 import { confirmDialog, toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
@@ -41,7 +41,7 @@ function Row({ label, children, onClick, icon }: { label: ReactNode; children?: 
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
     <button onClick={() => onChange(!on)} className={`relative h-[31px] w-[51px] rounded-full transition-colors ${on ? 'bg-done' : 'bg-line'}`}>
-      <motion.span className="absolute top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow" animate={{ left: on ? 22 : 2 }} transition={{ type: 'spring', stiffness: 700, damping: 35 }} />
+      <motion.span className="absolute top-[2px] h-[27px] w-[27px] rounded-full bg-[#fff] shadow" animate={{ left: on ? 22 : 2 }} transition={{ type: 'spring', stiffness: 700, damping: 35 }} />
     </button>
   );
 }
@@ -79,6 +79,28 @@ async function downloadImages(onProgress: (done: number, total: number) => void)
     }
   };
   await Promise.all(Array.from({ length: 8 }, worker));
+}
+
+const STYLE_PREVIEW: Record<StyleId, { font: React.CSSProperties; shape: React.CSSProperties }> = {
+  raw: { font: { fontFamily: 'Oswald, sans-serif', fontWeight: 700, textTransform: 'uppercase' }, shape: { clipPath: 'polygon(0 0, 70% 0, 100% 30%, 100% 100%, 30% 100%, 0 70%)' } },
+  elegant: { font: { fontFamily: "'Playfair Display', serif", fontWeight: 600 }, shape: { borderRadius: 6, opacity: 0.85 } },
+  minimal: { font: { fontFamily: '-apple-system, system-ui, sans-serif', fontWeight: 600 }, shape: { borderRadius: 4 } },
+  playful: { font: { fontFamily: 'Fredoka, ui-rounded, sans-serif', fontWeight: 600 }, shape: { borderRadius: 999 } },
+};
+
+/** Tiny screen-size readout — helps when fixing layout issues on a specific iPhone. */
+function ScreenInfo() {
+  const [info, setInfo] = useState('');
+  useEffect(() => {
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;padding-bottom:env(safe-area-inset-bottom);padding-top:env(safe-area-inset-top);visibility:hidden';
+    document.body.appendChild(probe);
+    const cs = getComputedStyle(probe);
+    const gap = getComputedStyle(document.documentElement).getPropertyValue('--vgap').trim();
+    setInfo(`screen ${screen.width}×${screen.height} · view ${innerWidth}×${innerHeight} · safe ${parseInt(cs.paddingTop)}/${parseInt(cs.paddingBottom)} · gap ${gap}`);
+    probe.remove();
+  }, []);
+  return <span className="opacity-60">{info}</span>;
 }
 
 export function Settings() {
@@ -126,21 +148,74 @@ export function Settings() {
           </Row>
         </Section>
 
-        <Section title="Look" foot="Changes the accent, highlights, background, cards and the app icon.">
+        <Section title="Style">
+          <div className="grid grid-cols-2 gap-2 p-3">
+            {(Object.keys(STYLES) as StyleId[]).map((id) => {
+              const on = s.style === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => s.update({ style: id })}
+                  className="press relative overflow-hidden rounded-xl bg-card2 p-3 text-left"
+                  style={{ boxShadow: on ? 'inset 0 0 0 2px rgb(var(--accent))' : undefined }}
+                >
+                  <div className="flex items-end justify-between">
+                    <span className="text-3xl leading-none" style={STYLE_PREVIEW[id].font}>
+                      Aa
+                    </span>
+                    <span className="h-6 w-6 bg-accent" style={STYLE_PREVIEW[id].shape} />
+                  </div>
+                  <div className="mt-2 text-sm font-semibold" style={STYLE_PREVIEW[id].font}>
+                    {STYLES[id].name}
+                  </div>
+                  <div className="text-[11px] leading-tight text-muted">{STYLES[id].desc}</div>
+                  {on && (
+                    <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-accent">
+                      <Check size={12} strokeWidth={4} />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </Section>
+
+        <Section title="Mode">
+          <div className="grid grid-cols-4 gap-2 p-3">
+            {(Object.keys(MODES) as ModeId[]).map((id) => {
+              const p = paletteOf(s.theme, id);
+              const on = s.mode === id;
+              return (
+                <button key={id} onClick={() => s.update({ mode: id })} className="press flex flex-col items-center gap-1.5">
+                  <span
+                    className="flex h-14 w-full flex-col justify-end gap-1 rounded-xl p-1.5"
+                    style={{ background: p.bg, boxShadow: on ? `inset 0 0 0 2px ${p.accent}` : `inset 0 0 0 1px ${p.line}` }}
+                  >
+                    <span className="h-2 w-2/3 rounded-full" style={{ background: p.fg, opacity: 0.85 }} />
+                    <span className="h-4 w-full rounded-md" style={{ background: p.card }} />
+                  </span>
+                  <span className={`text-xs font-semibold ${on ? 'text-white' : 'text-muted'}`}>{MODES[id].name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </Section>
+
+        <Section title="Colour" foot="Accent, highlights, background tint and the app icon.">
           <div className="grid grid-cols-4 gap-2 p-3">
             {(Object.keys(THEMES) as ThemeId[]).map((id) => {
-              const t = THEMES[id];
+              const t = paletteOf(id, s.mode);
               const on = s.theme === id;
               return (
                 <button key={id} onClick={() => s.update({ theme: id })} className="press flex flex-col items-center gap-1.5">
                   <span
-                    className="cut-sm relative flex h-16 w-full flex-col justify-end overflow-hidden p-1.5"
+                    className="relative flex h-16 w-full flex-col justify-end overflow-hidden rounded-xl p-1.5"
                     style={{ background: t.bg, boxShadow: on ? `inset 0 0 0 2px ${t.accent}` : `inset 0 0 0 1px ${t.line}` }}
                   >
                     <span className="absolute inset-x-0 top-0 h-6" style={{ background: `linear-gradient(120deg, ${t.accent}, ${t.accent2})` }} />
                     <span className="relative flex gap-1">
-                      <span className="h-3 flex-1" style={{ background: t.card }} />
-                      <span className="h-3 w-3" style={{ background: t.done }} />
+                      <span className="h-3 flex-1 rounded-sm" style={{ background: t.card }} />
+                      <span className="h-3 w-3 rounded-sm" style={{ background: t.done }} />
                     </span>
                     {on && (
                       <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full" style={{ background: t.ink, color: t.accent }}>
@@ -148,25 +223,29 @@ export function Settings() {
                       </span>
                     )}
                   </span>
-                  <span className={`font-display text-[11px] font-semibold uppercase tracking-wider ${on ? 'text-white' : 'text-muted'}`}>{t.name}</span>
+                  <span className={`text-xs font-semibold ${on ? 'text-white' : 'text-muted'}`}>{THEMES[id].name}</span>
                 </button>
               );
             })}
           </div>
-          <Row label="Home Screen icon in this colour" icon={<Smartphone size={20} />} onClick={() => setIconHelp(true)}>
+          <Row label="App icon" icon={<Smartphone size={20} />} onClick={() => setIconHelp(true)}>
             <img src={`${import.meta.env.BASE_URL}icons/${s.theme}-180.png`} alt="" className="h-9 w-9 rounded-[9px]" />
           </Row>
         </Section>
-        <Sheet open={iconHelp} onClose={() => setIconHelp(false)} title="Change the app icon">
+        <Sheet open={iconHelp} onClose={() => setIconHelp(false)} title="App icon colour">
           <div className="space-y-3 px-5 pb-2 pt-2 text-sm text-white/85">
-            <p>iOS saves a web app’s icon when you add it to the Home Screen and never updates it, so the icon only changes by adding the app again.</p>
+            <p>
+              <b>iOS doesn’t let a Home Screen web app change its own icon.</b> The icon is copied once, when the app is added, and only Apple’s App Store apps can swap it later. So the
+              icon on your Home Screen stays as it is until you add the app again — everything inside the app changes instantly.
+            </p>
+            <p className="text-muted">If you want the matching icon anyway:</p>
             <ol className="list-decimal space-y-2 pl-5">
               <li>
-                <b>Back up first:</b> Settings → Data → Export backup → Save to Files. Removing the app from the Home Screen can erase its data.
+                <b>Back up first:</b> Settings → Data → Export backup → Save to Files. Removing the app can erase its data.
               </li>
-              <li>Tap <b>Copy link</b> below, open <b>Safari</b>, paste the link and open it.</li>
+              <li>Tap <b>Copy link</b>, open <b>Safari</b>, paste and open it.</li>
               <li>
-                Share → <b>Add to Home Screen</b> (keep “Open as Web App” on). Then delete the old icon.
+                Share → <b>Add to Home Screen</b>, then delete the old icon.
               </li>
               <li>Open the new icon → Settings → Restore from backup.</li>
             </ol>
@@ -281,6 +360,8 @@ export function Settings() {
           Gym Log · v{__APP_VERSION__}
           <br />
           Exercise data & images: free-exercise-db (public domain)
+          <br />
+          <ScreenInfo />
         </div>
       </div>
     </Page>

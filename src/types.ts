@@ -114,7 +114,14 @@ export interface Settings {
   /** used for strength ranks */
   sex?: 'male' | 'female' | null;
   theme: ThemeId;
+  /** overall look: typography, shapes and decoration */
+  style: StyleId;
+  /** light / dark surfaces */
+  mode: ModeId;
 }
+
+export type StyleId = 'raw' | 'elegant' | 'minimal' | 'playful';
+export type ModeId = 'dark' | 'amoled' | 'dim' | 'light';
 
 export type ThemeId = 'blood' | 'inferno' | 'gold' | 'toxic' | 'steel' | 'cobalt' | 'venom' | 'pump';
 
@@ -130,4 +137,6 @@ export const DEFAULT_SETTINGS: Settings = {
   avatar: null,
   sex: null,
   theme: 'blood',
+  style: 'raw',
+  mode: 'dark',
 };

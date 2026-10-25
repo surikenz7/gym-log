@@ -56,7 +56,7 @@ export function Ranks() {
                   <TierBar score={overall} className="mt-2 w-56" />
                   {next && (
                     <div className="mt-1.5 text-xs text-muted">
-                      {next.min - overall} points to <span style={{ color: next.c[1] }}>{next.name}</span>
+                      {next.min - overall} points to <span className="tier-text" style={{ color: next.c[1] }}>{next.name}</span>
                     </div>
                   )}
                 </>
@@ -155,7 +155,7 @@ export function Ranks() {
                 {TIERS.map((t) => (
                   <div key={t.name} className="flex flex-col items-center rounded-lg bg-card2 py-2">
                     <RankBadge score={t.min} size={40} shine={false} />
-                    <div className="mt-1 font-display text-xs font-semibold" style={{ color: t.c[1] }}>
+                    <div className="tier-text mt-1 font-display text-xs font-semibold" style={{ color: t.c[1] }}>
                       {t.name}
                     </div>
                     <div className="text-[10px] text-muted">{t.min === 900 ? '900+' : `${t.min}–${t.min === 0 ? 199 : t.min + 99}`}</div>

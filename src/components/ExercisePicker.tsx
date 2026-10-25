@@ -196,7 +196,7 @@ export function ExercisePicker({
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-40 flex flex-col bg-bg"
+            className="to-edge fixed inset-0 z-40 flex flex-col bg-bg"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}

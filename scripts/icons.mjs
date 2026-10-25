@@ -15,99 +15,41 @@ const THEMES = {
   pump: ['#ff2e7e', '#ffb020'],
 };
 
+const INK = { gold: '#141414', toxic: '#141414', steel: '#141414', inferno: '#ffffff' };
+
 const shade = (hex, f) => {
   const n = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
   const m = n.map((c) => Math.round(f < 0 ? c * (1 + f) : c + (255 - c) * f));
   return `#${m.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 };
 
-/** One iron plate seen at a 3/4 angle: back rim, body, then the bevelled front face with a hub. */
-function plate(x, w, h, id, ring) {
-  const cy = 256;
-  const rx = Math.round(h * 0.13);
-  return `
-    <ellipse cx="${x}" cy="${cy}" rx="${rx}" ry="${h / 2}" fill="#0a0a0a"/>
-    <rect x="${x}" y="${cy - h / 2}" width="${w}" height="${h}" fill="url(#side)"/>
-    <ellipse cx="${x + w}" cy="${cy}" rx="${rx}" ry="${h / 2}" fill="url(#face${id})" stroke="#000" stroke-opacity=".5" stroke-width="2"/>
-    <ellipse cx="${x + w}" cy="${cy}" rx="${rx * 0.86}" ry="${h * 0.43}" fill="none" stroke="${ring}" stroke-opacity=".9" stroke-width="5"/>
-    <ellipse cx="${x + w}" cy="${cy}" rx="${rx * 0.72}" ry="${h * 0.36}" fill="none" stroke="#fff" stroke-opacity=".10" stroke-width="3"/>
-    <ellipse cx="${x + w}" cy="${cy}" rx="${rx * 0.6}" ry="${h * 0.3}" fill="none" stroke="#000" stroke-opacity=".45" stroke-width="5"/>
-    <ellipse cx="${x + w}" cy="${cy}" rx="${rx * 0.3}" ry="${h * 0.075}" fill="url(#chromeV)" stroke="#000" stroke-opacity=".6" stroke-width="1.5"/>
-    <path d="M${x + w - rx * 0.55} ${cy - h * 0.43} A${rx} ${h / 2} 0 0 1 ${x + w + rx * 0.7} ${cy - h * 0.25}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>`;
-}
-
-function iconSvg([accent, accent2], { rounded = false } = {}) {
+/** Plain, flat barbell on the theme colour — like a normal app icon. */
+function iconSvg([accent], { rounded = false, ink = '#ffffff' } = {}) {
+  const r = rounded ? 112 : 0;
+  const plate = (x, w, h) => `<rect x="${x}" y="${256 - h / 2}" width="${w}" height="${h}" rx="${Math.min(14, w / 2)}"/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${shade(accent, 0.15)}"/>
-      <stop offset=".55" stop-color="${accent}"/>
-      <stop offset="1" stop-color="${shade(accent, -0.55)}"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${shade(accent, 0.12)}"/>
+      <stop offset="1" stop-color="${shade(accent, -0.18)}"/>
     </linearGradient>
-    <radialGradient id="glow" cx=".3" cy=".25" r=".7">
-      <stop offset="0" stop-color="${accent2}" stop-opacity=".55"/>
-      <stop offset="1" stop-color="${accent2}" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="vig" cx=".5" cy=".5" r=".75">
-      <stop offset=".6" stop-color="#000" stop-opacity="0"/>
-      <stop offset="1" stop-color="#000" stop-opacity=".45"/>
-    </radialGradient>
-    <linearGradient id="side" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#4a4d52"/>
-      <stop offset=".18" stop-color="#2a2c30"/>
-      <stop offset=".55" stop-color="#131416"/>
-      <stop offset="1" stop-color="#050505"/>
-    </linearGradient>
-    <radialGradient id="face1" cx=".35" cy=".3" r=".9">
-      <stop offset="0" stop-color="#5b5f66"/>
-      <stop offset=".5" stop-color="#26282c"/>
-      <stop offset="1" stop-color="#0c0c0d"/>
-    </radialGradient>
-    <radialGradient id="face2" cx=".35" cy=".3" r=".9">
-      <stop offset="0" stop-color="#666a71"/>
-      <stop offset=".5" stop-color="#2c2e33"/>
-      <stop offset="1" stop-color="#0e0e10"/>
-    </radialGradient>
-    <linearGradient id="chromeV" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset=".3" stop-color="#d9dde2"/>
-      <stop offset=".55" stop-color="#7c838c"/>
-      <stop offset=".75" stop-color="#c9ced4"/>
-      <stop offset="1" stop-color="#4b5058"/>
-    </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
-      <feOffset dx="6" dy="18" result="b"/>
-      <feComponentTransfer><feFuncA type="linear" slope=".7"/></feComponentTransfer>
-      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
   </defs>
-  <rect width="512" height="512" rx="${rounded ? 112 : 0}" fill="url(#bg)"/>
-  <rect width="512" height="512" rx="${rounded ? 112 : 0}" fill="url(#glow)"/>
-  <g opacity=".07" stroke="#000" stroke-width="14">
-    ${Array.from({ length: 12 }, (_, i) => `<line x1="${-200 + i * 70}" y1="560" x2="${120 + i * 70}" y2="-40"/>`).join('')}
-  </g>
-  <rect width="512" height="512" rx="${rounded ? 112 : 0}" fill="url(#vig)"/>
-  <g transform="translate(256 256) scale(1.1) rotate(-22) translate(-256 -256)" filter="url(#shadow)">
-    <rect x="30" y="245" width="452" height="22" rx="5" fill="url(#chromeV)"/>
-    <rect x="30" y="240" width="74" height="32" rx="5" fill="url(#chromeV)"/>
-    <rect x="408" y="240" width="74" height="32" rx="5" fill="url(#chromeV)"/>
-    ${plate(96, 34, 260, 1, accent)}
-    ${plate(130, 24, 196, 2, accent2)}
-    <rect x="156" y="236" width="14" height="40" rx="3" fill="url(#chromeV)"/>
-    <rect x="342" y="236" width="14" height="40" rx="3" fill="url(#chromeV)"/>
-    ${plate(358, 24, 196, 2, accent2)}
-    ${plate(382, 34, 260, 1, accent)}
-    <g fill="url(#chromeV)" opacity=".9">
-      ${Array.from({ length: 9 }, (_, i) => `<rect x="${206 + i * 11}" y="248" width="4" height="16" fill="#000" opacity=".18"/>`).join('')}
-    </g>
+  <rect width="512" height="512" rx="${r}" fill="url(#bg)"/>
+  <g fill="${ink}">
+    <rect x="52" y="242" width="408" height="28" rx="14"/>
+    ${plate(84, 40, 164)}
+    ${plate(128, 54, 244)}
+    ${plate(186, 18, 84)}
+    ${plate(308, 18, 84)}
+    ${plate(330, 54, 244)}
+    ${plate(388, 40, 164)}
   </g>
 </svg>`;
 }
 
 fs.mkdirSync('public/icons', { recursive: true });
 for (const [name, colors] of Object.entries(THEMES)) {
-  const svg = Buffer.from(iconSvg(colors));
+  const svg = Buffer.from(iconSvg(colors, { ink: INK[name] }));
   for (const size of [180, 192, 512]) await sharp(svg, { density: 300 }).resize(size, size).png().toFile(`public/icons/${name}-${size}.png`);
 }
 // defaults (manifest / first install) = Blood

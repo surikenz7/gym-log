@@ -5,7 +5,7 @@ import { haptic } from '../lib/haptics';
 import { levelFromXp, levelTitle, type Achievement, type WorkoutReward } from '../lib/progress';
 import { tierIndex, TIERS } from '../lib/ranks';
 import { fanfare } from '../lib/sound';
-import { themeOf } from '../lib/theme';
+import { paletteOf } from '../lib/theme';
 import { useSettings } from '../state/settings';
 import { RankBadge, Rays, TierName } from './RankBadge';
 import { Portal } from './ui';
@@ -27,7 +27,7 @@ export function CountUp({ value, from = 0, fmt = (v) => Math.round(v).toLocaleSt
 
 export function Confetti({ colors }: { colors?: string[] }) {
   const theme = useSettings((s) => s.theme);
-  const t = themeOf(theme);
+  const t = paletteOf(theme, useSettings.getState().mode);
   const palette = colors ?? [t.accent, t.accent2, '#ffffff', t.done, t.accent];
   const pieces = useMemo(
     () =>
@@ -84,7 +84,7 @@ export function RankUpOverlay({ items, onDone }: { items: RankUp[]; onDone: () =
     <Portal>
       <motion.div
         key={i}
-        className="fixed inset-0 z-[80] flex flex-col items-center justify-center overflow-hidden bg-[#060606] px-6 text-center"
+        className="to-edge fixed inset-0 z-[80] flex flex-col items-center justify-center overflow-hidden bg-[#060606] px-6 text-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         onClick={next}
@@ -237,7 +237,7 @@ export function AchievementsUnlocked({ list }: { list: Achievement[] }) {
         {list.map((a, i) => (
           <motion.div
             key={a.id}
-            className="flex items-center gap-2.5 cut-sm bg-black/30 p-2.5"
+            className="flex items-center gap-2.5 cut-sm bg-card2 p-2.5"
             initial={{ scale: 0.3, opacity: 0, rotate: -8 }}
             animate={{ scale: 1, opacity: 1, rotate: 0 }}
             transition={{ delay: 0.6 + i * 0.15, type: 'spring', stiffness: 300, damping: 14 }}

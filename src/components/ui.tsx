@@ -63,7 +63,7 @@ export function Header({
       </div>
       {large && (
         <h1 className="flex items-center gap-2.5 px-4 pb-2 font-display text-4xl font-bold uppercase tracking-tight">
-          <span className="h-7 w-1.5 -skew-x-12 bg-accent" />
+          <span className="deco-raw h-7 w-1.5 -skew-x-12 bg-accent" />
           {title}
         </h1>
       )}
@@ -92,7 +92,7 @@ export function Sheet({
           <>
             <motion.div
               key="backdrop"
-              className="fixed inset-0 z-50 bg-black/60"
+              className="to-edge fixed inset-0 z-50 bg-black/60"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -100,7 +100,7 @@ export function Sheet({
             />
             <motion.div
               key="sheet"
-              className={`fixed inset-x-0 bottom-0 z-[51] flex flex-col rounded-t-3xl bg-card pb-safe shadow-2xl ${tall ? 'h-[88dvh]' : 'max-h-[88dvh]'}`}
+              className={`to-edge fixed inset-x-0 bottom-0 z-[51] flex flex-col rounded-t-3xl bg-card pb-safe shadow-2xl ${tall ? 'h-[88dvh]' : 'max-h-[88dvh]'}`}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -160,7 +160,7 @@ export function DialogHost() {
         {current && (
           <motion.div
             key={current.id}
-            className={`fixed inset-0 z-[60] flex bg-black/60 px-6 ${current.kind === 'sheet' ? 'items-end pb-6' : 'items-center justify-center'}`}
+            className={`to-edge fixed inset-0 z-[60] flex bg-black/60 px-6 ${current.kind === 'sheet' ? 'items-end pb-6' : 'items-center justify-center'}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

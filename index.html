@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
-    <meta name="theme-color" content="#090909" />
+    <meta name="theme-color" content="#0b0707" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -22,6 +22,14 @@
     <link rel="apple-touch-startup-image" href="/gym-log/splash/1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
     <link rel="apple-touch-startup-image" href="/gym-log/splash/750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
     <title>Gym Log</title>
+    <script>
+      // Light mode needs dark status-bar text; iOS only reads this tag when the app launches.
+      try {
+        var look = JSON.parse(localStorage.getItem('gymlog-look') || '{}');
+        if (look.light) document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').setAttribute('content', 'default');
+        if (look.bg) document.documentElement.style.background = look.bg;
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

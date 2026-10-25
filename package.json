@@ -11,7 +11,9 @@
     "exercises": "node scripts/build-exercises.mjs"
   },
   "dependencies": {
+    "@fontsource/fredoka": "^5.3.0",
     "@fontsource/oswald": "^5.3.0",
+    "@fontsource/playfair-display": "^5.3.0",
     "date-fns": "^4.4.0",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^1.1.7",

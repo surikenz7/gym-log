@@ -140,7 +140,7 @@ export function TierName({ score, className = '' }: { score: number | null; clas
   if (score == null) return <span className={`font-display text-muted ${className}`}>Unranked</span>;
   const t = TIERS[tierIndex(score)];
   return (
-    <span className={`font-display font-bold ${className}`} style={{ color: t.c[1] }}>
+    <span className={`tier-text font-display font-bold ${className}`} style={{ color: t.c[1] }}>
       {t.name}
     </span>
   );
@@ -190,7 +190,7 @@ export function RankChip({ exerciseId, score: given, size = 30, inline = false }
     return (
       <span className="ml-auto flex w-[4.25rem] shrink-0 items-center justify-end gap-1.5">
         <RankBadge score={score} size={size} shine={false} />
-        <span className="w-8 font-display text-sm font-bold tabular-nums" style={{ color }}>
+        <span className="tier-text w-8 font-display text-sm font-bold tabular-nums" style={{ color }}>
           {score}
         </span>
       </span>
@@ -198,7 +198,7 @@ export function RankChip({ exerciseId, score: given, size = 30, inline = false }
   return (
     <span className="flex w-12 shrink-0 flex-col items-center">
       <RankBadge score={score} size={size} shine={false} />
-      <span className="-mt-0.5 font-display text-xs font-bold leading-none tabular-nums" style={{ color }}>
+      <span className="tier-text -mt-0.5 font-display text-xs font-bold leading-none tabular-nums" style={{ color }}>
         {score}
       </span>
     </span>

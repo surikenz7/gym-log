@@ -139,7 +139,7 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
         {next && (
           <div className="border-t border-line px-4 py-3 text-sm">
             <span className="text-muted">Next: </span>
-            <span className="font-semibold" style={{ color: next.c[1] }}>
+            <span className="tier-text font-semibold" style={{ color: next.c[1] }}>
               {next.name}
             </span>
             <span className="text-muted"> at </span>
@@ -178,7 +178,7 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
               >
                 <span className="flex items-center gap-2">
                   <RankBadge score={t.min} size={22} shine={false} />
-                  <span className="font-semibold" style={{ color: t.c[1] }}>
+                  <span className="tier-text font-semibold" style={{ color: t.c[1] }}>
                     {t.name}
                   </span>
                 </span>

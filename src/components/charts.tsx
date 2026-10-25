@@ -1,13 +1,15 @@
 import { format } from 'date-fns';
 import { useSettings } from '../state/settings';
-import { themeOf } from '../lib/theme';
+import { paletteOf } from '../lib/theme';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 // Single-series charts: one accent hue, 2px line, ringed 8px dots, ~10% area wash, hairline solid grid.
 const MUTED = '#8e8e8e';
 /** Theme colours as plain hex — SVG attributes can't rely on CSS variables everywhere. */
 function useChartColors() {
-  const t = themeOf(useSettings((s) => s.theme));
+  const theme = useSettings((s) => s.theme);
+  const mode = useSettings((s) => s.mode);
+  const t = paletteOf(theme, mode);
   return { ACCENT: t.accent, SURFACE: t.card, GRID: t.line };
 }
 

@@ -16,7 +16,7 @@ export function Avatar({ size = 40, ring }: { size?: number; ring?: string }) {
   const photo = useSettings((s) => s.avatar);
   return (
     <div
-      className="flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-accent to-black font-display font-bold"
+      className="flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-accent to-[#000] font-display font-bold text-[#fff]"
       style={{ width: size, height: size, fontSize: size * 0.42, boxShadow: ring ? `0 0 0 ${Math.max(2, size / 22)}px rgb(var(--bg)), 0 0 0 ${Math.max(4, size / 11)}px ${ring}` : undefined }}
     >
       {photo ? <img src={photo} alt="" className="h-full w-full object-cover" draggable={false} /> : (name.trim()[0] ?? '🏋').toUpperCase()}

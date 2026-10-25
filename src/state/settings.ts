@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getKv, KV_SETTINGS, setKv } from '../db/db';
-import { applyTheme } from '../lib/theme';
+import { applyLook } from '../lib/theme';
 import { DEFAULT_SETTINGS, type Settings } from '../types';
 
 interface SettingsState extends Settings {
@@ -17,8 +17,10 @@ export const useSettings = create<SettingsState>((set, get) => ({
 }));
 
 if (typeof document !== 'undefined') {
-  applyTheme(DEFAULT_SETTINGS.theme);
-  useSettings.subscribe((s, prev) => s.theme !== prev.theme && applyTheme(s.theme));
+  applyLook(DEFAULT_SETTINGS.theme, DEFAULT_SETTINGS.style, DEFAULT_SETTINGS.mode);
+  useSettings.subscribe((s, prev) => {
+    if (s.theme !== prev.theme || s.style !== prev.style || s.mode !== prev.mode) applyLook(s.theme, s.style, s.mode);
+  });
 }
 
 export async function loadSettings() {
