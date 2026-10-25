@@ -84,9 +84,11 @@ export function Dock() {
     else setSheet(true);
   };
   return (
-    <div className="px-3 pb-safe">
-      <nav className="relative mb-2 flex items-stretch">
-        <div className="cut absolute inset-0 bg-card2/95 backdrop-blur-xl" style={{ boxShadow: 'inset 0 1px 0 rgb(255 255 255 / 0.06)' }} />
+    // Sits on the bottom edge like a native tab bar: the background runs under the home indicator,
+    // the buttons stay just above it.
+    <div>
+      <nav className="relative flex items-stretch px-1" style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom) - 14px), 4px)' }}>
+        <div className="cut-top absolute inset-0 bg-card2/95 backdrop-blur-xl" style={{ boxShadow: 'inset 0 1px 0 rgb(255 255 255 / 0.07)' }} />
         <Tab {...DOCK_TABS[0]} />
         <Tab {...DOCK_TABS[1]} />
         <div className="relative flex w-20 shrink-0 items-center justify-center">

@@ -177,14 +177,28 @@ export function Rays({ color, size }: { color: string; size: number }) {
   );
 }
 
-/** Small rank icon + points shown next to an exercise name (nothing if it isn't ranked yet). */
-export function RankChip({ exerciseId, size = 16, className = '' }: { exerciseId: string; size?: number; className?: string }) {
-  const score = useExerciseScore(exerciseId);
+/**
+ * Rank icon + points for an exercise, always in a fixed-width slot at the right of a row so it lines up
+ * no matter how long the name is. Renders nothing if the exercise isn't ranked yet.
+ */
+export function RankChip({ exerciseId, score: given, size = 30, inline = false }: { exerciseId: string; score?: number | null; size?: number; inline?: boolean }) {
+  const saved = useExerciseScore(exerciseId);
+  const score = given !== undefined ? given : saved;
   if (score == null) return null;
+  const color = TIERS[tierIndex(score)].c[1];
+  if (inline)
+    return (
+      <span className="ml-auto flex w-[4.25rem] shrink-0 items-center justify-end gap-1.5">
+        <RankBadge score={score} size={size} shine={false} />
+        <span className="w-8 font-display text-sm font-bold tabular-nums" style={{ color }}>
+          {score}
+        </span>
+      </span>
+    );
   return (
-    <span className={`inline-flex shrink-0 items-center gap-1 align-middle ${className}`}>
+    <span className="flex w-12 shrink-0 flex-col items-center">
       <RankBadge score={score} size={size} shine={false} />
-      <span className="font-display text-xs font-bold tabular-nums" style={{ color: TIERS[tierIndex(score)].c[1] }}>
+      <span className="-mt-0.5 font-display text-xs font-bold leading-none tabular-nums" style={{ color }}>
         {score}
       </span>
     </span>

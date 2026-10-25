@@ -54,16 +54,14 @@ export function ExerciseList({
         </AnimatePresence>
         <ExerciseThumb ex={e} />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate font-medium">{e.name}</span>
-            <RankChip exerciseId={e.id} />
-          </div>
+          <div className="truncate font-medium">{e.name}</div>
           <div className="truncate text-sm text-muted">
             {e.muscle}
             {e.equipment !== 'None' ? ` · ${e.equipment}` : ''}
             {e.custom ? ' · Custom' : ''}
           </div>
         </div>
+        <RankChip exerciseId={e.id} />
         <AnimatePresence>
           {sel && (
             <motion.div

@@ -65,7 +65,7 @@ export function WorkoutCard({ w, prs, index = 0 }: { w: Workout; prs: number; in
             <div key={e.id} className="flex items-baseline gap-2 text-sm">
               <span className="w-6 shrink-0 text-right font-display font-bold text-accent">{e.sets.length}×</span>
               <span className="truncate text-white/85">{getExercise(e.exerciseId).name}</span>
-              <RankChip exerciseId={e.exerciseId} size={14} className="ml-auto" />
+              <RankChip exerciseId={e.exerciseId} size={22} inline />
             </div>
           ))}
           {w.exercises.length > shown.length && <div className="pl-8 text-xs text-muted">+{w.exercises.length - shown.length} more</div>}

@@ -15,7 +15,7 @@ import { newSet } from '../state/workout';
 import type { WExercise, WSet } from '../types';
 import { ExerciseThumb } from './ExerciseImage';
 import { LoadSetupCard, LoadSetupNag } from './LoadSetup';
-import { RankBadge } from './RankBadge';
+import { RankChip } from './RankBadge';
 import { gridCols, SET_TYPE_STYLE, SetRow, type EditorMode, type SetRowHandle } from './SetRow';
 import { Sheet, SheetItem } from './ui';
 
@@ -97,14 +97,6 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
           <ExerciseThumb ex={ex} size={40} />
           <div className="min-w-0">
             <div className="truncate font-display text-lg font-bold uppercase leading-tight text-accent">{ex.name}</div>
-            {shownScore != null && (
-              <motion.div key={tierIndex(shownScore)} className="flex items-center gap-1" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 15 }}>
-                <RankBadge score={shownScore} size={16} shine={false} />
-                <span className="font-display text-[11px] font-semibold uppercase tracking-wider" style={{ color: tierOf(shownScore).c[1] }}>
-                  {tierOf(shownScore).name} · {shownScore}
-                </span>
-              </motion.div>
-            )}
             {supersetColor && (
               <div className="flex items-center gap-1 text-xs font-medium" style={{ color: supersetColor }}>
                 <Link2 size={12} /> Superset
@@ -112,6 +104,11 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
             )}
           </div>
         </button>
+        {shownScore != null && (
+          <motion.div key={tierIndex(shownScore)} initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 14 }}>
+            <RankChip exerciseId={wex.exerciseId} score={shownScore} size={32} />
+          </motion.div>
+        )}
         <button onClick={onMenu} className="press -mr-1 p-1.5 text-muted">
           <MoreHorizontal size={22} />
         </button>

@@ -62,9 +62,9 @@ function ExerciseBlocks({ w, prs }: { w: Workout; prs: PR[] }) {
         let n = 0;
         return (
           <div key={e.id} className="cut bg-card p-4">
-            <button className="flex items-center gap-3" onClick={() => nav(`/exercises/${ex.id}`)}>
+            <button className="flex w-full items-center gap-3 text-left" onClick={() => nav(`/exercises/${ex.id}`)}>
               <ExerciseThumb ex={ex} size={36} />
-              <span className="font-semibold text-accent">{ex.name}</span>
+              <span className="min-w-0 flex-1 font-semibold text-accent">{ex.name}</span>
               <RankChip exerciseId={ex.id} />
             </button>
             {e.notes && <div className="mt-2 text-sm text-white/75">{e.notes}</div>}
