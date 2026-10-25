@@ -11,7 +11,10 @@ import { distLabel, distTo, fmtDuration, fmtNum, fmtSet, isShortDistance, kgTo, 
 import { useSettings } from '../state/settings';
 import type { ExerciseType, Settings } from '../types';
 import { ProgressChart } from './charts';
+import { exerciseRanks, standardFor } from '../lib/ranks';
+import { useRankCtx } from '../lib/useProgress';
 import { CustomExerciseSheet } from './CustomExerciseSheet';
+import { ExerciseRankCard } from './RankParts';
 import { ExerciseDemo } from './ExerciseImage';
 import { SET_TYPE_STYLE } from './SetRow';
 import { Sheet } from './ui';
@@ -95,13 +98,15 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
     ...(sessionBest ? [['Best session volume', formatMetric('volume', sessionBest, ex.type, settings)] as [string, string]] : []),
     ...(['reps', 'duration', 'distance'] as PRKind[]).filter((k) => bests[k]).map((k): [string, string] => [PR_LABELS[k], formatMetric(k, bests[k]!, ex.type, settings)]),
   ];
+  const rankCtx = useRankCtx();
+  const rankScore = useMemo(() => (rankCtx ? (exerciseRanks(workouts, rankCtx).get(exerciseId)?.score ?? null) : null), [workouts, rankCtx, exerciseId]);
   const metrics = metricsFor(ex.type);
   const m = metrics[Math.min(metric, metrics.length - 1)];
   const history = [...workouts].sort((a, b) => b.start - a.start);
 
   return (
     <div className="pb-8">
-      <div className="sticky top-0 z-10 flex bg-card/95 backdrop-blur" style={inSheet ? undefined : { top: 'calc(env(safe-area-inset-top) + 3rem)', background: '#000000e6' }}>
+      <div className="sticky top-0 z-10 flex bg-card/95 backdrop-blur" style={inSheet ? undefined : { top: 'calc(env(safe-area-inset-top) + 3rem)', background: '#090909e6' }}>
         {(['summary', 'history', 'howto'] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} className={`relative flex-1 py-3 text-sm font-semibold ${tab === t ? 'text-white' : 'text-muted'}`}>
             {t === 'summary' ? 'Summary' : t === 'history' ? 'History' : 'How to'}
@@ -116,7 +121,7 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
             <ExerciseDemo ex={ex} />
             <div className="mt-4 flex items-start justify-between gap-3">
               <div>
-                <div className="text-xl font-bold">{ex.name}</div>
+                <div className="font-display text-2xl font-bold uppercase leading-tight">{ex.name}</div>
                 <div className="mt-0.5 text-sm text-muted">
                   Primary: {ex.muscle}
                   {ex.secondary.length > 0 && <> · Secondary: {ex.secondary.join(', ')}</>}
@@ -129,6 +134,8 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
                 <Pencil size={16} />
               </button>
             </div>
+
+            {standardFor(exerciseId) && <ExerciseRankCard exerciseId={exerciseId} score={rankScore} />}
 
             {sessions.length > 0 && (
               <>
@@ -151,7 +158,7 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
                   ))}
                 </div>
 
-                <div className="mt-6 text-lg font-semibold">Personal Records</div>
+                <div className="label mt-6">Personal Records</div>
                 <div className="mt-2 divide-y divide-line rounded-2xl bg-card">
                   {recordRows.map(([label, value], i) => (
                     <motion.div key={label} className="flex items-center gap-3 px-4 py-3" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}>
@@ -164,7 +171,7 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
 
                 {reps.length > 0 && (
                   <>
-                    <div className="mt-6 text-lg font-semibold">Set Records</div>
+                    <div className="label mt-6">Set Records</div>
                     <div className="mt-1 text-xs text-muted">Heaviest weight you’ve lifted for each number of reps</div>
                     <div className="mt-2 overflow-hidden rounded-2xl bg-card">
                       <div className="grid grid-cols-[4rem_1fr_auto] gap-2 border-b border-line px-4 py-2 text-[11px] font-semibold tracking-wide text-muted">

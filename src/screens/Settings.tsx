@@ -1,13 +1,18 @@
 import { motion } from 'framer-motion';
-import { ChevronRight, Download, ImageDown, Trash2, Upload, Watch } from 'lucide-react';
+import { Check, ChevronRight, Download, ImageDown, Shield, Trash2, Upload, Watch } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { REST_OPTIONS } from '../components/ExerciseCard';
-import { Header, Page } from '../components/ui';
+import { RankSetup } from '../components/RankParts';
+import { Header, Page, Sheet } from '../components/ui';
 import { db } from '../db/db';
 import { exportBackup, importBackup } from '../import/backup';
 import { BUILTIN, imageUrl, useLibrary } from '../lib/exercises';
-import { fmtDurationLong } from '../lib/units';
+import { THEMES } from '../lib/theme';
+import { fmtDurationLong, fmtNum, kgTo } from '../lib/units';
+import { useLatestBodyweight } from '../lib/useProgress';
+import type { ThemeId } from '../types';
+import { AvatarPicker } from './Profile';
 import { confirmDialog, toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
 import { useWorkout } from '../state/workout';
@@ -15,7 +20,7 @@ import { useWorkout } from '../state/workout';
 function Section({ title, children, foot }: { title: string; children: ReactNode; foot?: string }) {
   return (
     <div>
-      <div className="px-4 pb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{title}</div>
+      <div className="label px-4 pb-1.5">{title}</div>
       <div className="divide-y divide-line overflow-hidden rounded-2xl bg-card">{children}</div>
       {foot && <div className="px-4 pt-1.5 text-xs text-muted">{foot}</div>}
     </div>
@@ -45,7 +50,7 @@ function Segmented<T extends string>({ value, options, onChange }: { value: T; o
   return (
     <div className="relative flex rounded-lg bg-card2 p-0.5">
       {options.map((o) => (
-        <button key={o} onClick={() => onChange(o)} className="relative z-10 min-w-[52px] px-3 py-1 text-sm font-semibold">
+        <button key={o} onClick={() => onChange(o)} className={`relative z-10 min-w-[52px] px-3 py-1 text-sm font-semibold ${value === o ? 'text-ink' : ''}`}>
           {value === o && <motion.span layoutId={`seg-${options.join()}`} className="absolute inset-0 -z-10 rounded-md bg-accent" />}
           {o}
         </button>
@@ -81,6 +86,8 @@ export function Settings() {
   const nav = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
   const [img, setImg] = useState<{ done: number; total: number } | null>(null);
+  const [rankSheet, setRankSheet] = useState(false);
+  const bw = useLatestBodyweight();
   const [storage, setStorage] = useState<{ persisted: boolean; usage: number } | null>(null);
   const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as unknown as { standalone?: boolean }).standalone;
 
@@ -97,6 +104,10 @@ export function Settings() {
       <Header back title="Settings" />
       <div className="space-y-6 px-4 pb-12 pt-2">
         <Section title="Profile">
+          <div className="flex items-center gap-4 px-4 py-3">
+            <AvatarPicker size={56} />
+            <div className="text-sm text-muted">Tap to add a profile picture from your photos or camera.</div>
+          </div>
           <Row label="Name">
             <input
               value={s.name}
@@ -105,6 +116,26 @@ export function Settings() {
               className="w-40 bg-transparent text-right outline-none placeholder:text-muted"
             />
           </Row>
+          <Row label="Sex & bodyweight" icon={<Shield size={20} />} onClick={() => setRankSheet(true)}>
+            <span className="text-sm text-muted">
+              <span className="capitalize">{s.sex ?? 'Not set'}</span>
+              {bw ? ` · ${fmtNum(kgTo(bw, s.weightUnit))} ${s.weightUnit}` : ''}
+            </span>
+            <ChevronRight size={18} className="text-muted" />
+          </Row>
+        </Section>
+
+        <Section title="Look" foot="Accent colour used across the app.">
+          <div className="grid grid-cols-4 gap-2 p-3">
+            {(Object.keys(THEMES) as ThemeId[]).map((id) => (
+              <button key={id} onClick={() => s.update({ theme: id })} className="press flex flex-col items-center gap-1.5 rounded-xl bg-card2 py-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: THEMES[id].hex, color: THEMES[id].ink }}>
+                  {s.theme === id && <Check size={18} strokeWidth={3} />}
+                </span>
+                <span className={`font-display text-xs font-semibold uppercase tracking-wider ${s.theme === id ? 'text-white' : 'text-muted'}`}>{THEMES[id].name}</span>
+              </button>
+            ))}
+          </div>
         </Section>
 
         <Section title="Units">
@@ -201,6 +232,13 @@ export function Settings() {
             }}
           />
         </Section>
+
+        <Sheet open={rankSheet} onClose={() => setRankSheet(false)} title="Sex & bodyweight">
+          <div className="px-4 pt-2">
+            <RankSetup compact onDone={() => setRankSheet(false)} />
+            <div className="mt-3 text-center text-xs text-muted">Used only for strength ranks. Bodyweight is saved to Measures.</div>
+          </div>
+        </Sheet>
 
         <div className="text-center text-xs text-muted">
           Gym Log · v{__APP_VERSION__}

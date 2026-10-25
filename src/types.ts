@@ -110,7 +110,14 @@ export interface Settings {
   showRpe: boolean;
   haptics: boolean;
   name: string;
+  /** profile picture as a small JPEG data URL */
+  avatar?: string | null;
+  /** used for strength ranks */
+  sex?: 'male' | 'female' | null;
+  theme: ThemeId;
 }
+
+export type ThemeId = 'blood' | 'gold' | 'toxic' | 'steel';
 
 export const DEFAULT_SETTINGS: Settings = {
   weightUnit: 'kg',
@@ -121,4 +128,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showRpe: false,
   haptics: true,
   name: '',
+  avatar: null,
+  sex: null,
+  theme: 'blood',
 };

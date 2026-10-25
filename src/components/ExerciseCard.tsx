@@ -3,7 +3,9 @@ import { Link2, MoreHorizontal, Plus, Timer } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { useExercise } from '../lib/exercises';
 import { haptic } from '../lib/haptics';
-import { useHistoryBests, usePreviousSets } from '../lib/hooks';
+import { useHistoryBests, useHistoryRank, usePreviousSets } from '../lib/hooks';
+import { setScore, tierIndex, tierOf } from '../lib/ranks';
+import { fanfare } from '../lib/sound';
 import { livePRs, PR_LABELS } from '../lib/stats';
 import { FIELDS, fieldHeader, fmtDurationLong } from '../lib/units';
 import { toast } from '../state/dialog';
@@ -11,6 +13,7 @@ import { useSettings } from '../state/settings';
 import { newSet } from '../state/workout';
 import type { WExercise, WSet } from '../types';
 import { ExerciseThumb } from './ExerciseImage';
+import { RankBadge } from './RankBadge';
 import { gridCols, SET_TYPE_STYLE, SetRow, type EditorMode, type SetRowHandle } from './SetRow';
 import { Sheet, SheetItem } from './ui';
 
@@ -33,6 +36,15 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
   const prev = usePreviousSets(wex.exerciseId, excludeWorkoutId);
   const historyBests = useHistoryBests(wex.exerciseId, ex.type, mode === 'active' ? excludeWorkoutId : undefined);
   const prs = useMemo(() => (mode === 'active' && historyBests ? livePRs(wex.sets, historyBests, ex.type) : new Map()), [mode, historyBests, wex.sets, ex.type]);
+  const rank = useHistoryRank(wex.exerciseId, mode === 'active' ? excludeWorkoutId : undefined);
+  const scoreOf = (sets: WSet[]) => {
+    if (!rank.ctx) return null;
+    const bw = rank.ctx.bwAt(Date.now());
+    const best = Math.max(0, ...sets.filter((s) => s.done).map((s) => setScore(wex.exerciseId, s, bw, rank.ctx!.sex)));
+    return best || null;
+  };
+  const liveScore = mode === 'active' ? scoreOf(wex.sets) : null;
+  const shownScore = rank.score != null || liveScore != null ? Math.max(rank.score ?? 0, liveScore ?? 0) : null;
   const [typeSheet, setTypeSheet] = useState<string | null>(null);
   const [restSheet, setRestSheet] = useState(false);
   const rows = useRef(new Map<string, SetRowHandle>());
@@ -51,11 +63,21 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
     if (fields.every((f) => merged[f] == null)) return rows.current.get(set.id)?.shake();
     onChange((w) => Object.assign(w.sets[i], filled, { done: true }));
     onSetDone?.(wex, merged);
+    const sets = wex.sets.map((s, j) => (j === i ? { ...merged, done: true } : s));
+    if (mode === 'active' && rank.ctx) {
+      const after = scoreOf(sets);
+      if (after != null && (shownScore == null || tierIndex(after) > tierIndex(shownScore))) {
+        haptic('success');
+        fanfare(true);
+        toast(`⬆ ${shownScore == null ? 'Ranked' : 'Rank up'} · ${ex.name} → ${tierOf(after).name.toUpperCase()}`);
+        return;
+      }
+    }
     if (historyBests) {
-      const sets = wex.sets.map((s, j) => (j === i ? { ...merged, done: true } : s));
       const hit = livePRs(sets, historyBests, ex.type).get(set.id);
       if (hit) {
         haptic('success');
+        fanfare();
         toast(`🏆 New record · ${PR_LABELS[hit[0]]}`);
         return;
       }
@@ -70,6 +92,14 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
           <ExerciseThumb ex={ex} size={40} />
           <div className="min-w-0">
             <div className="truncate font-semibold text-accent">{ex.name}</div>
+            {mode === 'active' && shownScore != null && (
+              <motion.div key={tierIndex(shownScore)} className="flex items-center gap-1" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 15 }}>
+                <RankBadge score={shownScore} size={16} shine={false} />
+                <span className="font-display text-[11px] font-semibold uppercase tracking-wider" style={{ color: tierOf(shownScore).c[1] }}>
+                  {tierOf(shownScore).name} · {shownScore}
+                </span>
+              </motion.div>
+            )}
             {supersetColor && (
               <div className="flex items-center gap-1 text-xs font-medium" style={{ color: supersetColor }}>
                 <Link2 size={12} /> Superset

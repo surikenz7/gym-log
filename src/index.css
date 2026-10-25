@@ -6,11 +6,13 @@
   color-scheme: dark;
   --sat: env(safe-area-inset-top);
   --sab: env(safe-area-inset-bottom);
+  --accent: 229 38 45;
+  --ink: 255 255 255;
 }
 
 html,
 body {
-  background: #000;
+  background: #090909;
   color: #fff;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
@@ -30,6 +32,17 @@ body {
 
 #root {
   height: 100%;
+}
+
+/* Film-grain texture over everything for a raw, gritty look */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 button,
@@ -54,6 +67,25 @@ input::-webkit-inner-spin-button {
 }
 
 @layer utilities {
+  .font-display {
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .label {
+    font-family: Oswald, Impact, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #8e8e8e;
+  }
+  /* diagonal hazard stripes on top of a solid background */
+  .stripes {
+    background-image: repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.09) 0 10px, transparent 10px 20px);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
   .pt-safe {
     padding-top: env(safe-area-inset-top);
   }
@@ -79,4 +111,9 @@ input::-webkit-inner-spin-button {
     content-visibility: auto;
     contain-intrinsic-size: auto 64px;
   }
+}
+
+/* text on the accent colour follows the theme (white on red/blue, black on gold/lime) */
+.bg-accent {
+  color: rgb(var(--ink));
 }

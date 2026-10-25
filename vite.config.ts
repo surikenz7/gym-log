@@ -15,8 +15,8 @@ export default defineConfig({
         name: 'Gym Log',
         short_name: 'Gym Log',
         description: 'Free workout tracker',
-        theme_color: '#000000',
-        background_color: '#000000',
+        theme_color: '#090909',
+        background_color: '#090909',
         display: 'standalone',
         orientation: 'portrait',
         id: '/gym-log/',
@@ -29,7 +29,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,svg,json}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,json,woff2}'],
         globIgnores: ['splash/**'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         runtimeCaching: [

@@ -20,7 +20,7 @@ for (const [w, h, r] of SPLASH) {
   const H = h * r;
   const icon = Math.round(W * 0.26);
   const logo = await sharp(svg, { density: 600 }).resize(icon, icon).png().toBuffer();
-  await sharp({ create: { width: W, height: H, channels: 3, background: '#000000' } })
+  await sharp({ create: { width: W, height: H, channels: 3, background: '#0b0b0b' } })
     .composite([{ input: logo, left: Math.round((W - icon) / 2), top: Math.round((H - icon) / 2 - H * 0.04) }])
     .png({ compressionLevel: 9 })
     .toFile(`public/splash/${W}x${H}.png`);

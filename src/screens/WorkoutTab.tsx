@@ -97,13 +97,13 @@ export function WorkoutTab() {
     <Page>
       <Header title="Workout" large />
       <div className="px-4 pb-6">
-        <div className="text-lg font-semibold">Quick Start</div>
-        <Button variant="secondary" className="mt-2 w-full" onClick={() => startWorkout()}>
-          <Plus size={20} /> Start Empty Workout
+        <div className="label">Quick Start</div>
+        <Button className="stripes mt-2 w-full !py-4 text-lg" onClick={() => startWorkout()}>
+          <Plus size={22} strokeWidth={3} /> Start Empty Workout
         </Button>
 
         <div className="mt-7 flex items-center justify-between">
-          <div className="text-lg font-semibold">Routines</div>
+          <div className="label">Routines</div>
           <button onClick={newFolder} className="press p-1 text-muted">
             <FolderPlus size={22} />
           </button>

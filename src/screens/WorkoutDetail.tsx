@@ -1,18 +1,26 @@
 import { format } from 'date-fns';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { motion } from 'framer-motion';
-import { ClipboardList, MoreHorizontal, Pencil, Trash2, Trophy } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { ClipboardList, Flame, MoreHorizontal, Pencil, Trash2, Trophy } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ExerciseThumb } from '../components/ExerciseImage';
 import { formatMetric } from '../components/ExerciseInfo';
 import { SET_TYPE_STYLE } from '../components/SetRow';
 import { WatchCard } from '../components/WatchCard';
 import { WorkoutEditor } from '../components/WorkoutEditor';
-import { Button, Header, Page, Portal, Sheet, SheetItem } from '../components/ui';
+import { RankBadge } from '../components/RankBadge';
+import { AchievementsUnlocked, Confetti, CountUp, RankChanges, RankUpOverlay, XpCard, type RankChange, type RankUp } from '../components/Rewards';
+import { Button, Header, Page, Sheet, SheetItem } from '../components/ui';
 import { db } from '../db/db';
 import { getExercise, typeOf } from '../lib/exercises';
+import { haptic } from '../lib/haptics';
+import { useAllWorkouts } from '../lib/hooks';
 import { uid } from '../lib/id';
+import { volumeComparison } from '../lib/progress';
+import { STANDARDS, tierIndex } from '../lib/ranks';
+import { fanfare } from '../lib/sound';
+import { computeRanks, useJourney, useRankCtx } from '../lib/useProgress';
 import { findPRs, PR_LABELS, workoutSetCount, workoutVolume, type PR } from '../lib/stats';
 import { fmtDurationLong, fmtSet, fmtVolume } from '../lib/units';
 import { confirmDialog, toast } from '../state/dialog';
@@ -34,11 +42,11 @@ function StatGrid({ w, prs }: { w: Workout; prs: number }) {
     ['Records', String(prs)],
   ];
   return (
-    <div className="grid grid-cols-4 gap-2 rounded-2xl bg-card p-4">
+    <div className="grid grid-cols-4 gap-2 rounded-2xl border border-line bg-card p-4">
       {items.map(([l, v]) => (
         <div key={l}>
-          <div className="text-xs text-muted">{l}</div>
-          <div className="font-semibold">{v}</div>
+          <div className="label !text-[10px]">{l}</div>
+          <div className="font-display text-lg font-semibold">{v}</div>
         </div>
       ))}
     </div>
@@ -120,7 +128,7 @@ export function WorkoutDetail() {
       />
       <div className="space-y-3 px-4 pb-10">
         <div>
-          <div className="text-2xl font-bold">{w.name}</div>
+          <div className="font-display text-3xl font-bold uppercase">{w.name}</div>
           <div className="text-sm text-muted">{format(w.start, 'EEEE, d MMMM yyyy · HH:mm')}</div>
         </div>
         <StatGrid w={w} prs={prs.length} />
@@ -228,38 +236,7 @@ export function WorkoutEdit() {
   );
 }
 
-function Confetti() {
-  const pieces = useMemo(
-    () =>
-      Array.from({ length: 70 }, (_, i) => ({
-        x: (Math.random() - 0.5) * window.innerWidth * 1.2,
-        y: window.innerHeight * (0.6 + Math.random() * 0.5),
-        r: Math.random() * 720 - 360,
-        peak: -140 - Math.random() * 120,
-        d: 1.6 + Math.random() * 1.4,
-        delay: Math.random() * 0.25,
-        c: ['#2f7cf6', '#22c55e', '#f5a524', '#ef4444', '#a855f7', '#ffffff'][i % 6],
-        w: 6 + Math.random() * 6,
-      })),
-    [],
-  );
-  return (
-    <Portal>
-      <div className="pointer-events-none fixed inset-0 z-[65] overflow-hidden">
-        {pieces.map((p, i) => (
-          <motion.div
-            key={i}
-            className="absolute left-1/2 top-[18%] rounded-sm"
-            style={{ width: p.w, height: p.w * 0.45, background: p.c }}
-            initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scale: 0.4 }}
-            animate={{ x: p.x, y: [0, p.peak, p.y], rotate: p.r, opacity: [1, 1, 0], scale: 1 }}
-            transition={{ duration: p.d, delay: p.delay, ease: 'easeOut' }}
-          />
-        ))}
-      </div>
-    </Portal>
-  );
-}
+const HYPE = ['Crushed it', 'Beast mode', 'Gains secured', 'No days off', 'Iron sharpens iron', 'Built different', 'Pure work'];
 
 export function Summary() {
   const { id } = useParams();
@@ -267,23 +244,131 @@ export function Summary() {
   const settings = useSettings();
   const w = useLiveQuery(() => db.workouts.get(id!), [id]);
   const prs = usePRs(w);
-  const count = useLiveQuery(() => db.workouts.count(), []);
+  const all = useAllWorkouts();
+  const journey = useJourney();
+  const ctx = useRankCtx();
+  const reward = w ? journey?.byWorkout.get(w.id) : undefined;
+  const [hype] = useState(() => HYPE[Math.floor(Math.random() * HYPE.length)]);
+
+  const ranks = useMemo(() => {
+    if (!w || !all || !ctx) return null;
+    const before = computeRanks(
+      all.filter((x) => x.start < w.start && x.id !== w.id),
+      ctx,
+    );
+    const after = computeRanks(
+      all.filter((x) => x.start <= w.start),
+      ctx,
+    );
+    const changes: RankChange[] = [];
+    for (const exId of new Set(w.exerciseIds)) {
+      const a = after.exercises.get(exId);
+      if (!a) continue;
+      const b = before.exercises.get(exId)?.score ?? null;
+      if (b == null || a.score > b) changes.push({ exerciseId: exId, from: b, to: a.score });
+    }
+    changes.sort((x, y) => y.to - x.to);
+    const ups: RankUp[] = [];
+    if (after.overall != null && (before.overall == null || tierIndex(after.overall) > tierIndex(before.overall)))
+      ups.push({ exerciseId: null, from: before.overall, to: after.overall });
+    for (const c of changes) if (c.from != null && tierIndex(c.to) > tierIndex(c.from)) ups.push(c);
+    return { changes, ups };
+  }, [w?.id, all, ctx]);
+
+  const [overlay, setOverlay] = useState<RankUp[] | null>(null);
+  const shown = useRef(false);
+  useEffect(() => {
+    if (!w || shown.current) return;
+    if (ctx === undefined || (ctx && !ranks)) return; // wait until ranks are known
+    shown.current = true;
+    haptic('success');
+    fanfare();
+    if (ranks?.ups.length) {
+      const t = setTimeout(() => setOverlay(ranks.ups), 1300);
+      return () => clearTimeout(t);
+    }
+  }, [w, ranks, ctx]);
+
   if (!w) return null;
+  const vol = workoutVolume(w, typeOf);
+  const comparison = volumeComparison(vol);
+  const tiles: [string, number, (v: number) => string][] = [
+    ['Duration', (w.end - w.start) / 1000, (v) => fmtDurationLong(Math.round(v / 60) * 60 || Math.round(v))],
+    ['Volume', vol, (v) => fmtVolume(v, settings)],
+    ['Sets', workoutSetCount(w), (v) => String(Math.round(v))],
+    ['Records', prs.length, (v) => String(Math.round(v))],
+  ];
+
   return (
     <Page className="pb-10">
       <Confetti />
+      {overlay && <RankUpOverlay items={overlay} onDone={() => setOverlay(null)} />}
       <div className="px-4 pt-safe">
-        <motion.div className="pt-10 text-center" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 16 }}>
-          <div className="text-6xl">🏆</div>
-          <div className="mt-3 text-3xl font-bold">Great workout!</div>
-          <div className="mt-1 text-muted">{count ? `This is your ${ordinal(count)} workout` : ''}</div>
-        </motion.div>
-        <motion.div className="mt-8 space-y-3" initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}>
-          <StatGrid w={w} prs={prs.length} />
+        <div className="relative pt-8 text-center">
+          <motion.div className="label !tracking-[0.35em]" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+            Workout #{reward?.number ?? ''} complete
+          </motion.div>
+          <motion.div
+            className="mt-1 font-display text-[52px] font-bold uppercase italic leading-none tracking-tight"
+            initial={{ scale: 2.4, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.1 }}
+          >
+            {hype}
+            <span className="text-accent">.</span>
+          </motion.div>
+          <motion.div className="mx-auto mt-3 h-1 w-24 bg-accent" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.35, duration: 0.4 }} />
+          {reward && reward.streak > 1 && (
+            <motion.div
+              className="mx-auto mt-4 flex w-fit items-center gap-1.5 rounded-full border border-orange-500/40 bg-orange-500/10 px-3 py-1 font-display text-sm font-semibold uppercase tracking-wider text-orange-400"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5, type: 'spring', stiffness: 400, damping: 15 }}
+            >
+              <Flame size={16} /> {reward.streak}-week streak
+            </motion.div>
+          )}
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-2">
+          {tiles.map(([label, value, fmt], i) => (
+            <motion.div
+              key={label}
+              className="rounded-2xl border border-line bg-card px-4 py-3"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 + i * 0.07 }}
+            >
+              <div className="label">{label}</div>
+              <div className={`font-display text-2xl font-bold ${label === 'Records' && prs.length ? 'text-warn' : ''}`}>
+                <CountUp value={value} fmt={fmt} delay={0.35 + i * 0.07} />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+        {comparison && (
+          <motion.div className="mt-2 rounded-2xl border border-line bg-card px-4 py-3 text-sm text-white/80" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
+            💪 You moved <b className="text-white">{fmtVolume(vol, settings)}</b> — that’s like lifting <b className="text-white">{comparison}</b>.
+          </motion.div>
+        )}
+
+        <motion.div className="mt-3 space-y-3" initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }}>
+          {reward && <XpCard reward={reward} />}
+          {reward && <AchievementsUnlocked list={reward.achievements} />}
+          {ranks && <RankChanges changes={ranks.changes} />}
+          {ctx === null && w.exerciseIds.some((x) => STANDARDS[x]) && (
+            <button onClick={() => nav('/ranks')} className="press flex w-full items-center gap-3 rounded-2xl border border-line bg-card p-4 text-left">
+              <RankBadge score={null} size={40} />
+              <div className="flex-1 text-sm">
+                <div className="font-display font-semibold uppercase">Unlock your ranks</div>
+                <div className="text-muted">Add your bodyweight to see how strong these lifts rank.</div>
+              </div>
+            </button>
+          )}
           {prs.length > 0 && (
-            <div className="rounded-2xl bg-card p-4">
-              <div className="mb-2 flex items-center gap-2 font-semibold">
-                <Trophy size={18} className="text-warn" /> New Personal Records
+            <div className="rounded-2xl border border-line bg-card p-4">
+              <div className="mb-2 flex items-center gap-2">
+                <Trophy size={18} className="text-warn" /> <span className="label !text-white">New Personal Records</span>
               </div>
               {prs.map((p, i) => {
                 const ex = getExercise(p.exerciseId);
@@ -293,7 +378,7 @@ export function Summary() {
                     className="flex items-center justify-between gap-3 py-1.5 text-sm"
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 + i * 0.08 }}
+                    transition={{ delay: 0.6 + i * 0.08 }}
                   >
                     <span className="min-w-0 truncate">
                       {ex.name} <span className="text-muted">· {PR_LABELS[p.kind]}</span>
@@ -313,10 +398,4 @@ export function Summary() {
       </div>
     </Page>
   );
-}
-
-function ordinal(n: number) {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }

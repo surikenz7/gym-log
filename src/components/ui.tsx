@@ -51,10 +51,15 @@ export function Header({
             left
           )}
         </div>
-        <div className={`flex-1 truncate text-center font-semibold ${large ? 'opacity-0' : ''}`}>{title}</div>
+        <div className={`flex-1 truncate text-center font-display text-[17px] font-semibold uppercase tracking-wider ${large ? 'opacity-0' : ''}`}>{title}</div>
         <div className="flex min-w-[64px] items-center justify-end gap-3">{right}</div>
       </div>
-      {large && <h1 className="px-4 pb-2 text-3xl font-bold">{title}</h1>}
+      {large && (
+        <h1 className="flex items-center gap-2.5 px-4 pb-2 font-display text-4xl font-bold uppercase tracking-tight">
+          <span className="h-7 w-1.5 -skew-x-12 bg-accent" />
+          {title}
+        </h1>
+      )}
     </div>
   );
 }
@@ -104,7 +109,7 @@ export function Sheet({
             >
               <div className="touch-none cursor-grab pb-1 pt-2.5" onPointerDown={(e) => controls.start(e)}>
                 <div className="mx-auto h-1.5 w-10 rounded-full bg-line" />
-                {title && <div className="px-4 pt-3 text-center text-lg font-semibold">{title}</div>}
+                {title && <div className="px-4 pt-3 text-center font-display text-lg font-semibold uppercase tracking-wider">{title}</div>}
               </div>
               <div className="scroll-area flex-1 pb-4">{children}</div>
             </motion.div>
@@ -227,8 +232,8 @@ export function Button({
   disabled?: boolean;
 }) {
   const v = {
-    primary: 'bg-accent text-white',
-    secondary: 'bg-card2 text-white',
+    primary: 'bg-accent font-display uppercase tracking-wider',
+    secondary: 'bg-card2 text-white font-display uppercase tracking-wider',
     danger: 'bg-danger/15 text-danger',
     ghost: 'text-accent',
   }[variant];
@@ -251,7 +256,7 @@ export function Empty({ icon, title, text, children }: { icon: ReactNode; title:
       animate={{ opacity: 1, scale: 1 }}
     >
       <div className="mb-4 text-muted">{icon}</div>
-      <div className="text-lg font-semibold">{title}</div>
+      <div className="font-display text-2xl font-bold uppercase">{title}</div>
       {text && <div className="mt-1 text-sm text-muted">{text}</div>}
       {children && <div className="mt-5">{children}</div>}
     </motion.div>

@@ -1,7 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import type { ExerciseType, WSet, Workout } from '../types';
+import { exerciseRanks, STANDARDS } from './ranks';
 import { exerciseBests, type Bests } from './stats';
+import { useRankCtx } from './useProgress';
 
 /** Sets from the most recent workout containing `exerciseId` (excluding `excludeId`). */
 export function usePreviousSets(exerciseId: string, excludeId?: string): WSet[] {
@@ -32,4 +34,15 @@ export function useHistoryBests(exerciseId: string, type: ExerciseType, excludeI
     const ws = await db.workouts.where('exerciseIds').equals(exerciseId).toArray();
     return exerciseBests(ws.filter((w) => w.id !== excludeId), exerciseId, type);
   }, [exerciseId, type, excludeId]);
+}
+
+/** Best rank score for an exercise from saved workouts (excluding the running one). */
+export function useHistoryRank(exerciseId: string, excludeId?: string) {
+  const ctx = useRankCtx();
+  const score = useLiveQuery(async () => {
+    if (!ctx || !STANDARDS[exerciseId]) return null;
+    const ws = await db.workouts.where('exerciseIds').equals(exerciseId).toArray();
+    return exerciseRanks(ws.filter((w) => w.id !== excludeId), ctx).get(exerciseId)?.score ?? null;
+  }, [exerciseId, excludeId, ctx]);
+  return { ctx, score };
 }

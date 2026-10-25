@@ -10,14 +10,16 @@ import { useSettings } from '../state/settings';
 import type { Workout } from '../types';
 import { ExerciseThumb } from './ExerciseImage';
 
-export function Avatar({ size = 40 }: { size?: number }) {
+/** Profile picture (or initial). `ring` draws a coloured border, e.g. the overall rank's metal. */
+export function Avatar({ size = 40, ring }: { size?: number; ring?: string }) {
   const name = useSettings((s) => s.name);
+  const photo = useSettings((s) => s.avatar);
   return (
     <div
-      className="flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-blue-800 font-bold"
-      style={{ width: size, height: size, fontSize: size * 0.4 }}
+      className="flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-accent to-black font-display font-bold"
+      style={{ width: size, height: size, fontSize: size * 0.42, boxShadow: ring ? `0 0 0 ${Math.max(2, size / 22)}px #090909, 0 0 0 ${Math.max(4, size / 11)}px ${ring}` : undefined }}
     >
-      {(name.trim()[0] ?? '🏋').toUpperCase()}
+      {photo ? <img src={photo} alt="" className="h-full w-full object-cover" draggable={false} /> : (name.trim()[0] ?? '🏋').toUpperCase()}
     </div>
   );
 }
@@ -32,7 +34,7 @@ export function WorkoutCard({ w, prs, index = 0 }: { w: Workout; prs: number; in
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index, 6) * 0.04 }}
       onClick={() => nav(`/history/${w.id}`)}
-      className="press block w-full rounded-2xl bg-card p-4 text-left"
+      className="press block w-full rounded-2xl border border-line bg-card p-4 text-left"
     >
       <div className="flex items-center gap-3">
         <Avatar size={38} />
@@ -41,7 +43,7 @@ export function WorkoutCard({ w, prs, index = 0 }: { w: Workout; prs: number; in
           <div className="text-xs text-muted">{format(w.start, isThisYear(w.start) ? 'EEEE, d MMM · HH:mm' : 'd MMM yyyy · HH:mm')}</div>
         </div>
       </div>
-      <div className="mt-3 text-lg font-semibold">{w.name}</div>
+      <div className="mt-3 font-display text-xl font-bold uppercase leading-tight">{w.name}</div>
       <div className="mt-2 flex gap-6 text-sm">
         <div>
           <div className="text-xs text-muted">Time</div>

@@ -13,10 +13,12 @@ import { HevyImport } from './screens/HevyImport';
 import { Home } from './screens/Home';
 import { Measures } from './screens/Measures';
 import { Profile } from './screens/Profile';
+import { Ranks } from './screens/Ranks';
 import { RoutineEditor } from './screens/RoutineEditor';
 import { Settings } from './screens/Settings';
 import { Statistics } from './screens/Statistics';
 import { WatchSetup } from './screens/WatchSetup';
+import { Trophies } from './screens/Trophies';
 import { Summary, WorkoutDetail, WorkoutEdit } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
 
@@ -32,13 +34,14 @@ function TabBar() {
     <nav className="border-t border-line bg-bg/90 pb-safe backdrop-blur-xl">
       <div className="flex">
         {TABS.map(({ to, label, icon: Icon }) => (
-          <NavLink key={to} to={to} end={to === '/'} replace onClick={() => haptic()} className="flex flex-1 flex-col items-center gap-0.5 pb-1 pt-2">
+          <NavLink key={to} to={to} end={to === '/'} replace onClick={() => haptic()} className="relative flex flex-1 flex-col items-center gap-0.5 pb-1 pt-2">
             {({ isActive }) => (
               <>
+                {isActive && <motion.div layoutId="tab-bar" className="absolute inset-x-6 top-0 h-[3px] bg-accent" transition={{ type: 'spring', stiffness: 500, damping: 35 }} />}
                 <motion.div animate={{ scale: isActive ? 1.1 : 1, y: isActive ? -1 : 0 }} transition={{ type: 'spring', stiffness: 500, damping: 25 }}>
-                  <Icon size={25} className={isActive ? 'text-accent' : 'text-muted'} strokeWidth={isActive ? 2.4 : 2} />
+                  <Icon size={24} className={isActive ? 'text-accent' : 'text-muted'} strokeWidth={isActive ? 2.6 : 2} />
                 </motion.div>
-                <span className={`text-[10px] font-medium ${isActive ? 'text-accent' : 'text-muted'}`}>{label}</span>
+                <span className={`font-display text-[10px] font-semibold uppercase tracking-[0.12em] ${isActive ? 'text-white' : 'text-muted'}`}>{label}</span>
               </>
             )}
           </NavLink>
@@ -126,6 +129,8 @@ export default function App() {
           <Route path="/statistics" element={<Statistics />} />
           <Route path="/measures" element={<Measures />} />
           <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/ranks" element={<Ranks />} />
+          <Route path="/trophies" element={<Trophies />} />
           <Route path="/watch-setup" element={<WatchSetup />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/import/hevy" element={<HevyImport />} />

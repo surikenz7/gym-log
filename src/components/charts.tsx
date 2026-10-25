@@ -1,11 +1,13 @@
 import { format } from 'date-fns';
+import { useSettings } from '../state/settings';
+import { accentHex } from '../lib/theme';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 // Single-series charts: one accent hue, 2px line, ringed 8px dots, ~10% area wash, hairline solid grid.
-const ACCENT = '#2f7cf6';
-const SURFACE = '#16171a';
-const GRID = '#2a2c31';
-const MUTED = '#8b8f98';
+const SURFACE = '#151515';
+const GRID = '#2d2d2d';
+const MUTED = '#8e8e8e';
+const useAccent = () => accentHex(useSettings((s) => s.theme));
 
 export function compact(n: number) {
   if (Math.abs(n) >= 1e6) return `${+(n / 1e6).toFixed(1)}M`;
@@ -31,12 +33,13 @@ export function ProgressChart({
   fmt: (v: number) => string;
   height?: number;
 }) {
+  const ACCENT = useAccent();
   if (data.length === 0) return <div className="flex items-center justify-center text-sm text-muted" style={{ height }}>No data yet</div>;
   const last = data[data.length - 1];
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between px-1">
-        <div className="text-2xl font-semibold">{fmt(last.value)}</div>
+        <div className="font-display text-2xl font-bold">{fmt(last.value)}</div>
         <div className="text-xs text-muted">{format(last.date, 'd MMM yyyy')}</div>
       </div>
       <ResponsiveContainer width="100%" height={height}>
@@ -104,9 +107,10 @@ export function BarsChart({
   fmt: (v: number) => string;
   height?: number;
 }) {
+  const ACCENT = useAccent();
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -18 }} barCategoryGap={2}>
+      <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -8 }} barCategoryGap={2}>
         <CartesianGrid vertical={false} stroke={GRID} strokeWidth={1} />
         <XAxis dataKey="label" tick={{ fill: MUTED, fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={16} />
         <YAxis tickFormatter={compact} tick={{ fill: MUTED, fontSize: 11 }} axisLine={false} tickLine={false} width={40} allowDecimals={false} />

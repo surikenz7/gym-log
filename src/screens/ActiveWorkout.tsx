@@ -81,13 +81,13 @@ function RestBar() {
           <div className="flex items-center gap-3 rounded-2xl bg-card2/95 p-3 shadow-2xl ring-1 ring-line backdrop-blur-xl">
             <div className="relative h-14 w-14">
               <svg viewBox="0 0 56 56" className="h-14 w-14 -rotate-90">
-                <circle cx="28" cy="28" r={R} fill="none" stroke="#2f7cf633" strokeWidth="5" />
+                <circle cx="28" cy="28" r={R} fill="none" className="stroke-accent/20" strokeWidth="5" />
                 <circle
                   cx="28"
                   cy="28"
                   r={R}
                   fill="none"
-                  stroke="#2f7cf6"
+                  className="stroke-accent"
                   strokeWidth="5"
                   strokeLinecap="round"
                   strokeDasharray={C}
@@ -99,7 +99,7 @@ function RestBar() {
             </div>
             <div className="flex-1">
               <div className="text-xs text-muted">Rest</div>
-              <div className="text-2xl font-bold tabular-nums">{fmtDuration(Math.ceil(left))}</div>
+              <div className="font-display text-3xl font-bold tabular-nums">{fmtDuration(Math.ceil(left))}</div>
             </div>
             <button onClick={() => adjustRest(-15)} className="press rounded-lg bg-card px-3 py-2 text-sm font-semibold">
               -15
@@ -145,7 +145,7 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
             <button onClick={onBack} className="text-accent">
               <ChevronLeft size={26} />
             </button>
-            <div className="flex-1 text-center font-semibold">Save Workout</div>
+            <div className="flex-1 text-center font-display text-[17px] font-semibold uppercase tracking-wider">Save Workout</div>
             <button onClick={save} className="press rounded-lg bg-accent px-4 py-1.5 text-sm font-semibold">
               Save
             </button>
@@ -179,8 +179,8 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xs text-muted">{label}</div>
-      <div className="font-semibold tabular-nums">{value}</div>
+      <div className="label !text-[10px]">{label}</div>
+      <div className="font-display text-xl font-semibold tabular-nums">{value}</div>
     </div>
   );
 }
@@ -239,9 +239,9 @@ export function ActiveWorkout() {
                 <button onClick={() => setOpen(false)} className="press w-20 text-muted">
                   <ChevronDown size={28} />
                 </button>
-                <div className="flex-1 text-center font-semibold">Log Workout</div>
+                <div className="flex-1 text-center font-display text-[17px] font-semibold uppercase tracking-wider">Log Workout</div>
                 <div className="flex w-20 justify-end">
-                  <button onClick={onFinish} className="press rounded-lg bg-accent px-4 py-1.5 text-sm font-semibold">
+                  <button onClick={onFinish} className="press rounded-lg bg-accent px-4 py-1.5 font-display text-sm font-bold uppercase tracking-wider">
                     Finish
                   </button>
                 </div>

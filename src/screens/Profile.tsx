@@ -1,16 +1,63 @@
 import { format, startOfWeek, subWeeks } from 'date-fns';
 import { motion } from 'framer-motion';
-import { BarChart3, CalendarDays, Dumbbell, Ruler, Settings as SettingsIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { BarChart3, CalendarDays, Camera, ChevronRight, Dumbbell, Flame, Medal, Ruler, Settings as SettingsIcon, Shield, Trash2 } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarsChart, compact } from '../components/charts';
+import { RankBadge, TierBar, TierName } from '../components/RankBadge';
 import { Avatar, WorkoutList } from '../components/WorkoutFeed';
-import { Header, Page } from '../components/ui';
+import { Header, Page, Sheet, SheetItem } from '../components/ui';
+import { fileToAvatar } from '../lib/avatar';
 import { typeOf } from '../lib/exercises';
 import { useAllWorkouts } from '../lib/hooks';
+import { ACHIEVEMENTS, levelFromXp, levelTitle } from '../lib/progress';
+import { GROUPS, tierOf } from '../lib/ranks';
 import { workoutVolume } from '../lib/stats';
 import { fmtDurationLong, kgTo } from '../lib/units';
+import { useJourney, useRanks } from '../lib/useProgress';
+import { toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
+
+/** Tap-to-change profile picture: choose from Photos / camera, or remove. */
+export function AvatarPicker({ size, ring }: { size: number; ring?: string }) {
+  const photo = useSettings((s) => s.avatar);
+  const update = useSettings((s) => s.update);
+  const input = useRef<HTMLInputElement>(null);
+  const [menu, setMenu] = useState(false);
+  const pick = async (f: File | undefined) => {
+    if (!f) return;
+    try {
+      update({ avatar: await fileToAvatar(f) });
+      toast('Profile picture updated');
+    } catch {
+      toast('Couldn’t read that image');
+    }
+  };
+  return (
+    <>
+      <button onClick={() => (photo ? setMenu(true) : input.current?.click())} className="press relative shrink-0">
+        <Avatar size={size} ring={ring} />
+        <span className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-bg bg-accent">
+          <Camera size={14} />
+        </span>
+      </button>
+      <input
+        ref={input}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          void pick(e.target.files?.[0]);
+          e.target.value = '';
+        }}
+      />
+      <Sheet open={menu} onClose={() => setMenu(false)} title="Profile picture">
+        <SheetItem icon={<Camera size={20} />} label="Choose new photo" onClick={() => (setMenu(false), input.current?.click())} />
+        <SheetItem danger icon={<Trash2 size={20} />} label="Remove photo" onClick={() => (setMenu(false), update({ avatar: null }))} />
+      </Sheet>
+    </>
+  );
+}
 
 type WeekMetric = 'duration' | 'volume' | 'reps';
 
@@ -19,6 +66,10 @@ export function Profile() {
   const settings = useSettings();
   const workouts = useAllWorkouts() ?? [];
   const [metric, setMetric] = useState<WeekMetric>('duration');
+  const journey = useJourney();
+  const { ctx, data: ranks } = useRanks();
+  const lvl = levelFromXp(journey?.xp ?? 0);
+  const overall = ranks?.overall ?? null;
 
   const weeks = useMemo(() => {
     const first = startOfWeek(subWeeks(new Date(), 11), { weekStartsOn: 1 }).getTime();
@@ -53,7 +104,10 @@ export function Profile() {
     { label: 'Exercises', icon: Dumbbell, to: '/exercises' },
     { label: 'Measures', icon: Ruler, to: '/measures' },
     { label: 'Calendar', icon: CalendarDays, to: '/calendar' },
+    { label: 'Ranks', icon: Shield, to: '/ranks' },
+    { label: 'Trophies', icon: Medal, to: '/trophies' },
   ];
+  const trophies = journey ? journey.unlocked.size : 0;
 
   return (
     <Page>
@@ -66,18 +120,78 @@ export function Profile() {
         }
       />
       <div className="px-4 pb-10">
-        <button onClick={() => nav('/settings')} className="flex w-full items-center gap-4 py-2 text-left">
-          <Avatar size={64} />
-          <div>
-            <div className="text-lg font-semibold">{settings.name || 'Set your name'}</div>
-            <div className="mt-0.5 text-sm text-muted">
-              <span className="font-semibold text-white">{workouts.length}</span> workouts
+        <div className="flex items-center gap-4 pt-2">
+          <AvatarPicker size={88} ring={overall != null ? tierOf(overall).c[1] : undefined} />
+          <div className="min-w-0 flex-1">
+            <button onClick={() => nav('/settings')} className="block max-w-full truncate font-display text-3xl font-bold leading-tight">
+              {settings.name || 'Set your name'}
+            </button>
+            <div className="mt-0.5 flex items-center gap-2">
+              <span className="rounded bg-accent px-1.5 py-0.5 font-display text-xs font-bold tracking-wider">LVL {lvl.level}</span>
+              <span className="font-display text-sm uppercase tracking-wider text-white/70">{levelTitle(lvl.level)}</span>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <motion.div className="h-full bg-accent" initial={{ width: 0 }} animate={{ width: `${(lvl.into / lvl.need) * 100}%` }} transition={{ duration: 0.9, ease: 'easeOut' }} />
+            </div>
+            <div className="tabular mt-1 text-[11px] text-muted">
+              {lvl.into.toLocaleString('en-US')} / {lvl.need.toLocaleString('en-US')} XP to level {lvl.level + 1}
             </div>
           </div>
-        </button>
+        </div>
 
-        <div className="mt-4 rounded-2xl bg-card p-4">
-          <div className="font-semibold">{headline}</div>
+        <div className="mt-4 grid grid-cols-3 divide-x divide-line rounded-2xl border border-line bg-card py-3 text-center">
+          <div>
+            <div className="font-display text-2xl font-bold">{workouts.length}</div>
+            <div className="label !text-[10px]">Workouts</div>
+          </div>
+          <div>
+            <div className="flex items-center justify-center gap-1 font-display text-2xl font-bold">
+              <Flame size={20} className={journey?.totals.streak ? 'text-orange-500' : 'text-muted'} />
+              {journey?.totals.streak ?? 0}
+            </div>
+            <div className="label !text-[10px]">Week streak</div>
+          </div>
+          <button onClick={() => nav('/trophies')}>
+            <div className="font-display text-2xl font-bold">
+              {trophies}
+              <span className="text-sm text-muted">/{ACHIEVEMENTS.length}</span>
+            </div>
+            <div className="label !text-[10px]">Trophies</div>
+          </button>
+        </div>
+
+        <motion.button
+          onClick={() => nav('/ranks')}
+          className="press relative mt-3 flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-line bg-card p-4 text-left"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {overall != null && <div className="absolute inset-0 opacity-20" style={{ background: `radial-gradient(circle at 15% 50%, ${tierOf(overall).c[1]}, transparent 60%)` }} />}
+          <RankBadge score={ctx === null ? null : overall} size={68} />
+          <div className="relative min-w-0 flex-1">
+            <div className="label">Overall rank</div>
+            {ctx === null ? (
+              <div className="text-sm text-white/80">Set your bodyweight to unlock strength ranks</div>
+            ) : (
+              <>
+                <TierName score={overall} className="text-3xl leading-none" />
+                {overall != null && <TierBar score={overall} className="mt-2" />}
+                <div className="mt-2 flex gap-1.5">
+                  {ranks?.groups.map((g) => (
+                    <div key={g.group} className="flex flex-col items-center">
+                      <RankBadge score={g.score || null} size={24} shine={false} />
+                      <span className="text-[8px] uppercase text-muted">{GROUPS.find((x) => x.id === g.group)!.label.slice(0, 5)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          <ChevronRight size={18} className="relative text-muted" />
+        </motion.button>
+
+        <div className="mt-3 rounded-2xl border border-line bg-card p-4">
+          <div className="font-display text-lg font-semibold">{headline}</div>
           <div className="mb-3 text-xs text-muted">Last 12 weeks</div>
           <BarsChart key={metric} data={weeks} fmt={fmtMetric} height={170} />
           <div className="mt-3 grid grid-cols-3 gap-1.5">
@@ -93,13 +207,13 @@ export function Profile() {
           </div>
         </div>
 
-        <div className="mt-5 text-sm font-semibold text-muted">Dashboard</div>
+        <div className="label mt-6">Dashboard</div>
         <div className="mt-2 grid grid-cols-2 gap-2">
           {dashboard.map(({ label, icon: Icon, to }, i) => (
             <motion.button
               key={label}
               onClick={() => nav(to)}
-              className="press flex items-center gap-3 rounded-xl bg-card px-4 py-3.5 font-semibold"
+              className="press flex items-center gap-3 rounded-xl border border-line bg-card px-4 py-3.5 font-display font-semibold uppercase tracking-wide"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.04 }}
@@ -109,7 +223,7 @@ export function Profile() {
           ))}
         </div>
 
-        <div className="mb-2 mt-6 text-sm font-semibold text-muted">Workouts</div>
+        <div className="label mb-2 mt-6">Workouts</div>
         {workouts.length === 0 ? (
           <div className="rounded-2xl bg-card p-6 text-center text-sm text-muted">No workouts yet</div>
         ) : (

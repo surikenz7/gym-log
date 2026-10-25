@@ -36,3 +36,27 @@ export function beepTick() {
   if (!ctx) return;
   tone(660, ctx.currentTime, 0.08);
 }
+
+function chord(freq: number, at: number, len: number, type: OscillatorType = 'triangle', vol = 0.25) {
+  if (!ctx) return;
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.type = type;
+  o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(vol, at + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+  o.connect(g).connect(ctx.destination);
+  o.start(at);
+  o.stop(at + len + 0.05);
+}
+
+/** Short rising arpeggio for finishing a workout / a new record. */
+export function fanfare(big = false) {
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  const notes = big ? [392, 523.25, 659.25, 783.99, 1046.5] : [523.25, 659.25, 783.99];
+  notes.forEach((f, i) => chord(f, t + i * 0.09, 0.35));
+  const end = t + notes.length * 0.09;
+  for (const f of big ? [523.25, 659.25, 783.99, 1046.5] : [783.99, 1046.5]) chord(f, end, big ? 1.1 : 0.6, 'sawtooth', 0.06);
+}
