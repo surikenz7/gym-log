@@ -2,8 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { motion } from 'framer-motion';
 import { ClipboardList, Dumbbell, Home as HomeIcon, Play, Plus, Shield, User } from 'lucide-react';
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { tabNav } from '../lib/tabNav';
+import { NavLink } from 'react-router-dom';
 import { db } from '../db/db';
 import { getExercise } from '../lib/exercises';
 import { haptic } from '../lib/haptics';
@@ -19,17 +18,12 @@ export const DOCK_TABS = [
 ];
 
 function Tab({ to, label, icon: Icon }: (typeof DOCK_TABS)[number]) {
-  const here = DOCK_TABS.findIndex((t) => t.to === useLocation().pathname);
-  const there = DOCK_TABS.findIndex((t) => t.to === to);
   return (
     <NavLink
       to={to}
       end={to === '/'}
       replace
-      onClick={() => {
-        haptic();
-        tabNav.dir = Math.sign(there - here);
-      }}
+      onClick={() => haptic()}
       className="relative flex h-full flex-1 flex-col items-center justify-center gap-[3px]"
     >
       {({ isActive }) => (

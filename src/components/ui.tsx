@@ -3,7 +3,6 @@ import { ChevronLeft } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { tabNav } from '../lib/tabNav';
 import { useDialog, useToast } from '../state/dialog';
 
 export const spring = { type: 'spring', damping: 32, stiffness: 380 } as const;
@@ -14,16 +13,10 @@ export function Portal({ children }: { children: ReactNode }) {
 
 /** Scrollable page with a fade/slide-in. `pushed` pages slide in from the right. */
 export function Page({ children, pushed, className = '' }: { children: ReactNode; pushed?: boolean; className?: string }) {
-  // tab pages reached by swiping / tapping the dock slide in from the side they came from
-  const [dir] = useState(() => {
-    const d = tabNav.dir;
-    tabNav.dir = 0;
-    return d;
-  });
   return (
     <motion.div
       className={`scroll-area h-full ${className}`}
-      initial={{ opacity: dir ? 0.3 : 0, x: pushed ? 40 : dir * 110, y: pushed || dir ? 0 : 8 }}
+      initial={{ opacity: 0, x: pushed ? 40 : 0, y: pushed ? 0 : 8 }}
       animate={{ opacity: 1, x: 0, y: 0 }}
       transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
     >
