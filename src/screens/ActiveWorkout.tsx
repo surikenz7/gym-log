@@ -297,7 +297,7 @@ export function MiniWorkoutBar() {
       {active && !open && (
         <motion.button
           onClick={() => setOpen(true)}
-          className="mx-3 mb-2 flex w-[calc(100%-1.5rem)] items-center gap-3 cut bg-card2 px-4 py-3 text-left shadow-xl ring-1 ring-line"
+          className="glass relative mx-4 mb-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-[26px] py-2.5 pl-4 pr-2.5 text-left"
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
@@ -314,7 +314,7 @@ export function MiniWorkoutBar() {
               {rest && rest.endAt > now && ` · Rest ${fmtDuration(Math.ceil((rest.endAt - now) / 1000))}`}
             </div>
           </div>
-          <span className="cut-sm grad px-3 py-1.5 font-display text-sm font-bold uppercase tracking-wider">Resume</span>
+          <span className="grad rounded-full px-4 py-2 text-sm font-bold">Resume</span>
         </motion.button>
       )}
     </AnimatePresence>

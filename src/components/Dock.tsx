@@ -29,12 +29,14 @@ function Tab({ to, label, icon: Icon }: (typeof DOCK_TABS)[number]) {
       onClick={() => {
         haptic();
         tabNav.dir = Math.sign(there - here);
-      }} className="relative flex flex-1 flex-col items-center gap-0.5 py-2.5">
+      }}
+      className="relative flex h-full flex-1 flex-col items-center justify-center gap-[3px]"
+    >
       {({ isActive }) => (
         <>
-          {isActive && <motion.div layoutId="dock-active" className="cut-sm absolute inset-x-1 inset-y-1 bg-accent/15" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
-          <Icon size={22} className={`relative ${isActive ? 'text-accent' : 'text-muted'}`} strokeWidth={isActive ? 2.6 : 2} />
-          <span className={`relative font-display text-[9px] font-semibold uppercase tracking-[0.14em] ${isActive ? 'text-white' : 'text-muted'}`}>{label}</span>
+          {isActive && <motion.div layoutId="dock-active" className="glass-lens absolute inset-y-[5px] inset-x-0 rounded-full" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
+          <Icon size={23} className={`relative ${isActive ? 'text-accent' : 'text-white/75'}`} strokeWidth={isActive ? 2.4 : 2} />
+          <span className={`relative text-[10px] font-semibold leading-none tracking-[0.01em] ${isActive ? 'text-accent' : 'text-white/75'}`}>{label}</span>
         </>
       )}
     </NavLink>
@@ -84,22 +86,21 @@ export function Dock() {
     else setSheet(true);
   };
   return (
-    // Sits on the bottom edge like a native tab bar: the background runs under the home indicator,
-    // the buttons stay just above it.
-    <div>
-      <nav className="relative flex items-stretch px-1" style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom) - 14px), 4px)' }}>
-        <div className="cut-top absolute inset-0 bg-card2/95 backdrop-blur-xl" style={{ boxShadow: 'inset 0 1px 0 rgb(255 255 255 / 0.07)' }} />
+    // iOS 26-style floating Liquid Glass capsule: full width with the same 16pt gap to the
+    // sides and to the bottom edge (tuned on iPhone 15 Pro: 393×852pt, 55pt display corners).
+    <div className="px-4 pb-4">
+      <nav className="glass relative flex h-[64px] items-center rounded-full px-[5px]">
         <Tab {...DOCK_TABS[0]} />
         <Tab {...DOCK_TABS[1]} />
-        <div className="relative flex w-20 shrink-0 items-center justify-center">
+        <div className="relative flex w-[66px] shrink-0 items-center justify-center">
           <motion.button
             onClick={center}
-            whileTap={{ scale: 0.9, rotate: -8 }}
-            className="hex grad relative -mt-6 flex h-[62px] w-[58px] items-center justify-center shadow-[0_8px_30px_rgb(var(--accent)/0.45)]"
+            whileTap={{ scale: 0.88 }}
+            className="grad relative flex h-[52px] w-[52px] items-center justify-center rounded-full shadow-[0_6px_20px_rgb(var(--accent)/0.5),inset_0_1px_1px_rgb(255_255_255/0.45)]"
             aria-label={active ? 'Resume workout' : 'Start workout'}
           >
-            {active && <span className="hex absolute inset-0 animate-ping bg-accent opacity-30" />}
-            <Dumbbell size={26} strokeWidth={2.6} className="relative -rotate-45" />
+            {active && <span className="absolute inset-0 animate-ping rounded-full bg-accent opacity-30" />}
+            <Dumbbell size={25} strokeWidth={2.6} className="relative -rotate-45" />
           </motion.button>
         </div>
         <Tab {...DOCK_TABS[2]} />

@@ -9,6 +9,7 @@ import { DialogHost, Portal, spring, ToastHost } from './components/ui';
 import { Dock, DOCK_TABS } from './components/Dock';
 import { RankSync } from './lib/useProgress';
 import { ActiveWorkout, MiniWorkoutBar, RestWatcher } from './screens/ActiveWorkout';
+import { useWorkout } from './state/workout';
 import { CalendarPage } from './screens/CalendarPage';
 import { ExercisePage, Exercises } from './screens/Exercises';
 import { Explore } from './screens/Explore';
@@ -150,8 +151,9 @@ export default function App() {
   const tabIndex = DOCK_TABS.findIndex((t) => t.to === location.pathname);
   const isTabRoot = tabIndex >= 0;
   const swipe = useTabSwipe(tabIndex);
+  const miniBar = useWorkout((s) => !!s.active && !s.open);
   return (
-    <div className="flex h-full flex-col">
+    <div className={`relative flex h-full flex-col ${isTabRoot ? 'has-dock' : ''} ${miniBar ? 'has-mini' : ''}`}>
       <RotateLock />
       <main className="relative min-h-0 flex-1" {...swipe}>
         <Routes location={location} key={location.pathname}>
@@ -176,10 +178,13 @@ export default function App() {
           <Route path="*" element={<Home />} />
         </Routes>
       </main>
-      <div className="relative">
-        {isTabRoot && <InstallHint />}
-        <MiniWorkoutBar />
-        {isTabRoot && <Dock />}
+      {/* floats over the page so content scrolls behind the glass */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20">
+        <div className="pointer-events-auto">
+          {isTabRoot && <InstallHint />}
+          <MiniWorkoutBar />
+          {isTabRoot && <Dock />}
+        </div>
       </div>
       <ActiveWorkout />
       <RestWatcher />
