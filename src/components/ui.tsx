@@ -3,6 +3,7 @@ import { ChevronLeft } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { useRotated } from '../lib/orientation';
 import { useDialog, useToast } from '../state/dialog';
 
 export const spring = { type: 'spring', damping: 32, stiffness: 380 } as const;
@@ -78,6 +79,7 @@ export function Sheet({
   tall?: boolean;
 }) {
   const controls = useDragControls();
+  const rotated = useRotated();
   return (
     <Portal>
       <AnimatePresence>
@@ -93,12 +95,12 @@ export function Sheet({
             />
             <motion.div
               key="sheet"
-              className={`fixed inset-x-0 bottom-0 z-[51] flex flex-col rounded-t-3xl bg-card pb-safe shadow-2xl ${tall ? 'h-[88dvh]' : 'max-h-[88dvh]'}`}
+              className={`fixed inset-x-0 bottom-0 z-[51] flex flex-col rounded-t-3xl bg-card pb-safe shadow-2xl ${tall ? 'h-[88%]' : 'max-h-[88%]'}`}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={spring}
-              drag="y"
+              drag={rotated ? false : 'y'}
               dragControls={controls}
               dragListener={false}
               dragConstraints={{ top: 0, bottom: 0 }}

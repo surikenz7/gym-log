@@ -5,6 +5,7 @@ import { distTo, FIELDS, fmtNum, fmtSet, isShortDistance, kgTo, toKg, toMeters, 
 import type { PRKind } from '../lib/stats';
 import type { ExerciseType, Settings, WSet } from '../types';
 import { DurationInput, NumInput } from './inputs';
+import { useRotated } from '../lib/orientation';
 
 export type EditorMode = 'active' | 'routine' | 'edit';
 
@@ -44,6 +45,8 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
   ref,
 ) {
   const shakeCtl = useAnimationControls();
+  // swipe-to-delete measures screen-space movement, so it's off while the page is counter-rotated
+  const rotated = useRotated();
   useImperativeHandle(ref, () => ({
     shake: () => void shakeCtl.start({ x: [0, -10, 10, -6, 6, 0], transition: { duration: 0.35 } }),
   }));
@@ -99,7 +102,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
     >
       <div className="absolute inset-y-0 right-0 flex w-full items-center justify-end bg-danger pr-5 text-sm font-semibold">Delete</div>
       <motion.div
-        drag="x"
+        drag={rotated ? false : 'x'}
         dragDirectionLock
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={{ left: 0.6, right: 0 }}

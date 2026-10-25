@@ -125,7 +125,7 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
 
   return (
     <div className="pb-8">
-      <div className="sticky top-0 z-10 flex bg-card/95 backdrop-blur" style={inSheet ? undefined : { top: 'calc(env(safe-area-inset-top) + 3rem)', background: 'rgb(var(--bg) / 0.9)' }}>
+      <div className="sticky top-0 z-10 flex bg-card/95 backdrop-blur" style={inSheet ? undefined : { top: 'calc(var(--sat) + 3rem)', background: 'rgb(var(--bg) / 0.9)' }}>
         {(['summary', 'history', 'howto'] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} className={`relative flex-1 py-3 text-sm font-semibold ${tab === t ? 'text-white' : 'text-muted'}`}>
             {t === 'summary' ? 'Summary' : t === 'history' ? 'History' : 'How to'}

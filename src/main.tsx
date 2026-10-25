@@ -8,6 +8,7 @@ import type { ThemeId } from './types';
 import { loadActiveWorkout } from './state/workout';
 import { useLibrary } from './lib/exercises';
 import { unlockAudio } from './lib/sound';
+import { startOrientationLock } from './lib/orientation';
 import '@fontsource/oswald/latin-500.css';
 import '@fontsource/oswald/latin-600.css';
 import '@fontsource/oswald/latin-700.css';
@@ -19,6 +20,7 @@ import '@fontsource/fredoka/latin-600.css';
 import './index.css';
 
 document.addEventListener('pointerdown', unlockAudio, { capture: true });
+startOrientationLock();
 
 void navigator.storage?.persist?.();
 

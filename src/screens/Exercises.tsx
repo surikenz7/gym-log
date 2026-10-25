@@ -30,7 +30,7 @@ export function Exercises() {
           </button>
         }
       />
-      <div className="sticky z-10 bg-bg pt-1" style={{ top: 'calc(env(safe-area-inset-top) + 3rem)' }}>
+      <div className="sticky z-10 bg-bg pt-1" style={{ top: 'calc(var(--sat) + 3rem)' }}>
         <FilterBar {...{ query, setQuery, muscle, setMuscle, equipment, setEquipment }} />
       </div>
       <div className="pb-8">

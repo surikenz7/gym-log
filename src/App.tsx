@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Share, Smartphone } from 'lucide-react';
+import { Share } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { TabPager } from './components/TabPager';
@@ -37,7 +37,7 @@ function UpdatePrompt() {
           <motion.button
             onClick={() => updateServiceWorker(true)}
             className="fixed inset-x-4 top-0 z-[70] mt-3 cut grad px-4 py-3 text-center text-sm font-semibold shadow-xl"
-            style={{ marginTop: 'calc(env(safe-area-inset-top) + 12px)' }}
+            style={{ marginTop: 'calc(var(--sat) + 12px)' }}
             initial={{ y: -80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -80, opacity: 0 }}
@@ -85,18 +85,6 @@ function InstallHint() {
   );
 }
 
-/** Shown instead of the app when the phone is turned sideways (iOS doesn't let web apps lock rotation). */
-function RotateLock() {
-  return (
-    <div className="rotate-lock fixed inset-0 z-[95] flex-col items-center justify-center gap-4 bg-bg text-center">
-      <motion.div animate={{ rotate: [-90, -90, 0, 0] }} transition={{ duration: 2.2, times: [0, 0.3, 0.6, 1], repeat: Infinity }}>
-        <Smartphone size={56} className="text-accent" />
-      </motion.div>
-      <div className="font-display text-2xl font-bold uppercase">Turn your phone upright</div>
-    </div>
-  );
-}
-
 export default function App() {
   const location = useLocation();
   const tabIndex = DOCK_TABS.findIndex((t) => t.to === location.pathname);
@@ -107,7 +95,6 @@ export default function App() {
   const miniBar = useWorkout((s) => !!s.active && !s.open);
   return (
     <div className={`relative flex h-full flex-col ${isTabRoot ? 'has-dock' : ''} ${miniBar ? 'has-mini' : ''}`}>
-      <RotateLock />
       <main className="relative min-h-0 flex-1">
         <TabPager index={lastTab.current} pages={[<Home key="home" />, <WorkoutTab key="workout" />, <Ranks key="ranks" />, <Profile key="profile" />]} />
         {!isTabRoot && (

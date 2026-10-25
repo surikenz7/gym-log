@@ -76,7 +76,7 @@ function RestBar() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 120, opacity: 0 }}
           transition={spring}
-          style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
+          style={{ marginBottom: 'var(--sab)' }}
         >
           <div className="flex items-center gap-3 cut bg-card2/95 p-3 shadow-2xl ring-1 ring-line backdrop-blur-xl">
             <div className="relative h-14 w-14">

@@ -1,7 +1,8 @@
-import { animate, motion, useMotionValue, type AnimationPlaybackControls } from 'framer-motion';
+import { animate, motion, useMotionValue, useTransform, type AnimationPlaybackControls } from 'framer-motion';
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { haptic } from '../lib/haptics';
+import { toPage } from '../lib/orientation';
 import { DOCK_TABS } from './Dock';
 
 /** A soft, slightly floaty spring — it carries the speed of the flick into the glide. */
@@ -16,29 +17,33 @@ const IGNORE = 'input, textarea, select, .overflow-x-auto, .recharts-wrapper, [d
 export function TabPager({ index, pages }: { index: number; pages: ReactNode[] }) {
   const nav = useNavigate();
   const wrap = useRef<HTMLDivElement>(null);
-  const x = useMotionValue(0);
-  const width = useRef(typeof window === 'undefined' ? 390 : window.innerWidth);
+  // position measured in pages (not pixels), so rotating or resizing can never misalign the strip
+  const pos = useMotionValue(index);
+  const transform = useTransform(pos, (p) => `translate3d(${-p * 100}%, 0, 0)`);
   const current = useRef(index);
   const anim = useRef<AnimationPlaybackControls | null>(null);
   // only build a page once it's the current one or a neighbour (keeps app start fast)
   const [mounted, setMounted] = useState(() => new Set([index - 1, index, index + 1]));
-  const drag = useRef<{ x: number; y: number; start: number; lock?: 'x' | 'y'; samples: [number, number][] } | null>(null);
+  const drag = useRef<{ x: number; y: number; start: number; width: number; lock?: 'x' | 'y'; samples: [number, number][] } | null>(null);
 
+  /** velocity in pages per second */
   const glide = (i: number, velocity = 0) => {
     anim.current?.stop();
-    anim.current = animate(x, -i * width.current, { ...SPRING, velocity });
+    anim.current = animate(pos, i, { ...SPRING, velocity });
   };
 
+  // after a rotation / resize, snap straight to the current page
   useLayoutEffect(() => {
-    width.current = wrap.current?.clientWidth || width.current;
-    x.set(-index * width.current);
-    const onResize = () => {
-      width.current = wrap.current?.clientWidth || width.current;
+    const snap = () => {
       anim.current?.stop();
-      x.set(-current.current * width.current);
+      pos.set(current.current);
     };
-    addEventListener('resize', onResize);
-    return () => removeEventListener('resize', onResize);
+    addEventListener('orientlock', snap);
+    addEventListener('resize', snap);
+    return () => {
+      removeEventListener('orientlock', snap);
+      removeEventListener('resize', snap);
+    };
   }, []);
 
   // dock taps / links change the route → glide there
@@ -50,15 +55,14 @@ export function TabPager({ index, pages }: { index: number; pages: ReactNode[] }
     }
   }, [index]);
 
-  const settle = (velocityPxMs: number) => {
-    const w = width.current;
-    const moved = -x.get() / w - current.current; // pages dragged, + = towards the next tab
+  const settle = (velocityPxMs: number, w: number) => {
+    const moved = pos.get() - current.current; // pages dragged, + = towards the next tab
     let target = current.current;
     // a third of a page is enough, and a quick flick always moves one page in its direction
     if (moved > 0.33 || (velocityPxMs < -0.3 && moved > 0)) target++;
     else if (moved < -0.33 || (velocityPxMs > 0.3 && moved < 0)) target--;
     target = Math.max(0, Math.min(pages.length - 1, Math.max(current.current - 1, Math.min(current.current + 1, target))));
-    glide(target, velocityPxMs * 1000);
+    glide(target, (-velocityPxMs * 1000) / w);
     if (target !== current.current) {
       current.current = target;
       haptic();
@@ -77,30 +81,30 @@ export function TabPager({ index, pages }: { index: number; pages: ReactNode[] }
           drag.current = null;
           return;
         }
-        drag.current = { x: t.clientX, y: t.clientY, start: x.get(), samples: [[t.clientX, e.timeStamp]] };
+        drag.current = { x: t.clientX, y: t.clientY, start: pos.get(), width: wrap.current?.clientWidth || 390, samples: [[0, e.timeStamp]] };
       }}
       onTouchMove={(e) => {
         const d = drag.current;
         if (!d) return;
         const t = e.touches[0];
-        const dx = t.clientX - d.x;
-        const dy = t.clientY - d.y;
+        // in page coordinates (the page may be counter-rotated in landscape)
+        const [dx, dy] = toPage(t.clientX - d.x, t.clientY - d.y);
         if (!d.lock && Math.hypot(dx, dy) > 8) {
           d.lock = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
           if (d.lock === 'x') {
             // grab the strip where it is, even mid-glide
             anim.current?.stop();
-            d.start = x.get() - dx;
+            d.start = pos.get() + dx / d.width;
           }
         }
         if (d.lock !== 'x') return;
-        const min = -(pages.length - 1) * width.current;
-        let pos = d.start + dx;
+        const max = pages.length - 1;
+        let p = d.start - dx / d.width;
         // rubber-band past the first / last page
-        if (pos > 0) pos *= 0.3;
-        if (pos < min) pos = min + (pos - min) * 0.3;
-        x.set(pos);
-        d.samples.push([t.clientX, e.timeStamp]);
+        if (p < 0) p *= 0.3;
+        if (p > max) p = max + (p - max) * 0.3;
+        pos.set(p);
+        d.samples.push([dx, e.timeStamp]);
         if (d.samples.length > 5) d.samples.shift();
       }}
       onTouchEnd={(e) => {
@@ -108,17 +112,18 @@ export function TabPager({ index, pages }: { index: number; pages: ReactNode[] }
         drag.current = null;
         if (!d || d.lock !== 'x') return;
         const last = e.changedTouches[0];
-        d.samples.push([last.clientX, e.timeStamp]);
+        const [dx] = toPage(last.clientX - d.x, last.clientY - d.y);
+        d.samples.push([dx, e.timeStamp]);
         const [x0, t0] = d.samples[0];
-        const v = (last.clientX - x0) / Math.max(1, e.timeStamp - t0);
-        settle(v);
+        const v = (dx - x0) / Math.max(1, e.timeStamp - t0);
+        settle(v, d.width);
       }}
       onTouchCancel={() => {
-        if (drag.current?.lock === 'x') settle(0);
+        if (drag.current?.lock === 'x') settle(0, drag.current.width);
         drag.current = null;
       }}
     >
-      <motion.div className="flex h-full" style={{ x, willChange: 'transform' }}>
+      <motion.div className="flex h-full" style={{ transform, willChange: 'transform' }}>
         {pages.map((page, i) => (
           <div key={i} className="relative h-full w-full min-w-full shrink-0" aria-hidden={i !== index} style={{ transform: 'translateZ(0)' }}>
             {mounted.has(i) ? page : null}
