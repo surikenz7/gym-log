@@ -1,0 +1,40 @@
+{
+  "name": "gym-log",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "exercises": "node scripts/build-exercises.mjs"
+  },
+  "dependencies": {
+    "date-fns": "^4.4.0",
+    "dexie": "^4.4.7",
+    "dexie-react-hooks": "^1.1.7",
+    "framer-motion": "^11.18.2",
+    "lucide-react": "^0.460.0",
+    "papaparse": "^5.7.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.6",
+    "recharts": "^2.15.4",
+    "zustand": "^5.0.16"
+  },
+  "devDependencies": {
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.6.1",
+    "postcss": "^8.5.31",
+    "sharp": "^0.33.5",
+    "tailwindcss": "^3.4.19",
+    "typescript": "5.6",
+    "vite": "^5.4.21",
+    "vite-plugin-pwa": "^0.21.2",
+    "vitest": "^2.1.9"
+  }
+}

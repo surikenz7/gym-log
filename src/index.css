@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --sat: env(safe-area-inset-top);
+  --sab: env(safe-area-inset-bottom);
+}
+
+html,
+body {
+  background: #000;
+  color: #fff;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+}
+
+#root {
+  height: 100%;
+}
+
+button,
+a {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* iOS zooms into inputs smaller than 16px */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+@layer utilities {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .scroll-area {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .press {
+    transition: transform 0.12s ease, opacity 0.12s ease;
+  }
+  .press:active {
+    transform: scale(0.96);
+    opacity: 0.85;
+  }
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 64px;
+  }
+}
