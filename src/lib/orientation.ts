@@ -44,11 +44,54 @@ function apply() {
   dispatchEvent(new Event('orientlock'));
 }
 
+/** Real lock where the browser allows it (newer iOS home-screen apps, Android). Needs a tap on some systems. */
+async function tryNativeLock() {
+  try {
+    await (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.('portrait');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+let settleTimer = 0;
+/**
+ * While iOS turns the screen, hide the page for a moment and bring it back already upright —
+ * a short blink instead of the page spinning one way and then back the other.
+ */
+function onRotate() {
+  const body = document.body.style;
+  body.transition = 'opacity 80ms ease-out';
+  body.opacity = '0';
+  clearTimeout(settleTimer);
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    removeEventListener('resize', finish);
+    apply();
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        body.transition = 'opacity 220ms ease-in';
+        body.opacity = '1';
+      }),
+    );
+  };
+  addEventListener('resize', finish);
+  // iOS may report the new size late (or not at all for a 180° turn)
+  settleTimer = window.setTimeout(finish, 450);
+}
+
 export function startOrientationLock() {
   apply();
-  addEventListener('resize', apply);
-  // iOS reports the new size a moment after the rotation event
-  addEventListener('orientationchange', () => setTimeout(apply, 250));
+  void tryNativeLock();
+  // some browsers only allow locking right after a tap
+  document.addEventListener('pointerdown', () => void tryNativeLock(), { once: true, capture: true });
+  addEventListener('resize', () => {
+    if (document.body.style.opacity !== '0') apply();
+  });
+  addEventListener('orientationchange', onRotate);
+  screen.orientation?.addEventListener?.('change', onRotate);
 }
 
 /** Converts a screen-space movement into the page's own (possibly rotated) axes. */
