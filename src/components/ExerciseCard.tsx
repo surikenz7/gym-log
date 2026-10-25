@@ -6,6 +6,7 @@ import { haptic } from '../lib/haptics';
 import { useHistoryBests, useHistoryRank, usePreviousSets } from '../lib/hooks';
 import { setScore, tierIndex, tierOf } from '../lib/ranks';
 import { fanfare } from '../lib/sound';
+import { useExerciseScore } from '../lib/useProgress';
 import { livePRs, PR_LABELS } from '../lib/stats';
 import { FIELDS, fieldHeader, fmtDurationLong } from '../lib/units';
 import { toast } from '../state/dialog';
@@ -46,7 +47,8 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
     return best || null;
   };
   const liveScore = mode === 'active' ? scoreOf(wex.sets) : null;
-  const shownScore = rank.score != null || liveScore != null ? Math.max(rank.score ?? 0, liveScore ?? 0) : null;
+  const savedScore = useExerciseScore(wex.exerciseId);
+  const shownScore = mode !== 'active' ? savedScore : rank.score != null || liveScore != null ? Math.max(rank.score ?? 0, liveScore ?? 0) : null;
   const [typeSheet, setTypeSheet] = useState<string | null>(null);
   const [restSheet, setRestSheet] = useState(false);
   const [loadSheet, setLoadSheet] = useState(false);
@@ -95,7 +97,7 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
           <ExerciseThumb ex={ex} size={40} />
           <div className="min-w-0">
             <div className="truncate font-display text-lg font-bold uppercase leading-tight text-accent">{ex.name}</div>
-            {mode === 'active' && shownScore != null && (
+            {shownScore != null && (
               <motion.div key={tierIndex(shownScore)} className="flex items-center gap-1" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 15 }}>
                 <RankBadge score={shownScore} size={16} shine={false} />
                 <span className="font-display text-[11px] font-semibold uppercase tracking-wider" style={{ color: tierOf(shownScore).c[1] }}>

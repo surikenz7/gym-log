@@ -51,6 +51,15 @@ export function applyTheme(id: ThemeId) {
   root.setProperty('--card2', rgb(t.card2));
   root.setProperty('--line', rgb(t.line));
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t.bg);
+  // iOS reads this when the app is added to the Home Screen, so the icon matches the chosen colour
+  const base = import.meta.env.BASE_URL;
+  document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute('href', `${base}icons/${id}-180.png`);
+  const fav = document.querySelector('link[rel="icon"]');
+  fav?.setAttribute('href', `${base}icons/${id}-192.png`);
+  fav?.setAttribute('type', 'image/png');
 }
+
+/** Link that opens the app in Safari with a theme pre-selected, so "Add to Home Screen" picks up that icon. */
+export const themeLink = (id: ThemeId) => `${location.origin}${import.meta.env.BASE_URL}?theme=${id}`;
 
 export const accentHex = (id: ThemeId) => themeOf(id).accent;

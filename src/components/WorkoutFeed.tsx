@@ -1,12 +1,13 @@
 import { format, isThisYear } from 'date-fns';
 import { motion } from 'framer-motion';
-import { Heart, Timer, Trophy, Weight } from 'lucide-react';
+import { Timer, Trophy, Weight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getExercise, typeOf } from '../lib/exercises';
 import { prCounts, workoutVolume } from '../lib/stats';
 import { fmtDurationLong, fmtVolume } from '../lib/units';
 import { useSettings } from '../state/settings';
+import { RankChip } from './RankBadge';
 import type { Workout } from '../types';
 
 /** Profile picture (or initial). `ring` draws a coloured border, e.g. the overall rank's metal. */
@@ -58,17 +59,13 @@ export function WorkoutCard({ w, prs, index = 0 }: { w: Workout; prs: number; in
             <Weight size={12} /> {fmtVolume(workoutVolume(w, typeOf), settings)}
           </span>
           <span>{sets} set{sets === 1 ? "" : "s"}</span>
-          {w.health?.avgHr && (
-            <span className="flex items-center gap-1">
-              <Heart size={12} className="text-rose-500" /> {w.health.avgHr}
-            </span>
-          )}
         </div>
         <div className="mt-2 space-y-0.5">
           {shown.map((e) => (
             <div key={e.id} className="flex items-baseline gap-2 text-sm">
               <span className="w-6 shrink-0 text-right font-display font-bold text-accent">{e.sets.length}×</span>
               <span className="truncate text-white/85">{getExercise(e.exerciseId).name}</span>
+              <RankChip exerciseId={e.exerciseId} size={14} className="ml-auto" />
             </div>
           ))}
           {w.exercises.length > shown.length && <div className="pl-8 text-xs text-muted">+{w.exercises.length - shown.length} more</div>}

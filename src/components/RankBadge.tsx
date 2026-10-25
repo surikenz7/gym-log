@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useId } from 'react';
 import { tierIndex, TIERS } from '../lib/ranks';
+import { useExerciseScore } from '../lib/useProgress';
 
 const SHIELD = 'M60 14 L94 26 V58 C94 80 79 95 60 105 C41 95 26 80 26 58 V26 Z';
 const INNER = 'M60 23 L86 32.5 V58 C86 74 75 86 60 94 C45 86 34 74 34 58 V32.5 Z';
@@ -173,5 +174,19 @@ export function Rays({ color, size }: { color: string; size: number }) {
       animate={{ rotate: 360 }}
       transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
     />
+  );
+}
+
+/** Small rank icon + points shown next to an exercise name (nothing if it isn't ranked yet). */
+export function RankChip({ exerciseId, size = 16, className = '' }: { exerciseId: string; size?: number; className?: string }) {
+  const score = useExerciseScore(exerciseId);
+  if (score == null) return null;
+  return (
+    <span className={`inline-flex shrink-0 items-center gap-1 align-middle ${className}`}>
+      <RankBadge score={score} size={size} shine={false} />
+      <span className="font-display text-xs font-bold tabular-nums" style={{ color: TIERS[tierIndex(score)].c[1] }}>
+        {score}
+      </span>
+    </span>
   );
 }

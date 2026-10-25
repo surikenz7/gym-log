@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { create } from 'zustand';
 import { db } from '../db/db';
 import { useSettings } from '../state/settings';
 import type { Workout } from '../types';
@@ -34,11 +35,31 @@ export function computeRanks(workouts: Workout[], ctx: RankCtx) {
   return { exercises, groups, overall: overallScore(groups) };
 }
 
-export function useRanks() {
+interface RankState {
+  ctx: RankCtx | null | undefined;
+  data: ReturnType<typeof computeRanks> | null;
+  loading: boolean;
+}
+
+/** Ranks are computed once (by <RankSync/>) and shared, so any exercise name can show its rank cheaply. */
+const useRankStore = create<RankState>(() => ({ ctx: undefined, data: null, loading: true }));
+
+export function RankSync() {
   const ctx = useRankCtx();
   const workouts = useAllWorkouts();
-  const data = useMemo(() => (ctx && workouts ? computeRanks(workouts, ctx) : null), [ctx, workouts]);
-  return { ctx, data, loading: ctx === undefined || !workouts };
+  useEffect(() => {
+    useRankStore.setState({ ctx, data: ctx && workouts ? computeRanks(workouts, ctx) : null, loading: ctx === undefined || !workouts });
+  }, [ctx, workouts]);
+  return null;
+}
+
+export function useRanks() {
+  return useRankStore();
+}
+
+/** Best rank score of one exercise from saved workouts, or null. */
+export function useExerciseScore(exerciseId: string) {
+  return useRankStore((s) => s.data?.exercises.get(exerciseId)?.score ?? null);
 }
 
 export function useJourney() {

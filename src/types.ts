@@ -70,16 +70,6 @@ export interface Workout {
   /** derived, for indexing */
   exerciseIds: string[];
   source?: 'hevy';
-  /** heart rate & calories pulled from Apple Health (via the Shortcut bridge) */
-  health?: WorkoutHealth;
-}
-
-export interface WorkoutHealth {
-  calories?: number | null;
-  avgHr?: number | null;
-  maxHr?: number | null;
-  /** heart-rate samples (bpm), assumed evenly spread over the workout */
-  hr?: number[];
 }
 
 export const MEASURE_FIELDS = ['weight', 'bodyFat', 'waist', 'chest', 'hips', 'shoulders', 'arms', 'thighs', 'calves', 'neck'] as const;

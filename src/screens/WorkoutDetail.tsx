@@ -7,9 +7,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ExerciseThumb } from '../components/ExerciseImage';
 import { formatMetric } from '../components/ExerciseInfo';
 import { SET_TYPE_STYLE } from '../components/SetRow';
-import { WatchCard } from '../components/WatchCard';
 import { WorkoutEditor } from '../components/WorkoutEditor';
-import { RankBadge } from '../components/RankBadge';
+import { RankBadge, RankChip } from '../components/RankBadge';
 import { AchievementsUnlocked, Confetti, CountUp, RankChanges, RankUpOverlay, XpCard, type RankChange, type RankUp } from '../components/Rewards';
 import { Button, Header, Page, Sheet, SheetItem } from '../components/ui';
 import { db } from '../db/db';
@@ -66,6 +65,7 @@ function ExerciseBlocks({ w, prs }: { w: Workout; prs: PR[] }) {
             <button className="flex items-center gap-3" onClick={() => nav(`/exercises/${ex.id}`)}>
               <ExerciseThumb ex={ex} size={36} />
               <span className="font-semibold text-accent">{ex.name}</span>
+              <RankChip exerciseId={ex.id} />
             </button>
             {e.notes && <div className="mt-2 text-sm text-white/75">{e.notes}</div>}
             <div className="mt-3 space-y-1">
@@ -133,7 +133,6 @@ export function WorkoutDetail() {
         </div>
         <StatGrid w={w} prs={prs.length} />
         {w.notes && <div className="cut bg-card p-4 text-sm text-white/85">{w.notes}</div>}
-        <WatchCard w={w} />
         <ExerciseBlocks w={w} prs={prs} />
       </div>
       <Sheet open={menu} onClose={() => setMenu(false)} title={w.name}>
@@ -389,7 +388,6 @@ export function Summary() {
               })}
             </div>
           )}
-          <WatchCard w={w} />
           <ExerciseBlocks w={w} prs={prs} />
           <Button className="w-full" onClick={() => nav('/', { replace: true })}>
             Done

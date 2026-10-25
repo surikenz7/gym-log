@@ -164,3 +164,13 @@ input::-webkit-inner-spin-button {
 .bg-accent {
   color: rgb(var(--ink));
 }
+
+/* iOS web apps can't lock orientation, so landscape on a phone shows a "turn upright" screen */
+.rotate-lock {
+  display: none;
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .rotate-lock {
+    display: flex;
+  }
+}

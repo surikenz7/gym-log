@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { downsample, parseHealthText, requestText } from '../lib/health';
 import { bestSessionVolume, exerciseBests, livePRs, prCounts, repRecords } from '../lib/stats';
 import type { WSet, Workout } from '../types';
 
@@ -48,29 +47,5 @@ describe('records', () => {
     expect(live.get(sets[1].id)).toEqual(['weight', '1rm']);
     expect(live.has(sets[2].id)).toBe(false);
     expect(livePRs(sets, {}, 'weight_reps').size).toBe(0);
-  });
-});
-
-describe('apple health bridge', () => {
-  it('parses the Shortcut output with comma decimals and units', () => {
-    const h = parseHealthText('GYMLOG\nKCAL:345,6\n92\n110 count/min\n131,0\n\n2');
-    expect(h).toEqual({ calories: 346, avgHr: 111, maxHr: 131, hr: [92, 110, 131] });
-  });
-
-  it('rejects other clipboard contents, including our own request', () => {
-    expect(parseHealthText('hello')).toBeNull();
-    expect(parseHealthText(requestText(0, 60_000))).toBeNull();
-    expect(parseHealthText('GYMLOG')).toBeNull();
-  });
-
-  it('formats the request window with a minute of slack', () => {
-    const start = new Date(2026, 9, 25, 17, 0).getTime();
-    expect(requestText(start, start + 3600e3)).toBe('GYMLOG-REQ|2026-10-25 16:59|2026-10-25 18:01');
-  });
-
-  it('downsamples long series', () => {
-    const d = downsample(Array.from({ length: 1000 }, (_, i) => i), 100);
-    expect(d).toHaveLength(100);
-    expect(d[0]).toBe(5);
   });
 });

@@ -1,17 +1,98 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.6"><stop offset="0" stop-color="#5a0a0d"/><stop offset="1" stop-color="#0b0b0b"/></radialGradient>
-    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff4a4f"/><stop offset="1" stop-color="#b3141a"/></linearGradient>
-    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#9aa0a6"/></linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e9474d"/>
+      <stop offset=".55" stop-color="#e5262d"/>
+      <stop offset="1" stop-color="#671114"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".3" cy=".25" r=".7">
+      <stop offset="0" stop-color="#ff7a1a" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vig" cx=".5" cy=".5" r=".75">
+      <stop offset=".6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".45"/>
+    </radialGradient>
+    <linearGradient id="side" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a4d52"/>
+      <stop offset=".18" stop-color="#2a2c30"/>
+      <stop offset=".55" stop-color="#131416"/>
+      <stop offset="1" stop-color="#050505"/>
+    </linearGradient>
+    <radialGradient id="face1" cx=".35" cy=".3" r=".9">
+      <stop offset="0" stop-color="#5b5f66"/>
+      <stop offset=".5" stop-color="#26282c"/>
+      <stop offset="1" stop-color="#0c0c0d"/>
+    </radialGradient>
+    <radialGradient id="face2" cx=".35" cy=".3" r=".9">
+      <stop offset="0" stop-color="#666a71"/>
+      <stop offset=".5" stop-color="#2c2e33"/>
+      <stop offset="1" stop-color="#0e0e10"/>
+    </radialGradient>
+    <linearGradient id="chromeV" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".3" stop-color="#d9dde2"/>
+      <stop offset=".55" stop-color="#7c838c"/>
+      <stop offset=".75" stop-color="#c9ced4"/>
+      <stop offset="1" stop-color="#4b5058"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
+      <feOffset dx="6" dy="18" result="b"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".7"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
   <rect width="512" height="512" rx="112" fill="url(#glow)"/>
-  <g transform="rotate(-20 256 256)">
-    <rect x="70" y="240" width="372" height="32" rx="6" fill="url(#steel)"/>
-    <rect x="96" y="150" width="46" height="212" rx="10" fill="url(#plate)"/>
-    <rect x="146" y="176" width="34" height="160" rx="9" fill="url(#plate)"/>
-    <rect x="186" y="226" width="16" height="60" rx="4" fill="url(#steel)"/>
-    <rect x="370" y="150" width="46" height="212" rx="10" fill="url(#plate)"/>
-    <rect x="332" y="176" width="34" height="160" rx="9" fill="url(#plate)"/>
-    <rect x="310" y="226" width="16" height="60" rx="4" fill="url(#steel)"/>
+  <g opacity=".07" stroke="#000" stroke-width="14">
+    <line x1="-200" y1="560" x2="120" y2="-40"/><line x1="-130" y1="560" x2="190" y2="-40"/><line x1="-60" y1="560" x2="260" y2="-40"/><line x1="10" y1="560" x2="330" y2="-40"/><line x1="80" y1="560" x2="400" y2="-40"/><line x1="150" y1="560" x2="470" y2="-40"/><line x1="220" y1="560" x2="540" y2="-40"/><line x1="290" y1="560" x2="610" y2="-40"/><line x1="360" y1="560" x2="680" y2="-40"/><line x1="430" y1="560" x2="750" y2="-40"/><line x1="500" y1="560" x2="820" y2="-40"/><line x1="570" y1="560" x2="890" y2="-40"/>
+  </g>
+  <rect width="512" height="512" rx="112" fill="url(#vig)"/>
+  <g transform="translate(256 256) scale(1.1) rotate(-22) translate(-256 -256)" filter="url(#shadow)">
+    <rect x="30" y="245" width="452" height="22" rx="5" fill="url(#chromeV)"/>
+    <rect x="30" y="240" width="74" height="32" rx="5" fill="url(#chromeV)"/>
+    <rect x="408" y="240" width="74" height="32" rx="5" fill="url(#chromeV)"/>
+    
+    <ellipse cx="96" cy="256" rx="34" ry="130" fill="#0a0a0a"/>
+    <rect x="96" y="126" width="34" height="260" fill="url(#side)"/>
+    <ellipse cx="130" cy="256" rx="34" ry="130" fill="url(#face1)" stroke="#000" stroke-opacity=".5" stroke-width="2"/>
+    <ellipse cx="130" cy="256" rx="29.24" ry="111.8" fill="none" stroke="#e5262d" stroke-opacity=".9" stroke-width="5"/>
+    <ellipse cx="130" cy="256" rx="24.48" ry="93.6" fill="none" stroke="#fff" stroke-opacity=".10" stroke-width="3"/>
+    <ellipse cx="130" cy="256" rx="20.4" ry="78" fill="none" stroke="#000" stroke-opacity=".45" stroke-width="5"/>
+    <ellipse cx="130" cy="256" rx="10.2" ry="19.5" fill="url(#chromeV)" stroke="#000" stroke-opacity=".6" stroke-width="1.5"/>
+    <path d="M111.3 144.2 A34 130 0 0 1 153.8 191" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+    
+    <ellipse cx="130" cy="256" rx="25" ry="98" fill="#0a0a0a"/>
+    <rect x="130" y="158" width="24" height="196" fill="url(#side)"/>
+    <ellipse cx="154" cy="256" rx="25" ry="98" fill="url(#face2)" stroke="#000" stroke-opacity=".5" stroke-width="2"/>
+    <ellipse cx="154" cy="256" rx="21.5" ry="84.28" fill="none" stroke="#ff7a1a" stroke-opacity=".9" stroke-width="5"/>
+    <ellipse cx="154" cy="256" rx="18" ry="70.56" fill="none" stroke="#fff" stroke-opacity=".10" stroke-width="3"/>
+    <ellipse cx="154" cy="256" rx="15" ry="58.8" fill="none" stroke="#000" stroke-opacity=".45" stroke-width="5"/>
+    <ellipse cx="154" cy="256" rx="7.5" ry="14.7" fill="url(#chromeV)" stroke="#000" stroke-opacity=".6" stroke-width="1.5"/>
+    <path d="M140.25 171.72 A25 98 0 0 1 171.5 207" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+    <rect x="156" y="236" width="14" height="40" rx="3" fill="url(#chromeV)"/>
+    <rect x="342" y="236" width="14" height="40" rx="3" fill="url(#chromeV)"/>
+    
+    <ellipse cx="358" cy="256" rx="25" ry="98" fill="#0a0a0a"/>
+    <rect x="358" y="158" width="24" height="196" fill="url(#side)"/>
+    <ellipse cx="382" cy="256" rx="25" ry="98" fill="url(#face2)" stroke="#000" stroke-opacity=".5" stroke-width="2"/>
+    <ellipse cx="382" cy="256" rx="21.5" ry="84.28" fill="none" stroke="#ff7a1a" stroke-opacity=".9" stroke-width="5"/>
+    <ellipse cx="382" cy="256" rx="18" ry="70.56" fill="none" stroke="#fff" stroke-opacity=".10" stroke-width="3"/>
+    <ellipse cx="382" cy="256" rx="15" ry="58.8" fill="none" stroke="#000" stroke-opacity=".45" stroke-width="5"/>
+    <ellipse cx="382" cy="256" rx="7.5" ry="14.7" fill="url(#chromeV)" stroke="#000" stroke-opacity=".6" stroke-width="1.5"/>
+    <path d="M368.25 171.72 A25 98 0 0 1 399.5 207" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+    
+    <ellipse cx="382" cy="256" rx="34" ry="130" fill="#0a0a0a"/>
+    <rect x="382" y="126" width="34" height="260" fill="url(#side)"/>
+    <ellipse cx="416" cy="256" rx="34" ry="130" fill="url(#face1)" stroke="#000" stroke-opacity=".5" stroke-width="2"/>
+    <ellipse cx="416" cy="256" rx="29.24" ry="111.8" fill="none" stroke="#e5262d" stroke-opacity=".9" stroke-width="5"/>
+    <ellipse cx="416" cy="256" rx="24.48" ry="93.6" fill="none" stroke="#fff" stroke-opacity=".10" stroke-width="3"/>
+    <ellipse cx="416" cy="256" rx="20.4" ry="78" fill="none" stroke="#000" stroke-opacity=".45" stroke-width="5"/>
+    <ellipse cx="416" cy="256" rx="10.2" ry="19.5" fill="url(#chromeV)" stroke="#000" stroke-opacity=".6" stroke-width="1.5"/>
+    <path d="M397.3 144.2 A34 130 0 0 1 439.8 191" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+    <g fill="url(#chromeV)" opacity=".9">
+      <rect x="206" y="248" width="4" height="16" fill="#000" opacity=".18"/><rect x="217" y="248" width="4" height="16" fill="#000" opacity=".18"/><rect x="228" y="248" width="4" height="16" fill="#000" opacity=".18"/><rect x="239" y="248" width="4" height="16" fill="#000" opacity=".18"/><rect x="250" y="248" width="4" height="16" fill="#000" opacity=".18"/><rect x="261" y="248" width="4" height="16" fill="#000" opacity=".18"/><rect x="272" y="248" width="4" height="16" fill="#000" opacity=".18"/><rect x="283" y="248" width="4" height="16" fill="#000" opacity=".18"/><rect x="294" y="248" width="4" height="16" fill="#000" opacity=".18"/>
+    </g>
   </g>
 </svg>

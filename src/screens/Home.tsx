@@ -1,9 +1,7 @@
-import { addDays, format, formatDistanceToNowStrict, isSameDay, isSameWeek, startOfWeek } from 'date-fns';
+import { addDays, format, isSameDay, isSameWeek, startOfWeek } from 'date-fns';
 import { motion } from 'framer-motion';
-import { ChevronRight, Flame, Upload, Zap } from 'lucide-react';
-import { useState } from 'react';
+import { Flame, Upload, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { StartSheet } from '../components/Dock';
 import { RankBadge, TierName } from '../components/RankBadge';
 import { Avatar, WorkoutList } from '../components/WorkoutFeed';
 import { Page } from '../components/ui';
@@ -58,7 +56,6 @@ export function Home() {
   const settings = useSettings();
   const journey = useJourney();
   const { ctx, data: ranks } = useRanks();
-  const [start, setStart] = useState(false);
   const list = workouts ?? [];
   const week = list.filter((w) => isSameWeek(w.start, new Date(), { weekStartsOn: 1 }));
   const days = new Set(week.map((w) => (new Date(w.start).getDay() + 6) % 7));
@@ -67,7 +64,6 @@ export function Home() {
   const streak = journey?.totals.streak ?? 0;
   const lvl = levelFromXp(journey?.xp ?? 0);
   const overall = ranks?.overall ?? null;
-  const last = list[0];
 
   return (
     <Page>
@@ -113,18 +109,6 @@ export function Home() {
           </div>
         </div>
 
-        <motion.button
-          onClick={() => setStart(true)}
-          whileTap={{ scale: 0.97 }}
-          className="cut grad stripes flex w-full items-center justify-between px-5 py-4 text-left"
-        >
-          <div>
-            <div className="font-display text-2xl font-bold uppercase leading-none tracking-wide">Start training</div>
-            <div className="mt-1 text-xs opacity-80">{last ? `Last: ${last.name} · ${formatDistanceToNowStrict(last.start, { addSuffix: true })}` : 'Empty workout or one of your routines'}</div>
-          </div>
-          <ChevronRight size={28} strokeWidth={3} />
-        </motion.button>
-
         <div className="grid grid-cols-2 gap-3">
           <button onClick={() => nav('/ranks')} className="press cut relative flex items-center gap-3 overflow-hidden bg-card p-3 text-left">
             {overall != null && <div className="absolute inset-0 opacity-25" style={{ background: `radial-gradient(circle at 20% 50%, ${tierOf(overall).c[1]}, transparent 70%)` }} />}
@@ -162,7 +146,6 @@ export function Home() {
           </>
         )}
       </div>
-      <StartSheet open={start} onClose={() => setStart(false)} />
     </Page>
   );
 }

@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AnimatePresence, motion, Reorder, useDragControls } from 'framer-motion';
-import { ChevronDown, ClipboardList, Compass, Copy, FolderInput, FolderPlus, GripVertical, MoreHorizontal, Pencil, Play, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ClipboardList, Compass, Copy, FolderInput, FolderPlus, GripVertical, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Empty, Header, Page, Sheet, SheetItem } from '../components/ui';
@@ -41,16 +41,13 @@ function RoutineCard({ r, onMenu }: { r: Routine; onMenu: () => void }) {
     <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="cut bg-card p-4">
       <div className="flex items-start gap-2">
         <button className="min-w-0 flex-1 text-left" onClick={() => nav(`/routine/${r.id}`)}>
-          <div className="truncate text-[17px] font-semibold">{r.name}</div>
+          <div className="truncate font-display text-xl font-bold uppercase">{r.name}</div>
           <div className="mt-0.5 line-clamp-2 text-sm text-muted">{names || 'No exercises'}</div>
         </button>
         <button onClick={onMenu} className="press -mr-1 -mt-1 p-1.5 text-muted">
           <MoreHorizontal size={22} />
         </button>
       </div>
-      <Button className="mt-3 w-full !py-2.5" onClick={() => startWorkout(r)}>
-        Start Routine
-      </Button>
     </motion.div>
   );
 }
@@ -97,13 +94,8 @@ export function WorkoutTab() {
     <Page>
       <Header title="Routines" large />
       <div className="px-4 pb-6">
-        <div className="label">Quick Start</div>
-        <Button className="stripes mt-2 w-full !py-4 text-lg" onClick={() => startWorkout()}>
-          <Plus size={22} strokeWidth={3} /> Start Empty Workout
-        </Button>
-
-        <div className="mt-7 flex items-center justify-between">
-          <div className="label">Routines</div>
+        <div className="mt-2 flex items-center justify-between">
+          <div className="label">Your routines</div>
           <button onClick={newFolder} className="press p-1 text-muted">
             <FolderPlus size={22} />
           </button>
@@ -158,7 +150,6 @@ export function WorkoutTab() {
       </div>
 
       <Sheet open={!!menu} onClose={() => setMenu(null)} title={menu?.name}>
-        <SheetItem icon={<Play size={20} />} label="Start Routine" onClick={() => (setMenu(null), startWorkout(menu!))} />
         <SheetItem icon={<Pencil size={20} />} label="Edit Routine" onClick={() => (setMenu(null), nav(`/routine/${menu!.id}`))} />
         <SheetItem icon={<Copy size={20} />} label="Duplicate Routine" onClick={() => (setMenu(null), duplicate(menu!))} />
         <SheetItem icon={<FolderInput size={20} />} label="Move to Folder" onClick={() => (setMenu(null), setMoving(menu))} />

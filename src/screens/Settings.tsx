@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Check, ChevronRight, Download, ImageDown, Shield, Trash2, Upload, Watch } from 'lucide-react';
+import { Check, ChevronRight, Copy, Smartphone, Download, ImageDown, Shield, Trash2, Upload } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { REST_OPTIONS } from '../components/ExerciseCard';
@@ -8,7 +8,7 @@ import { Header, Page, Sheet } from '../components/ui';
 import { db } from '../db/db';
 import { exportBackup, importBackup } from '../import/backup';
 import { BUILTIN, imageUrl, useLibrary } from '../lib/exercises';
-import { THEMES } from '../lib/theme';
+import { THEMES, themeLink } from '../lib/theme';
 import { fmtDurationLong, fmtNum, kgTo } from '../lib/units';
 import { useLatestBodyweight } from '../lib/useProgress';
 import type { ThemeId } from '../types';
@@ -87,6 +87,7 @@ export function Settings() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [img, setImg] = useState<{ done: number; total: number } | null>(null);
   const [rankSheet, setRankSheet] = useState(false);
+  const [iconHelp, setIconHelp] = useState(false);
   const bw = useLatestBodyweight();
   const [storage, setStorage] = useState<{ persisted: boolean; usage: number } | null>(null);
   const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as unknown as { standalone?: boolean }).standalone;
@@ -125,7 +126,7 @@ export function Settings() {
           </Row>
         </Section>
 
-        <Section title="Look" foot="Changes the accent, highlights, background and cards across the whole app.">
+        <Section title="Look" foot="Changes the accent, highlights, background, cards and the app icon.">
           <div className="grid grid-cols-4 gap-2 p-3">
             {(Object.keys(THEMES) as ThemeId[]).map((id) => {
               const t = THEMES[id];
@@ -152,7 +153,33 @@ export function Settings() {
               );
             })}
           </div>
+          <Row label="Home Screen icon in this colour" icon={<Smartphone size={20} />} onClick={() => setIconHelp(true)}>
+            <img src={`${import.meta.env.BASE_URL}icons/${s.theme}-180.png`} alt="" className="h-9 w-9 rounded-[9px]" />
+          </Row>
         </Section>
+        <Sheet open={iconHelp} onClose={() => setIconHelp(false)} title="Change the app icon">
+          <div className="space-y-3 px-5 pb-2 pt-2 text-sm text-white/85">
+            <p>iOS saves a web app’s icon when you add it to the Home Screen and never updates it, so the icon only changes by adding the app again.</p>
+            <ol className="list-decimal space-y-2 pl-5">
+              <li>
+                <b>Back up first:</b> Settings → Data → Export backup → Save to Files. Removing the app from the Home Screen can erase its data.
+              </li>
+              <li>Tap <b>Copy link</b> below, open <b>Safari</b>, paste the link and open it.</li>
+              <li>
+                Share → <b>Add to Home Screen</b> (keep “Open as Web App” on). Then delete the old icon.
+              </li>
+              <li>Open the new icon → Settings → Restore from backup.</li>
+            </ol>
+            <button
+              onClick={() => {
+                void navigator.clipboard?.writeText(themeLink(s.theme)).then(() => toast('Link copied — paste it in Safari'), () => toast(themeLink(s.theme)));
+              }}
+              className="press cut-sm grad flex w-full items-center justify-center gap-2 py-3 font-display text-lg font-bold uppercase tracking-wider"
+            >
+              <Copy size={18} /> Copy link
+            </button>
+          </div>
+        </Sheet>
 
         <Section title="Units">
           <Row label="Weight">
@@ -184,12 +211,6 @@ export function Settings() {
           </Row>
           <Row label="Show RPE column">
             <Toggle on={s.showRpe} onChange={(showRpe) => s.update({ showRpe })} />
-          </Row>
-        </Section>
-
-        <Section title="Apple Watch" foot="Adds heart rate and calories from Apple Health to your workouts via a free Shortcut.">
-          <Row label="Set up heart rate & calories" icon={<Watch size={20} />} onClick={() => nav('/watch-setup')}>
-            <ChevronRight size={18} className="text-muted" />
           </Row>
         </Section>
 
