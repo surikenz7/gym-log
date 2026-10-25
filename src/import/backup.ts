@@ -11,6 +11,7 @@ export async function exportBackup() {
     routines: await db.routines.toArray(),
     folders: await db.folders.toArray(),
     exercises: await db.exercises.toArray(),
+    measures: await db.measures.toArray(),
     settings: await getKv(KV_SETTINGS),
   };
   const name = `gym-log-backup-${new Date().toISOString().slice(0, 10)}.json`;
@@ -35,7 +36,8 @@ export async function exportBackup() {
 export async function importBackup(text: string) {
   const d = JSON.parse(text);
   if (d?.app !== 'gym-log') throw new Error('Not a Gym Log backup file.');
-  await db.transaction('rw', [db.workouts, db.routines, db.folders, db.exercises, db.kv], async () => {
+  await db.transaction('rw', [db.workouts, db.routines, db.folders, db.exercises, db.measures, db.kv], async () => {
+    await db.measures.bulkPut(d.measures ?? []);
     await db.workouts.bulkPut(d.workouts ?? []);
     await db.routines.bulkPut(d.routines ?? []);
     await db.folders.bulkPut(d.folders ?? []);

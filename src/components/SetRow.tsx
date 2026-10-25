@@ -1,7 +1,8 @@
-import { motion, useAnimationControls } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
+import { Check, Trophy } from 'lucide-react';
 import { forwardRef, useImperativeHandle } from 'react';
 import { distTo, FIELDS, fmtNum, fmtSet, isShortDistance, kgTo, toKg, toMeters, type Field } from '../lib/units';
+import type { PRKind } from '../lib/stats';
 import type { ExerciseType, Settings, WSet } from '../types';
 import { DurationInput, NumInput } from './inputs';
 
@@ -31,6 +32,7 @@ interface Props {
   prev?: WSet;
   placeholder?: Partial<WSet>;
   settings: Settings;
+  pr?: PRKind[];
   onChange: (patch: Partial<WSet>) => void;
   onToggle: () => void;
   onDelete: () => void;
@@ -38,7 +40,7 @@ interface Props {
 }
 
 export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
-  { set, number, type, mode, prev, placeholder, settings, onChange, onToggle, onDelete, onTypeClick },
+  { set, number, type, mode, prev, placeholder, settings, pr, onChange, onToggle, onDelete, onTypeClick },
   ref,
 ) {
   const shakeCtl = useAnimationControls();
@@ -109,8 +111,21 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
         className={`relative grid items-center gap-1 px-3 py-1 transition-colors duration-300 ${done ? 'bg-done-soft' : 'bg-card'}`}
         style={{ gridTemplateColumns: gridCols(type, mode, settings.showRpe) }}
       >
-        <button onClick={onTypeClick} className={`press h-8 rounded-md text-center font-bold ${st.cls} ${done ? '' : 'bg-card2'}`}>
+        <button onClick={onTypeClick} className={`press relative h-8 rounded-md text-center font-bold ${st.cls} ${done ? '' : 'bg-card2'}`}>
           {st.label || number}
+          <AnimatePresence>
+            {pr && (
+              <motion.span
+                className="absolute -right-1.5 -top-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-warn text-black shadow"
+                initial={{ scale: 0, rotate: -40 }}
+                animate={{ scale: 1, rotate: 0 }}
+                exit={{ scale: 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 14 }}
+              >
+                <Trophy size={11} strokeWidth={2.5} />
+              </motion.span>
+            )}
+          </AnimatePresence>
         </button>
         <button
           className="truncate px-1 text-center text-sm text-muted"

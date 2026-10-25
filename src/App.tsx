@@ -1,23 +1,29 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Dumbbell, History as HistoryIcon, ListChecks, Share, User } from 'lucide-react';
+import { Dumbbell, Home as HomeIcon, Share, User } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { DialogHost, Portal, spring, ToastHost } from './components/ui';
+import { haptic } from './lib/haptics';
 import { ActiveWorkout, MiniWorkoutBar, RestWatcher } from './screens/ActiveWorkout';
+import { CalendarPage } from './screens/CalendarPage';
 import { ExercisePage, Exercises } from './screens/Exercises';
+import { Explore } from './screens/Explore';
 import { HevyImport } from './screens/HevyImport';
-import { History } from './screens/History';
+import { Home } from './screens/Home';
+import { Measures } from './screens/Measures';
 import { Profile } from './screens/Profile';
 import { RoutineEditor } from './screens/RoutineEditor';
 import { Settings } from './screens/Settings';
+import { Statistics } from './screens/Statistics';
+import { WatchSetup } from './screens/WatchSetup';
 import { Summary, WorkoutDetail, WorkoutEdit } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
 
+// Same three tabs as Hevy (minus the social feed — Home shows your own workouts).
 const TABS = [
-  { to: '/', label: 'Workout', icon: Dumbbell },
-  { to: '/history', label: 'History', icon: HistoryIcon },
-  { to: '/exercises', label: 'Exercises', icon: ListChecks },
+  { to: '/', label: 'Home', icon: HomeIcon },
+  { to: '/workout', label: 'Workout', icon: Dumbbell },
   { to: '/profile', label: 'Profile', icon: User },
 ];
 
@@ -26,11 +32,11 @@ function TabBar() {
     <nav className="border-t border-line bg-bg/90 pb-safe backdrop-blur-xl">
       <div className="flex">
         {TABS.map(({ to, label, icon: Icon }) => (
-          <NavLink key={to} to={to} end={to === '/'} replace className="flex flex-1 flex-col items-center gap-0.5 pb-1 pt-2">
+          <NavLink key={to} to={to} end={to === '/'} replace onClick={() => haptic()} className="flex flex-1 flex-col items-center gap-0.5 pb-1 pt-2">
             {({ isActive }) => (
               <>
                 <motion.div animate={{ scale: isActive ? 1.1 : 1, y: isActive ? -1 : 0 }} transition={{ type: 'spring', stiffness: 500, damping: 25 }}>
-                  <Icon size={24} className={isActive ? 'text-accent' : 'text-muted'} strokeWidth={isActive ? 2.4 : 2} />
+                  <Icon size={25} className={isActive ? 'text-accent' : 'text-muted'} strokeWidth={isActive ? 2.4 : 2} />
                 </motion.div>
                 <span className={`text-[10px] font-medium ${isActive ? 'text-accent' : 'text-muted'}`}>{label}</span>
               </>
@@ -109,19 +115,24 @@ export default function App() {
     <div className="flex h-full flex-col">
       <main className="relative min-h-0 flex-1">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<WorkoutTab />} />
-          <Route path="/history" element={<History />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/workout" element={<WorkoutTab />} />
+          <Route path="/explore" element={<Explore />} />
           <Route path="/history/:id" element={<WorkoutDetail />} />
           <Route path="/history/:id/edit" element={<WorkoutEdit />} />
           <Route path="/exercises" element={<Exercises />} />
           <Route path="/exercises/:id" element={<ExercisePage />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/statistics" element={<Statistics />} />
+          <Route path="/measures" element={<Measures />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/watch-setup" element={<WatchSetup />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/import/hevy" element={<HevyImport />} />
           <Route path="/routine/new" element={<RoutineEditor />} />
           <Route path="/routine/:id" element={<RoutineEditor />} />
           <Route path="/summary/:id" element={<Summary />} />
-          <Route path="*" element={<WorkoutTab />} />
+          <Route path="*" element={<Home />} />
         </Routes>
       </main>
       <div className="relative">

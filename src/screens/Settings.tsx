@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ChevronRight, Download, ImageDown, Trash2, Upload } from 'lucide-react';
+import { ChevronRight, Download, ImageDown, Trash2, Upload, Watch } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { REST_OPTIONS } from '../components/ExerciseCard';
@@ -96,6 +96,17 @@ export function Settings() {
     <Page pushed>
       <Header back title="Settings" />
       <div className="space-y-6 px-4 pb-12 pt-2">
+        <Section title="Profile">
+          <Row label="Name">
+            <input
+              value={s.name}
+              onChange={(e) => s.update({ name: e.target.value })}
+              placeholder="Your name"
+              className="w-40 bg-transparent text-right outline-none placeholder:text-muted"
+            />
+          </Row>
+        </Section>
+
         <Section title="Units">
           <Row label="Weight">
             <Segmented value={s.weightUnit} options={['kg', 'lbs']} onChange={(weightUnit) => s.update({ weightUnit })} />
@@ -105,7 +116,7 @@ export function Settings() {
           </Row>
         </Section>
 
-        <Section title="Workout" foot="iPhone can’t vibrate from web apps, so the rest timer plays a sound when it’s done (while the app is open).">
+        <Section title="Workout" foot="The rest timer plays a sound when it’s done while the app is open. Vibration works on iOS 18 and newer.">
           <Row label="Default rest timer">
             <select value={s.defaultRest} onChange={(e) => s.update({ defaultRest: Number(e.target.value) })} className="appearance-none rounded-lg bg-card2 px-3 py-1.5 text-sm font-semibold outline-none">
               {REST_OPTIONS.map((r) => (
@@ -121,8 +132,17 @@ export function Settings() {
           <Row label="Keep screen on during workout">
             <Toggle on={s.keepAwake} onChange={(keepAwake) => s.update({ keepAwake })} />
           </Row>
+          <Row label="Vibration feedback">
+            <Toggle on={s.haptics} onChange={(haptics) => s.update({ haptics })} />
+          </Row>
           <Row label="Show RPE column">
             <Toggle on={s.showRpe} onChange={(showRpe) => s.update({ showRpe })} />
+          </Row>
+        </Section>
+
+        <Section title="Apple Watch" foot="Adds heart rate and calories from Apple Health to your workouts via a free Shortcut.">
+          <Row label="Set up heart rate & calories" icon={<Watch size={20} />} onClick={() => nav('/watch-setup')}>
+            <ChevronRight size={18} className="text-muted" />
           </Row>
         </Section>
 
@@ -174,7 +194,7 @@ export function Settings() {
             icon={<Trash2 size={20} className="text-danger" />}
             onClick={async () => {
               if (!(await confirmDialog('Delete everything?', 'All workouts, routines and custom exercises will be permanently deleted. Export a backup first!', 'Delete All', true))) return;
-              await Promise.all([db.workouts.clear(), db.routines.clear(), db.folders.clear(), db.exercises.clear()]);
+              await Promise.all([db.workouts.clear(), db.routines.clear(), db.folders.clear(), db.exercises.clear(), db.measures.clear()]);
               useWorkout.getState().discard();
               await useLibrary.getState().reload();
               toast('All data deleted');

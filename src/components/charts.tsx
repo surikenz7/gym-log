@@ -121,3 +121,34 @@ export function BarsChart({
     </ResponsiveContainer>
   );
 }
+
+const HEART = '#f43f5e';
+
+/** Heart rate over the workout; samples are spread evenly across its duration. */
+export function HeartRateChart({ hr, minutes, height = 140 }: { hr: number[]; minutes: number; height?: number }) {
+  const data = hr.map((v, i) => ({ t: hr.length > 1 ? (i / (hr.length - 1)) * minutes : 0, v }));
+  const lo = Math.floor((Math.min(...hr) - 5) / 10) * 10;
+  const hi = Math.ceil((Math.max(...hr) + 5) / 10) * 10;
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <AreaChart data={data} margin={{ top: 6, right: 6, bottom: 0, left: -8 }}>
+        <defs>
+          <linearGradient id="hrwash" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={HEART} stopOpacity={0.16} />
+            <stop offset="1" stopColor={HEART} stopOpacity={0.02} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid vertical={false} stroke={GRID} strokeWidth={1} />
+        <XAxis dataKey="t" type="number" domain={[0, 'dataMax']} tickFormatter={(m) => `${Math.round(m)} min`} minTickGap={24} tick={{ fill: MUTED, fontSize: 11 }} axisLine={false} tickLine={false} />
+        <YAxis domain={[lo, hi]} tickCount={4} tick={{ fill: MUTED, fontSize: 11 }} axisLine={false} tickLine={false} width={36} allowDecimals={false} />
+        <Tooltip
+          cursor={{ stroke: MUTED, strokeWidth: 1 }}
+          content={({ active, payload }) =>
+            active && payload?.[0] ? <TooltipBox title={`${Math.round(payload[0].payload.t)} min`} value={`${payload[0].payload.v} bpm`} /> : null
+          }
+        />
+        <Area type="monotone" dataKey="v" stroke={HEART} strokeWidth={2} fill="url(#hrwash)" dot={false} activeDot={{ r: 5, fill: HEART, stroke: SURFACE, strokeWidth: 2 }} animationDuration={700} />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}

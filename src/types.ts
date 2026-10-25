@@ -61,7 +61,23 @@ export interface Workout {
   /** derived, for indexing */
   exerciseIds: string[];
   source?: 'hevy';
+  /** heart rate & calories pulled from Apple Health (via the Shortcut bridge) */
+  health?: WorkoutHealth;
 }
+
+export interface WorkoutHealth {
+  calories?: number | null;
+  avgHr?: number | null;
+  maxHr?: number | null;
+  /** heart-rate samples (bpm), assumed evenly spread over the workout */
+  hr?: number[];
+}
+
+export const MEASURE_FIELDS = ['weight', 'bodyFat', 'waist', 'chest', 'hips', 'shoulders', 'arms', 'thighs', 'calves', 'neck'] as const;
+export type MeasureField = (typeof MEASURE_FIELDS)[number];
+
+/** Body measurement entry. Weight in kg, lengths in cm, body fat in %. */
+export type Measure = { id: string; date: number } & Partial<Record<MeasureField, number | null>>;
 
 export interface Routine {
   id: string;
@@ -92,6 +108,8 @@ export interface Settings {
   sound: boolean;
   keepAwake: boolean;
   showRpe: boolean;
+  haptics: boolean;
+  name: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -101,4 +119,6 @@ export const DEFAULT_SETTINGS: Settings = {
   sound: true,
   keepAwake: true,
   showRpe: false,
+  haptics: true,
+  name: '',
 };

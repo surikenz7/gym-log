@@ -1,9 +1,12 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Link2, MoreHorizontal, Plus, Timer } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useExercise } from '../lib/exercises';
-import { usePreviousSets } from '../lib/hooks';
+import { haptic } from '../lib/haptics';
+import { useHistoryBests, usePreviousSets } from '../lib/hooks';
+import { livePRs, PR_LABELS } from '../lib/stats';
 import { FIELDS, fieldHeader, fmtDurationLong } from '../lib/units';
+import { toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
 import { newSet } from '../state/workout';
 import type { WExercise, WSet } from '../types';
@@ -28,6 +31,8 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
   const ex = useExercise(wex.exerciseId);
   const settings = useSettings();
   const prev = usePreviousSets(wex.exerciseId, excludeWorkoutId);
+  const historyBests = useHistoryBests(wex.exerciseId, ex.type, mode === 'active' ? excludeWorkoutId : undefined);
+  const prs = useMemo(() => (mode === 'active' && historyBests ? livePRs(wex.sets, historyBests, ex.type) : new Map()), [mode, historyBests, wex.sets, ex.type]);
   const [typeSheet, setTypeSheet] = useState<string | null>(null);
   const [restSheet, setRestSheet] = useState(false);
   const rows = useRef(new Map<string, SetRowHandle>());
@@ -46,6 +51,16 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
     if (fields.every((f) => merged[f] == null)) return rows.current.get(set.id)?.shake();
     onChange((w) => Object.assign(w.sets[i], filled, { done: true }));
     onSetDone?.(wex, merged);
+    if (historyBests) {
+      const sets = wex.sets.map((s, j) => (j === i ? { ...merged, done: true } : s));
+      const hit = livePRs(sets, historyBests, ex.type).get(set.id);
+      if (hit) {
+        haptic('success');
+        toast(`🏆 New record · ${PR_LABELS[hit[0]]}`);
+        return;
+      }
+    }
+    haptic();
   };
 
   return (
@@ -110,7 +125,8 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
             settings={settings}
             onChange={(patch) => onChange((w) => Object.assign(w.sets[i], patch))}
             onToggle={() => toggle(s, i)}
-            onDelete={() => onChange((w) => void w.sets.splice(i, 1))}
+            pr={prs.get(s.id)}
+            onDelete={() => (haptic(), onChange((w) => void w.sets.splice(i, 1)))}
             onTypeClick={() => setTypeSheet(s.id)}
           />
         ))}

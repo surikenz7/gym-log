@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AnimatePresence, motion, Reorder, useDragControls } from 'framer-motion';
-import { ChevronDown, ClipboardList, Copy, FolderInput, FolderPlus, GripVertical, MoreHorizontal, Pencil, Play, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ClipboardList, Compass, Copy, FolderInput, FolderPlus, GripVertical, MoreHorizontal, Pencil, Play, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Empty, Header, Page, Sheet, SheetItem } from '../components/ui';
@@ -112,8 +112,8 @@ export function WorkoutTab() {
           <Button variant="secondary" onClick={() => nav('/routine/new')}>
             <ClipboardList size={18} /> New Routine
           </Button>
-          <Button variant="secondary" onClick={() => nav('/exercises')}>
-            Explore
+          <Button variant="secondary" onClick={() => nav('/explore')}>
+            <Compass size={18} /> Explore
           </Button>
         </div>
 

@@ -20,10 +20,10 @@ export function Exercises() {
   const setMuscle = (muscle: string | null) => (setM(muscle), (saved = { ...saved, muscle }));
   const setEquipment = (equipment: string | null) => (setE(equipment), (saved = { ...saved, equipment }));
   return (
-    <Page>
+    <Page pushed>
       <Header
         title="Exercises"
-        large
+        back
         right={
           <button onClick={() => setCreating(true)} className="press text-accent">
             <Plus size={26} />

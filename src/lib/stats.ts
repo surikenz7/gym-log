@@ -169,3 +169,80 @@ export function exerciseSessions(workouts: Workout[], exerciseId: string, type: 
   }
   return pts;
 }
+
+export interface RepRecord {
+  reps: number;
+  weight: number;
+  date: number;
+  workoutId: string;
+}
+
+/** Hevy-style "Set Records": the heaviest weight lifted for each rep count (1..maxReps). */
+export function repRecords(workouts: Workout[], exerciseId: string): RepRecord[] {
+  const best = new Map<number, RepRecord>();
+  for (const w of workouts)
+    for (const e of w.exercises)
+      if (e.exerciseId === exerciseId)
+        for (const s of e.sets) {
+          const r = s.reps ?? 0;
+          const kg = s.weight ?? 0;
+          if (!s.done || s.type === 'warmup' || r <= 0 || kg <= 0) continue;
+          const cur = best.get(r);
+          if (!cur || kg > cur.weight || (kg === cur.weight && w.start < cur.date)) best.set(r, { reps: r, weight: kg, date: w.start, workoutId: w.id });
+        }
+  return [...best.values()].sort((a, b) => a.reps - b.reps);
+}
+
+export function bestSessionVolume(workouts: Workout[], exerciseId: string, type: ExerciseType) {
+  let best = 0;
+  for (const w of workouts) {
+    let v = 0;
+    for (const e of w.exercises) if (e.exerciseId === exerciseId) for (const s of e.sets) if (s.done) v += setVolume(s, type);
+    best = Math.max(best, v);
+  }
+  return best;
+}
+
+/** Number of PR sets in every workout, computed in one chronological pass. */
+export function prCounts(workouts: Workout[], typeOf: (id: string) => ExerciseType): Map<string, number> {
+  const out = new Map<string, number>();
+  const bests = new Map<string, Bests>();
+  for (const w of [...workouts].sort((a, b) => a.start - b.start)) {
+    let n = 0;
+    const seenBefore = new Set([...bests.keys()]);
+    for (const e of w.exercises) {
+      const type = typeOf(e.exerciseId);
+      const b = bests.get(e.exerciseId) ?? {};
+      for (const s of e.sets) {
+        if (!s.done || s.type === 'warmup') continue;
+        const m = setMetrics(s, type);
+        let pr = false;
+        for (const k of Object.keys(m) as PRKind[]) {
+          if (m[k]! > (b[k] ?? 0) + 1e-9) {
+            if (seenBefore.has(e.exerciseId)) pr = true;
+            b[k] = m[k];
+          }
+        }
+        if (pr) n++;
+      }
+      bests.set(e.exerciseId, b);
+    }
+    out.set(w.id, n);
+  }
+  return out;
+}
+
+/** PR kinds hit by each set of one exercise block, given all-time bests from earlier workouts. */
+export function livePRs(sets: WSet[], history: Bests, type: ExerciseType): Map<string, PRKind[]> {
+  const out = new Map<string, PRKind[]>();
+  if (Object.keys(history).length === 0) return out;
+  const b = { ...history };
+  for (const s of sets) {
+    if (!s.done || s.type === 'warmup') continue;
+    const m = setMetrics(s, type);
+    const kinds = (Object.keys(m) as PRKind[]).filter((k) => m[k]! > (b[k] ?? 0) + 1e-9);
+    for (const k of kinds) b[k] = m[k];
+    if (kinds.length) out.set(s.id, kinds);
+  }
+  return out;
+}

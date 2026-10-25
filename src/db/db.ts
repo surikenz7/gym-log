@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { ActiveWorkout, Exercise, Folder, Routine, Settings, Workout } from '../types';
+import type { ActiveWorkout, Exercise, Folder, Measure, Routine, Settings, Workout } from '../types';
 
 class GymDB extends Dexie {
   workouts!: Table<Workout, string>;
@@ -8,6 +8,7 @@ class GymDB extends Dexie {
   /** custom exercises + overrides of built-in ones (same id) */
   exercises!: Table<Exercise, string>;
   kv!: Table<{ key: string; value: unknown }, string>;
+  measures!: Table<Measure, string>;
 
   constructor() {
     super('gym-log');
@@ -18,6 +19,7 @@ class GymDB extends Dexie {
       exercises: 'id, name',
       kv: 'key',
     });
+    this.version(2).stores({ measures: 'id, date' });
   }
 }
 

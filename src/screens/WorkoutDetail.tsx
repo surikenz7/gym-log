@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ExerciseThumb } from '../components/ExerciseImage';
 import { formatMetric } from '../components/ExerciseInfo';
 import { SET_TYPE_STYLE } from '../components/SetRow';
+import { WatchCard } from '../components/WatchCard';
 import { WorkoutEditor } from '../components/WorkoutEditor';
 import { Button, Header, Page, Portal, Sheet, SheetItem } from '../components/ui';
 import { db } from '../db/db';
@@ -124,6 +125,7 @@ export function WorkoutDetail() {
         </div>
         <StatGrid w={w} prs={prs.length} />
         {w.notes && <div className="rounded-2xl bg-card p-4 text-sm text-white/85">{w.notes}</div>}
+        <WatchCard w={w} />
         <ExerciseBlocks w={w} prs={prs} />
       </div>
       <Sheet open={menu} onClose={() => setMenu(false)} title={w.name}>
@@ -302,6 +304,7 @@ export function Summary() {
               })}
             </div>
           )}
+          <WatchCard w={w} />
           <ExerciseBlocks w={w} prs={prs} />
           <Button className="w-full" onClick={() => nav('/', { replace: true })}>
             Done

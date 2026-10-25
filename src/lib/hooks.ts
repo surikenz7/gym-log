@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
-import type { WSet, Workout } from '../types';
+import type { ExerciseType, WSet, Workout } from '../types';
+import { exerciseBests, type Bests } from './stats';
 
 /** Sets from the most recent workout containing `exerciseId` (excluding `excludeId`). */
 export function usePreviousSets(exerciseId: string, excludeId?: string): WSet[] {
@@ -22,4 +23,13 @@ export async function previousSets(exerciseId: string): Promise<WSet[]> {
 
 export function useAllWorkouts(): Workout[] | undefined {
   return useLiveQuery(() => db.workouts.orderBy('start').reverse().toArray(), []);
+}
+
+/** All-time bests for an exercise from saved workouts (excluding the running one). */
+export function useHistoryBests(exerciseId: string, type: ExerciseType, excludeId?: string): Bests | undefined {
+  return useLiveQuery(async () => {
+    if (!excludeId) return undefined;
+    const ws = await db.workouts.where('exerciseIds').equals(exerciseId).toArray();
+    return exerciseBests(ws.filter((w) => w.id !== excludeId), exerciseId, type);
+  }, [exerciseId, type, excludeId]);
 }

@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../db/db';
 import { getInstructions, useExercise } from '../lib/exercises';
-import { exerciseBests, exerciseSessions, PR_LABELS, type PRKind, type SessionPoint } from '../lib/stats';
+import { bestSessionVolume, exerciseBests, exerciseSessions, PR_LABELS, repRecords, type PRKind, type SessionPoint } from '../lib/stats';
 import { distLabel, distTo, fmtDuration, fmtNum, fmtSet, isShortDistance, kgTo, round, TYPE_LABELS } from '../lib/units';
 import { useSettings } from '../state/settings';
 import type { ExerciseType, Settings } from '../types';
@@ -62,7 +62,7 @@ export function formatMetric(kind: Metric['kind'] | PRKind, v: number, type: Exe
       return `${fmtNum(kgTo(v, s.weightUnit))} ${s.weightUnit}`;
     case '1rm':
     case 'volume':
-      return `${fmtNum(round(kgTo(v, s.weightUnit), 1))} ${s.weightUnit}`;
+      return `${round(kgTo(v, s.weightUnit), 1).toLocaleString('en-US')} ${s.weightUnit}`;
     case 'reps':
       return `${v} reps`;
     case 'duration':
@@ -88,6 +88,13 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
 
   const sessions = useMemo(() => exerciseSessions(workouts, exerciseId, ex.type), [workouts, exerciseId, ex.type]);
   const bests = useMemo(() => exerciseBests(workouts, exerciseId, ex.type), [workouts, exerciseId, ex.type]);
+  const sessionBest = useMemo(() => bestSessionVolume(workouts, exerciseId, ex.type), [workouts, exerciseId, ex.type]);
+  const reps = useMemo(() => repRecords(workouts, exerciseId), [workouts, exerciseId]);
+  const recordRows: [string, string][] = [
+    ...(['weight', '1rm', 'volume'] as PRKind[]).filter((k) => bests[k]).map((k): [string, string] => [PR_LABELS[k], formatMetric(k, bests[k]!, ex.type, settings)]),
+    ...(sessionBest ? [['Best session volume', formatMetric('volume', sessionBest, ex.type, settings)] as [string, string]] : []),
+    ...(['reps', 'duration', 'distance'] as PRKind[]).filter((k) => bests[k]).map((k): [string, string] => [PR_LABELS[k], formatMetric(k, bests[k]!, ex.type, settings)]),
+  ];
   const metrics = metricsFor(ex.type);
   const m = metrics[Math.min(metric, metrics.length - 1)];
   const history = [...workouts].sort((a, b) => b.start - a.start);
@@ -146,14 +153,39 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
 
                 <div className="mt-6 text-lg font-semibold">Personal Records</div>
                 <div className="mt-2 divide-y divide-line rounded-2xl bg-card">
-                  {(Object.keys(bests) as PRKind[]).map((k) => (
-                    <div key={k} className="flex items-center gap-3 px-4 py-3">
+                  {recordRows.map(([label, value], i) => (
+                    <motion.div key={label} className="flex items-center gap-3 px-4 py-3" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}>
                       <Trophy size={18} className="text-warn" />
-                      <div className="flex-1">{PR_LABELS[k]}</div>
-                      <div className="font-semibold tabular-nums">{formatMetric(k, bests[k]!, ex.type, settings)}</div>
-                    </div>
+                      <div className="flex-1">{label}</div>
+                      <div className="font-semibold tabular-nums">{value}</div>
+                    </motion.div>
                   ))}
                 </div>
+
+                {reps.length > 0 && (
+                  <>
+                    <div className="mt-6 text-lg font-semibold">Set Records</div>
+                    <div className="mt-1 text-xs text-muted">Heaviest weight you’ve lifted for each number of reps</div>
+                    <div className="mt-2 overflow-hidden rounded-2xl bg-card">
+                      <div className="grid grid-cols-[4rem_1fr_auto] gap-2 border-b border-line px-4 py-2 text-[11px] font-semibold tracking-wide text-muted">
+                        <span>REPS</span>
+                        <span>BEST WEIGHT</span>
+                        <span>DATE</span>
+                      </div>
+                      {reps.map((r) => (
+                        <button
+                          key={r.reps}
+                          onClick={() => !inSheet && nav(`/history/${r.workoutId}`)}
+                          className="grid w-full grid-cols-[4rem_1fr_auto] gap-2 px-4 py-2.5 text-left odd:bg-card2/40"
+                        >
+                          <span className="font-semibold">{r.reps}</span>
+                          <span className="tabular-nums">{formatMetric('weight', r.weight, ex.type, settings)}</span>
+                          <span className="text-sm text-muted">{format(r.date, 'd MMM yyyy')}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </>
             )}
             {sessions.length === 0 && <div className="mt-6 rounded-2xl bg-card p-5 text-center text-sm text-muted">Log this exercise to see your progress chart and records.</div>}
