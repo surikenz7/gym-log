@@ -8,12 +8,16 @@ import { RankSetup } from '../components/RankParts';
 import { Header, Page, Sheet } from '../components/ui';
 import { getExercise } from '../lib/exercises';
 import { GROUPS, LEVEL_NAMES, STANDARDS, TIERS, tierIndex } from '../lib/ranks';
+import { useAllWorkouts } from '../lib/hooks';
 import { useRanks } from '../lib/useProgress';
+import { AlertTriangle, ChevronRight } from 'lucide-react';
 
 export function Ranks() {
   const nav = useNavigate();
   const { ctx, data } = useRanks();
   const [edit, setEdit] = useState(false);
+  const all = useAllWorkouts();
+  const needsSetup = ctx?.factor && all ? [...new Set(all.flatMap((w) => w.exerciseIds))].filter((id) => STANDARDS[id] && ctx.factor!(id) == null) : [];
   const overall = data?.overall ?? null;
   const ranked = data ? [...data.exercises.values()].sort((a, b) => b.score - a.score) : [];
   const tier = overall != null ? TIERS[tierIndex(overall)] : null;
@@ -22,7 +26,7 @@ export function Ranks() {
   return (
     <Page pushed>
       <Header
-        back
+        large
         title="Ranks"
         right={
           ctx && (
@@ -69,7 +73,7 @@ export function Ranks() {
                   <motion.button
                     key={g.group}
                     onClick={() => g.exerciseId && nav(`/exercises/${g.exerciseId}`)}
-                    className="press flex items-center gap-3 rounded-xl border border-line bg-card p-3 text-left"
+                    className="press flex items-center gap-3 cut-sm bg-card p-3 text-left"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 + i * 0.05 }}
@@ -85,8 +89,31 @@ export function Ranks() {
               })}
             </div>
 
+            {needsSetup.length > 0 && (
+              <>
+                <div className="label mb-2 mt-6 flex items-center gap-1.5 !text-warn">
+                  <AlertTriangle size={14} /> Not ranked until set up
+                </div>
+                <div className="space-y-1.5">
+                  {needsSetup.map((id) => {
+                    const ex = getExercise(id);
+                    return (
+                      <button key={id} onClick={() => nav(`/exercises/${id}`)} className="press cut flex w-full items-center gap-3 bg-warn/10 px-3 py-2.5 text-left">
+                        <ExerciseThumb ex={ex} size={34} />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-semibold">{ex.name}</div>
+                          <div className="text-xs text-warn">{ex.equipment === 'Cable' ? 'Pulley ratio / sides' : 'One dumbbell or both?'}</div>
+                        </div>
+                        <ChevronRight size={18} className="text-muted" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
             <div className="label mb-2 mt-6">Your lifts</div>
-            {ranked.length === 0 && <div className="rounded-xl bg-card p-5 text-center text-sm text-muted">Log a ranked exercise (bench, squat, deadlift, rows, curls…) to get your first rank.</div>}
+            {ranked.length === 0 && <div className="cut-sm bg-card p-5 text-center text-sm text-muted">Log a ranked exercise (bench, squat, deadlift, rows, curls…) to get your first rank.</div>}
             <div className="space-y-1.5">
               {ranked.map((r, i) => {
                 const ex = getExercise(r.exerciseId);
@@ -94,7 +121,7 @@ export function Ranks() {
                   <motion.button
                     key={r.exerciseId}
                     onClick={() => nav(`/exercises/${r.exerciseId}`)}
-                    className="press flex w-full items-center gap-3 rounded-xl bg-card px-3 py-2.5 text-left"
+                    className="press flex w-full items-center gap-3 cut-sm bg-card px-3 py-2.5 text-left"
                     initial={{ opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: Math.min(i, 10) * 0.03 }}
@@ -116,7 +143,7 @@ export function Ranks() {
             </div>
 
             <div className="label mb-2 mt-8">How ranks work</div>
-            <div className="rounded-xl border border-line bg-card p-4 text-sm text-white/80">
+            <div className="cut-sm bg-card p-4 text-sm text-white/80">
               <p>
                 Every working set gets a score from 0 to 1000 based on your estimated one-rep max (Epley) compared with your bodyweight and sex. Each exercise is ranked by its best
                 set; warm-ups and sets over 30 reps don’t count. A muscle group takes its best exercise, and your overall rank averages your ranked groups.

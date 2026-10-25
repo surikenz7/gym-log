@@ -60,7 +60,7 @@ export function WatchCard({ w }: { w: Workout }) {
   if (h) {
     const minutes = (w.end - w.start) / 60000;
     return (
-      <motion.div className="rounded-2xl bg-card p-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.div className="cut bg-card p-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <div className="mb-3 flex items-center gap-2">
           <Watch size={18} className="text-muted" />
           <span className="flex-1 font-semibold">Apple Watch</span>
@@ -104,7 +104,7 @@ export function WatchCard({ w }: { w: Workout }) {
   }
 
   return (
-    <div className="rounded-2xl bg-card p-4">
+    <div className="cut bg-card p-4">
       <div className="flex items-center gap-2">
         <Watch size={18} className="text-muted" />
         <span className="font-semibold">Apple Watch</span>

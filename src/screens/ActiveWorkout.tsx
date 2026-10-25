@@ -78,7 +78,7 @@ function RestBar() {
           transition={spring}
           style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
         >
-          <div className="flex items-center gap-3 rounded-2xl bg-card2/95 p-3 shadow-2xl ring-1 ring-line backdrop-blur-xl">
+          <div className="flex items-center gap-3 cut bg-card2/95 p-3 shadow-2xl ring-1 ring-line backdrop-blur-xl">
             <div className="relative h-14 w-14">
               <svg viewBox="0 0 56 56" className="h-14 w-14 -rotate-90">
                 <circle cx="28" cy="28" r={R} fill="none" className="stroke-accent/20" strokeWidth="5" />
@@ -107,7 +107,7 @@ function RestBar() {
             <button onClick={() => adjustRest(15)} className="press rounded-lg bg-card px-3 py-2 text-sm font-semibold">
               +15
             </button>
-            <button onClick={skipRest} className="press rounded-lg bg-accent px-3 py-2 text-sm font-semibold">
+            <button onClick={skipRest} className="press cut-sm grad px-3 py-2 font-display text-sm font-bold uppercase">
               Skip
             </button>
           </div>
@@ -146,7 +146,7 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
               <ChevronLeft size={26} />
             </button>
             <div className="flex-1 text-center font-display text-[17px] font-semibold uppercase tracking-wider">Save Workout</div>
-            <button onClick={save} className="press rounded-lg bg-accent px-4 py-1.5 text-sm font-semibold">
+            <button onClick={save} className="press cut-sm grad px-4 py-1.5 font-display text-sm font-bold uppercase">
               Save
             </button>
           </div>
@@ -167,7 +167,7 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
               placeholder="How did your workout go? Leave some notes here..."
-              className="mt-4 w-full resize-none rounded-xl bg-card p-3 outline-none placeholder:text-muted"
+              className="mt-4 w-full resize-none cut-sm bg-card p-3 outline-none placeholder:text-muted"
             />
           </div>
         </motion.div>
@@ -241,7 +241,7 @@ export function ActiveWorkout() {
                 </button>
                 <div className="flex-1 text-center font-display text-[17px] font-semibold uppercase tracking-wider">Log Workout</div>
                 <div className="flex w-20 justify-end">
-                  <button onClick={onFinish} className="press rounded-lg bg-accent px-4 py-1.5 font-display text-sm font-bold uppercase tracking-wider">
+                  <button onClick={onFinish} className="press cut-sm grad px-4 py-1.5 font-display text-sm font-bold uppercase tracking-wider">
                     Finish
                   </button>
                 </div>
@@ -297,7 +297,7 @@ export function MiniWorkoutBar() {
       {active && !open && (
         <motion.button
           onClick={() => setOpen(true)}
-          className="mx-3 mb-2 flex w-[calc(100%-1.5rem)] items-center gap-3 rounded-2xl bg-card2 px-4 py-3 text-left shadow-xl ring-1 ring-line"
+          className="mx-3 mb-2 flex w-[calc(100%-1.5rem)] items-center gap-3 cut bg-card2 px-4 py-3 text-left shadow-xl ring-1 ring-line"
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
@@ -314,7 +314,7 @@ export function MiniWorkoutBar() {
               {rest && rest.endAt > now && ` · Rest ${fmtDuration(Math.ceil((rest.endAt - now) / 1000))}`}
             </div>
           </div>
-          <span className="rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold">Resume</span>
+          <span className="cut-sm grad px-3 py-1.5 font-display text-sm font-bold uppercase tracking-wider">Resume</span>
         </motion.button>
       )}
     </AnimatePresence>

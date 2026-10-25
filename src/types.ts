@@ -20,6 +20,15 @@ export interface Exercise {
   popular?: boolean;
   stretch?: boolean;
   custom?: boolean;
+  /** how the weight is logged for dumbbell / cable exercises (affects ranks) */
+  load?: LoadSetup;
+}
+
+export interface LoadSetup {
+  /** 'one' = weight of one dumbbell / one handle, 'both' = both sides added together */
+  side?: 'one' | 'both';
+  /** cable pulley ratio: 2 means the stack feels half as heavy (2:1) */
+  pulley?: number;
 }
 
 export type SetType = 'normal' | 'warmup' | 'failure' | 'drop';
@@ -117,7 +126,7 @@ export interface Settings {
   theme: ThemeId;
 }
 
-export type ThemeId = 'blood' | 'gold' | 'toxic' | 'steel';
+export type ThemeId = 'blood' | 'inferno' | 'gold' | 'toxic' | 'steel' | 'cobalt' | 'venom' | 'pump';
 
 export const DEFAULT_SETTINGS: Settings = {
   weightUnit: 'kg',

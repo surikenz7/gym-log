@@ -33,7 +33,7 @@ export function Trophies() {
               <motion.button
                 key={a.id}
                 onClick={() => u && nav(`/history/${u.workoutId}`)}
-                className={`relative flex flex-col items-center rounded-xl border p-2.5 text-center ${u ? 'border-warn/40 bg-gradient-to-b from-warn/15 to-card' : 'border-line bg-card'}`}
+                className={`relative flex flex-col items-center cut-sm border p-2.5 text-center ${u ? 'border-warn/40 bg-gradient-to-b from-warn/15 to-card' : 'border-line bg-card'}`}
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: Math.min(i, 18) * 0.02 }}

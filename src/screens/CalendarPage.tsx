@@ -11,7 +11,7 @@ function Month({ month, byDay, onDay }: { month: Date; byDay: Map<string, Workou
   const days = eachDayOfInterval({ start: startOfWeek(month, { weekStartsOn: 1 }), end: endOfWeek(endOfMonth(month), { weekStartsOn: 1 }) });
   const count = days.filter((d) => isSameMonth(d, month) && byDay.has(format(d, 'yyyy-MM-dd'))).length;
   return (
-    <div className="rounded-2xl bg-card p-3">
+    <div className="cut bg-card p-3">
       <div className="mb-2 flex items-baseline justify-between px-1">
         <div className="font-semibold">{format(month, 'MMMM')}</div>
         <div className="text-xs text-muted">{count ? `${count} day${count === 1 ? '' : 's'}` : ''}</div>
@@ -75,11 +75,11 @@ export function CalendarPage() {
       <Header back title="Calendar" />
       <div className="px-4 pb-12">
         <div className="mb-3 grid grid-cols-2 gap-2">
-          <div className="rounded-2xl bg-card p-4">
+          <div className="cut bg-card p-4">
             <div className="text-xs text-muted">Workouts in {year}</div>
             <div className="text-xl font-semibold">{yearCount}</div>
           </div>
-          <div className="rounded-2xl bg-card p-4">
+          <div className="cut bg-card p-4">
             <div className="text-xs text-muted">Week streak</div>
             <div className="text-xl font-semibold">{streak} 🔥</div>
           </div>

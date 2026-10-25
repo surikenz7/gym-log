@@ -66,7 +66,7 @@ export function Statistics() {
     <Page pushed>
       <Header back title="Statistics" />
       <div className="space-y-4 px-4 pb-12">
-        <div className="grid grid-cols-4 gap-1 rounded-xl bg-card p-1">
+        <div className="grid grid-cols-4 gap-1 cut-sm bg-card p-1">
           {PERIODS.map((p, i) => (
             <button key={p.label} onClick={() => setPeriod(i)} className="relative rounded-lg py-1.5 text-sm font-semibold">
               {period === i && <motion.span layoutId="period" className="absolute inset-0 rounded-lg bg-accent" />}
@@ -84,14 +84,14 @@ export function Statistics() {
             ['Records', `${totals.records} 🏆`],
             ['Avg. workout', ws.length ? fmtDurationLong(totals.time / ws.length) : '–'],
           ].map(([l, v]) => (
-            <div key={l} className="rounded-2xl bg-card p-4">
+            <div key={l} className="cut bg-card p-4">
               <div className="text-xs text-muted">{l}</div>
               <div className="mt-0.5 text-xl font-semibold">{v}</div>
             </div>
           ))}
         </div>
 
-        <div className="rounded-2xl bg-card p-4">
+        <div className="cut bg-card p-4">
           <div className="font-semibold">Muscle distribution</div>
           <div className="mb-3 text-xs text-muted">Working sets per muscle group</div>
           {muscles.length === 0 && <div className="py-4 text-center text-sm text-muted">No workouts in this period</div>}
@@ -122,7 +122,7 @@ export function Statistics() {
         {main.length > 0 && (
           <div>
             <div className="mb-2 font-semibold">Main exercises</div>
-            <div className="divide-y divide-line overflow-hidden rounded-2xl bg-card">
+            <div className="divide-y divide-line overflow-hidden cut bg-card">
               {main.map(({ ex, n, best }) => (
                 <button key={ex.id} onClick={() => nav(`/exercises/${ex.id}`)} className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-card2">
                   <ExerciseThumb ex={ex} size={38} />

@@ -160,7 +160,7 @@ export function DialogHost() {
             onClick={() => close(null)}
           >
             <motion.div
-              className="w-full max-w-sm overflow-hidden rounded-2xl bg-card2 text-center"
+              className="w-full max-w-sm overflow-hidden cut bg-card2 text-center"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -232,7 +232,7 @@ export function Button({
   disabled?: boolean;
 }) {
   const v = {
-    primary: 'bg-accent font-display uppercase tracking-wider',
+    primary: 'grad font-display uppercase tracking-wider',
     secondary: 'bg-card2 text-white font-display uppercase tracking-wider',
     danger: 'bg-danger/15 text-danger',
     ghost: 'text-accent',
@@ -241,7 +241,7 @@ export function Button({
     <button
       disabled={disabled}
       onClick={onClick}
-      className={`press flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold disabled:opacity-40 ${v} ${className}`}
+      className={`press flex items-center justify-center gap-2 cut-sm px-4 py-3 font-semibold disabled:opacity-40 ${v} ${className}`}
     >
       {children}
     </button>

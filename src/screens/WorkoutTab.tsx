@@ -38,7 +38,7 @@ function RoutineCard({ r, onMenu }: { r: Routine; onMenu: () => void }) {
   const nav = useNavigate();
   const names = r.exercises.map((e) => getExercise(e.exerciseId).name).join(', ');
   return (
-    <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="rounded-2xl bg-card p-4">
+    <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="cut bg-card p-4">
       <div className="flex items-start gap-2">
         <button className="min-w-0 flex-1 text-left" onClick={() => nav(`/routine/${r.id}`)}>
           <div className="truncate text-[17px] font-semibold">{r.name}</div>
@@ -95,7 +95,7 @@ export function WorkoutTab() {
 
   return (
     <Page>
-      <Header title="Workout" large />
+      <Header title="Routines" large />
       <div className="px-4 pb-6">
         <div className="label">Quick Start</div>
         <Button className="stripes mt-2 w-full !py-4 text-lg" onClick={() => startWorkout()}>

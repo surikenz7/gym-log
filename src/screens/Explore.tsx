@@ -96,7 +96,7 @@ export function Explore() {
       <Header back title="Explore Routines" />
       <div className="space-y-4 px-4 pb-12">
         {PROGRAMS.map((p, i) => (
-          <motion.div key={p.name} className="rounded-2xl bg-card p-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+          <motion.div key={p.name} className="cut bg-card p-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <div className="text-lg font-semibold">{p.name}</div>
             <div className="text-xs font-medium text-accent">{p.level}</div>
             <div className="mt-1 text-sm text-muted">{p.description}</div>

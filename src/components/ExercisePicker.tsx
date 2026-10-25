@@ -234,7 +234,7 @@ export function ExercisePicker({
                   exit={{ y: 100, opacity: 0 }}
                   transition={spring}
                 >
-                  <button onClick={() => done(selected)} className="press mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3.5 font-semibold">
+                  <button onClick={() => done(selected)} className="press mb-4 flex w-full items-center justify-center gap-2 cut-sm grad py-3.5 font-semibold">
                     <Plus size={18} /> Add {selected.length} exercise{selected.length > 1 ? 's' : ''}
                   </button>
                 </motion.div>

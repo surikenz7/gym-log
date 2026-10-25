@@ -4,15 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#090909',
-        card: '#151515',
-        card2: '#202020',
-        line: '#2d2d2d',
+        // surfaces and accents come from the chosen theme (src/lib/theme.ts)
+        bg: 'rgb(var(--bg) / <alpha-value>)',
+        card: 'rgb(var(--card) / <alpha-value>)',
+        card2: 'rgb(var(--card2) / <alpha-value>)',
+        line: 'rgb(var(--line) / <alpha-value>)',
         muted: '#8e8e8e',
-        // set at runtime from the chosen theme (src/lib/theme.ts)
         accent: { DEFAULT: 'rgb(var(--accent) / <alpha-value>)', soft: 'rgb(var(--accent) / 0.16)' },
+        accent2: 'rgb(var(--accent2) / <alpha-value>)',
         ink: 'rgb(var(--ink) / <alpha-value>)',
-        done: { DEFAULT: '#22c55e', soft: '#173023' },
+        done: { DEFAULT: 'rgb(var(--done) / <alpha-value>)', soft: 'rgb(var(--done-soft) / <alpha-value>)' },
         warn: '#f5a524',
         danger: '#ef4444',
       },

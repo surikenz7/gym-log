@@ -109,9 +109,9 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
         }}
         animate={shakeCtl}
         className={`relative grid items-center gap-1 px-3 py-1 transition-colors duration-300 ${done ? 'bg-done-soft' : 'bg-card'}`}
-        style={{ gridTemplateColumns: gridCols(type, mode, settings.showRpe) }}
+        style={{ gridTemplateColumns: gridCols(type, mode, settings.showRpe), boxShadow: done ? 'inset 3px 0 0 rgb(var(--done))' : undefined }}
       >
-        <button onClick={onTypeClick} className={`press relative h-8 rounded-md text-center font-bold ${st.cls} ${done ? '' : 'bg-card2'}`}>
+        <button onClick={onTypeClick} className={`press relative h-8 text-center font-display text-lg font-bold ${st.cls} ${done ? '' : 'cut-sm bg-card2'}`}>
           {st.label || number}
           <AnimatePresence>
             {pr && (
@@ -142,7 +142,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
             initial={done ? { scale: 0.6 } : false}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 600, damping: 14 }}
-            className={`ml-auto flex h-8 w-9 items-center justify-center rounded-md ${done ? 'bg-done text-white' : 'bg-card2 text-muted'}`}
+            className={`cut-sm ml-auto flex h-8 w-9 items-center justify-center ${done ? 'bg-done text-black' : 'bg-card2 text-muted'}`}
           >
             <Check size={20} strokeWidth={3} />
           </motion.button>

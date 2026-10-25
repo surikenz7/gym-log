@@ -13,6 +13,7 @@ import { useSettings } from '../state/settings';
 import { newSet } from '../state/workout';
 import type { WExercise, WSet } from '../types';
 import { ExerciseThumb } from './ExerciseImage';
+import { LoadSetupCard, LoadSetupNag } from './LoadSetup';
 import { RankBadge } from './RankBadge';
 import { gridCols, SET_TYPE_STYLE, SetRow, type EditorMode, type SetRowHandle } from './SetRow';
 import { Sheet, SheetItem } from './ui';
@@ -40,13 +41,15 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
   const scoreOf = (sets: WSet[]) => {
     if (!rank.ctx) return null;
     const bw = rank.ctx.bwAt(Date.now());
-    const best = Math.max(0, ...sets.filter((s) => s.done).map((s) => setScore(wex.exerciseId, s, bw, rank.ctx!.sex)));
+    const factor = rank.ctx.factor ? rank.ctx.factor(wex.exerciseId) : 1;
+    const best = Math.max(0, ...sets.filter((s) => s.done).map((s) => setScore(wex.exerciseId, s, bw, rank.ctx!.sex, factor)));
     return best || null;
   };
   const liveScore = mode === 'active' ? scoreOf(wex.sets) : null;
   const shownScore = rank.score != null || liveScore != null ? Math.max(rank.score ?? 0, liveScore ?? 0) : null;
   const [typeSheet, setTypeSheet] = useState<string | null>(null);
   const [restSheet, setRestSheet] = useState(false);
+  const [loadSheet, setLoadSheet] = useState(false);
   const rows = useRef(new Map<string, SetRowHandle>());
   const rest = wex.restSec ?? settings.defaultRest;
   const fields = FIELDS[ex.type];
@@ -91,7 +94,7 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
         <button onClick={onOpenInfo} className="flex min-w-0 flex-1 items-center gap-3 text-left">
           <ExerciseThumb ex={ex} size={40} />
           <div className="min-w-0">
-            <div className="truncate font-semibold text-accent">{ex.name}</div>
+            <div className="truncate font-display text-lg font-bold uppercase leading-tight text-accent">{ex.name}</div>
             {mode === 'active' && shownScore != null && (
               <motion.div key={tierIndex(shownScore)} className="flex items-center gap-1" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 15 }}>
                 <RankBadge score={shownScore} size={16} shine={false} />
@@ -112,6 +115,8 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
         </button>
       </div>
 
+      {mode !== 'routine' && <LoadSetupNag exerciseId={wex.exerciseId} onClick={() => setLoadSheet(true)} />}
+
       <textarea
         rows={1}
         value={wex.notes ?? ''}
@@ -127,7 +132,7 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
       )}
 
       <div
-        className="grid items-center gap-1 px-3 pb-1 pt-1 text-[11px] font-semibold tracking-wide text-muted"
+        className="grid items-center gap-1 px-3 pb-1 pt-1 font-display text-[11px] font-semibold tracking-[0.12em] text-muted"
         style={{ gridTemplateColumns: gridCols(ex.type, mode, settings.showRpe) }}
       >
         <div className="text-center">SET</div>
@@ -179,7 +184,7 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
               w.sets.push(s);
             })
           }
-          className="press flex w-full items-center justify-center gap-1.5 rounded-lg bg-card2 py-2 text-sm font-semibold"
+          className="press cut-sm flex w-full items-center justify-center gap-1.5 bg-card2 py-2 font-display text-sm font-semibold uppercase tracking-wider"
         >
           <Plus size={16} /> Add Set
         </button>
@@ -212,6 +217,15 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
         />
       </Sheet>
 
+      <Sheet open={loadSheet} onClose={() => setLoadSheet(false)} title={ex.name}>
+        <div className="px-4 pt-2">
+          <LoadSetupCard exerciseId={wex.exerciseId} bare />
+          <button onClick={() => setLoadSheet(false)} className="press mt-4 w-full bg-accent py-3 font-display text-lg font-bold uppercase tracking-wider">
+            Done
+          </button>
+        </div>
+      </Sheet>
+
       <Sheet open={restSheet} onClose={() => setRestSheet(false)} title={`Rest Timer · ${ex.name}`}>
         <div className="grid grid-cols-3 gap-2 px-4 pt-2">
           {REST_OPTIONS.map((sec) => (
@@ -221,7 +235,7 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
                 setRestSheet(false);
                 onChange((w) => void (w.restSec = sec));
               }}
-              className={`press rounded-xl py-3 font-semibold ${sec === rest ? 'bg-accent' : 'bg-card2'}`}
+              className={`press cut-sm py-3 font-semibold ${sec === rest ? 'bg-accent' : 'bg-card2'}`}
             >
               {sec ? fmtDurationLong(sec) : 'Off'}
             </button>

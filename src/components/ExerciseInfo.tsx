@@ -1,11 +1,11 @@
 import { format } from 'date-fns';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { motion } from 'framer-motion';
-import { Pencil, Trophy } from 'lucide-react';
+import { ArrowRightLeft, Pencil, Trophy } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../db/db';
-import { getInstructions, useExercise } from '../lib/exercises';
+import { getExercise, getInstructions, useExercise } from '../lib/exercises';
 import { bestSessionVolume, exerciseBests, exerciseSessions, PR_LABELS, repRecords, type PRKind, type SessionPoint } from '../lib/stats';
 import { distLabel, distTo, fmtDuration, fmtNum, fmtSet, isShortDistance, kgTo, round, TYPE_LABELS } from '../lib/units';
 import { useSettings } from '../state/settings';
@@ -15,6 +15,10 @@ import { exerciseRanks, standardFor } from '../lib/ranks';
 import { useRankCtx } from '../lib/useProgress';
 import { CustomExerciseSheet } from './CustomExerciseSheet';
 import { ExerciseRankCard } from './RankParts';
+import { LoadSetupCard } from './LoadSetup';
+import { ExercisePicker } from './ExercisePicker';
+import { exerciseUsage, moveExerciseHistory } from '../lib/merge';
+import { confirmDialog, toast } from '../state/dialog';
 import { ExerciseDemo } from './ExerciseImage';
 import { SET_TYPE_STYLE } from './SetRow';
 import { Sheet } from './ui';
@@ -84,6 +88,21 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
   const [tab, setTab] = useState<'summary' | 'history' | 'howto'>('summary');
   const [metric, setMetric] = useState(0);
   const [editing, setEditing] = useState(false);
+  const [moving, setMoving] = useState(false);
+  const moveTo = async (toId: string) => {
+    if (toId === exerciseId) return;
+    const to = getExercise(toId);
+    const use = await exerciseUsage(exerciseId);
+    const ok = await confirmDialog(
+      `Move to ${to.name}?`,
+      `All sets of ${ex.name} in ${use.workouts} workout${use.workouts === 1 ? '' : 's'}${use.routines ? ` and ${use.routines} routine${use.routines === 1 ? '' : 's'}` : ''} will become ${to.name}. Records, charts and ranks follow.`,
+      'Move',
+    );
+    if (!ok) return;
+    const n = await moveExerciseHistory(exerciseId, toId);
+    toast(`Moved ${n} workout${n === 1 ? '' : 's'} to ${to.name}`);
+    if (!inSheet) nav(`/exercises/${toId}`, { replace: true });
+  };
   const [steps, setSteps] = useState<string[]>([]);
   const workouts = useLiveQuery(() => db.workouts.where('exerciseIds').equals(exerciseId).toArray(), [exerciseId]) ?? [];
 
@@ -106,7 +125,7 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
 
   return (
     <div className="pb-8">
-      <div className="sticky top-0 z-10 flex bg-card/95 backdrop-blur" style={inSheet ? undefined : { top: 'calc(env(safe-area-inset-top) + 3rem)', background: '#090909e6' }}>
+      <div className="sticky top-0 z-10 flex bg-card/95 backdrop-blur" style={inSheet ? undefined : { top: 'calc(env(safe-area-inset-top) + 3rem)', background: 'rgb(var(--bg) / 0.9)' }}>
         {(['summary', 'history', 'howto'] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} className={`relative flex-1 py-3 text-sm font-semibold ${tab === t ? 'text-white' : 'text-muted'}`}>
             {t === 'summary' ? 'Summary' : t === 'history' ? 'History' : 'How to'}
@@ -130,16 +149,28 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
                   {ex.equipment} · {TYPE_LABELS[ex.type]}
                 </div>
               </div>
-              <button onClick={() => setEditing(true)} className="press rounded-full bg-card2 p-2 text-muted">
-                <Pencil size={16} />
-              </button>
+              <div className="flex shrink-0 gap-2">
+                {workouts.length > 0 && (
+                  <button onClick={() => setMoving(true)} className="press rounded-full bg-card2 p-2 text-muted" aria-label="Move history to another exercise">
+                    <ArrowRightLeft size={16} />
+                  </button>
+                )}
+                <button onClick={() => setEditing(true)} className="press rounded-full bg-card2 p-2 text-muted">
+                  <Pencil size={16} />
+                </button>
+              </div>
             </div>
 
+            {(ex.equipment === 'Dumbbell' || ex.equipment === 'Cable') && (
+              <div className="mt-5">
+                <LoadSetupCard exerciseId={exerciseId} />
+              </div>
+            )}
             {standardFor(exerciseId) && <ExerciseRankCard exerciseId={exerciseId} score={rankScore} />}
 
             {sessions.length > 0 && (
               <>
-                <div className="mt-5 rounded-2xl bg-card p-3">
+                <div className="mt-5 cut bg-card p-3">
                   <ProgressChart
                     key={m.key}
                     data={sessions.map((p) => ({ date: p.date, value: p[m.key] as number })).filter((p) => p.value > 0)}
@@ -159,7 +190,7 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
                 </div>
 
                 <div className="label mt-6">Personal Records</div>
-                <div className="mt-2 divide-y divide-line rounded-2xl bg-card">
+                <div className="mt-2 divide-y divide-line cut bg-card">
                   {recordRows.map(([label, value], i) => (
                     <motion.div key={label} className="flex items-center gap-3 px-4 py-3" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}>
                       <Trophy size={18} className="text-warn" />
@@ -173,7 +204,7 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
                   <>
                     <div className="label mt-6">Set Records</div>
                     <div className="mt-1 text-xs text-muted">Heaviest weight you’ve lifted for each number of reps</div>
-                    <div className="mt-2 overflow-hidden rounded-2xl bg-card">
+                    <div className="mt-2 overflow-hidden cut bg-card">
                       <div className="grid grid-cols-[4rem_1fr_auto] gap-2 border-b border-line px-4 py-2 text-[11px] font-semibold tracking-wide text-muted">
                         <span>REPS</span>
                         <span>BEST WEIGHT</span>
@@ -195,18 +226,27 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
                 )}
               </>
             )}
-            {sessions.length === 0 && <div className="mt-6 rounded-2xl bg-card p-5 text-center text-sm text-muted">Log this exercise to see your progress chart and records.</div>}
+            {sessions.length === 0 && <div className="mt-6 cut bg-card p-5 text-center text-sm text-muted">Log this exercise to see your progress chart and records.</div>}
           </>
         )}
 
         {tab === 'history' && (
           <div className="space-y-3">
+            {history.length > 0 && (
+              <button onClick={() => setMoving(true)} className="press cut flex w-full items-center gap-3 bg-card p-4 text-left">
+                <ArrowRightLeft size={20} className="shrink-0 text-accent" />
+                <div className="flex-1">
+                  <div className="font-semibold">Wrong exercise?</div>
+                  <div className="text-sm text-muted">Move all {history.length} workouts to a different exercise (e.g. a Hevy import that picked the wrong one).</div>
+                </div>
+              </button>
+            )}
             {history.length === 0 && <div className="py-10 text-center text-muted">No history yet</div>}
             {history.map((w) => (
               <button
                 key={w.id}
                 onClick={() => !inSheet && nav(`/history/${w.id}`)}
-                className="block w-full rounded-2xl bg-card p-4 text-left"
+                className="block w-full cut bg-card p-4 text-left"
               >
                 <div className="font-semibold">{w.name}</div>
                 <div className="mb-2 text-sm text-muted">{format(w.start, 'EEEE, d MMM yyyy')}</div>
@@ -240,6 +280,7 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
         )}
       </motion.div>
       <CustomExerciseSheet open={editing} onClose={() => setEditing(false)} editing={ex} />
+      <ExercisePicker open={moving} onClose={() => setMoving(false)} single title="Move history to…" onPick={(ids) => ids[0] && void moveTo(ids[0])} />
     </div>
   );
 }

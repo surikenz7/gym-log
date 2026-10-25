@@ -148,7 +148,7 @@ export function Measures() {
                 </button>
               ))}
             </div>
-            <div className="rounded-2xl bg-card p-3">
+            <div className="cut bg-card p-3">
               <ProgressChart
                 key={active}
                 data={[...list]
@@ -160,7 +160,7 @@ export function Measures() {
             </div>
             <div>
               <div className="mb-2 font-semibold">History</div>
-              <div className="divide-y divide-line overflow-hidden rounded-2xl bg-card">
+              <div className="divide-y divide-line overflow-hidden cut bg-card">
                 <AnimatePresence initial={false}>
                   {list.map((m) => (
                     <motion.button

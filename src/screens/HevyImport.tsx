@@ -108,7 +108,7 @@ export function HevyImport() {
             </motion.div>
           ) : !parsed ? (
             <motion.div key="start" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="rounded-2xl bg-card p-4">
+              <div className="cut bg-card p-4">
                 <div className="font-semibold">1. Export from Hevy</div>
                 <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-white/80">
                   <li>Open Hevy → Profile → ⚙️ Settings</li>
@@ -129,7 +129,7 @@ export function HevyImport() {
             </motion.div>
           ) : (
             <motion.div key="review" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }}>
-              <div className="rounded-2xl bg-card p-4">
+              <div className="cut bg-card p-4">
                 <div className="text-2xl font-bold">{parsed.workouts.length} workouts</div>
                 <div className="text-sm text-muted">
                   {format(stats!.from, 'd MMM yyyy')} – {format(stats!.to, 'd MMM yyyy')} · {parsed.exercises.length} exercises
@@ -153,7 +153,7 @@ export function HevyImport() {
                   {onlyNew ? 'Show all' : 'Only needs review'}
                 </button>
               </div>
-              <div className="divide-y divide-line overflow-hidden rounded-2xl bg-card">
+              <div className="divide-y divide-line overflow-hidden cut bg-card">
                 {names.map((e) => {
                   const t = mapping[e.name];
                   const ex = 'id' in t ? getExercise(t.id) : null;

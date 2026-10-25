@@ -7,12 +7,19 @@
   --sat: env(safe-area-inset-top);
   --sab: env(safe-area-inset-bottom);
   --accent: 229 38 45;
+  --accent2: 255 122 26;
   --ink: 255 255 255;
+  --done: 34 197 94;
+  --done-soft: 26 50 31;
+  --bg: 11 7 7;
+  --card: 24 16 16;
+  --card2: 36 23 23;
+  --line: 58 36 36;
 }
 
 html,
 body {
-  background: #090909;
+  background: rgb(var(--bg));
   color: #fff;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
@@ -32,6 +39,19 @@ body {
 
 #root {
   height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Theme glow bleeding in from the top of the screen */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 340px;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 15% 0%, rgb(var(--accent) / 0.16), transparent 65%),
+    radial-gradient(90% 80% at 100% 0%, rgb(var(--accent2) / 0.08), transparent 60%);
 }
 
 /* Film-grain texture over everything for a raw, gritty look */
@@ -82,6 +102,33 @@ input::-webkit-inner-spin-button {
   /* diagonal hazard stripes on top of a solid background */
   .stripes {
     background-image: repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.09) 0 10px, transparent 10px 20px);
+  }
+  /* Chamfered "cut steel plate" corners instead of soft rounded cards */
+  .cut {
+    border-radius: 0 !important;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  }
+  .cut-sm {
+    border-radius: 0 !important;
+    clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+  }
+  .hex {
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  }
+  .grad {
+    background-color: rgb(var(--accent));
+    background-image: linear-gradient(120deg, rgb(var(--accent)) 30%, rgb(var(--accent2)));
+    color: rgb(var(--ink));
+  }
+  .grad.stripes {
+    background-image: repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.1) 0 10px, transparent 10px 20px),
+      linear-gradient(120deg, rgb(var(--accent)) 30%, rgb(var(--accent2)));
+  }
+  .text-grad {
+    background-image: linear-gradient(100deg, rgb(var(--accent)), rgb(var(--accent2)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   .tabular {
     font-variant-numeric: tabular-nums;

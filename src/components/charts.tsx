@@ -1,13 +1,15 @@
 import { format } from 'date-fns';
 import { useSettings } from '../state/settings';
-import { accentHex } from '../lib/theme';
+import { themeOf } from '../lib/theme';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 // Single-series charts: one accent hue, 2px line, ringed 8px dots, ~10% area wash, hairline solid grid.
-const SURFACE = '#151515';
-const GRID = '#2d2d2d';
 const MUTED = '#8e8e8e';
-const useAccent = () => accentHex(useSettings((s) => s.theme));
+/** Theme colours as plain hex — SVG attributes can't rely on CSS variables everywhere. */
+function useChartColors() {
+  const t = themeOf(useSettings((s) => s.theme));
+  return { ACCENT: t.accent, SURFACE: t.card, GRID: t.line };
+}
 
 export function compact(n: number) {
   if (Math.abs(n) >= 1e6) return `${+(n / 1e6).toFixed(1)}M`;
@@ -33,7 +35,7 @@ export function ProgressChart({
   fmt: (v: number) => string;
   height?: number;
 }) {
-  const ACCENT = useAccent();
+  const { ACCENT, SURFACE, GRID } = useChartColors();
   if (data.length === 0) return <div className="flex items-center justify-center text-sm text-muted" style={{ height }}>No data yet</div>;
   const last = data[data.length - 1];
   return (
@@ -107,7 +109,7 @@ export function BarsChart({
   fmt: (v: number) => string;
   height?: number;
 }) {
-  const ACCENT = useAccent();
+  const { ACCENT, GRID } = useChartColors();
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -8 }} barCategoryGap={2}>
@@ -130,6 +132,7 @@ const HEART = '#f43f5e';
 
 /** Heart rate over the workout; samples are spread evenly across its duration. */
 export function HeartRateChart({ hr, minutes, height = 140 }: { hr: number[]; minutes: number; height?: number }) {
+  const { SURFACE, GRID } = useChartColors();
   const data = hr.map((v, i) => ({ t: hr.length > 1 ? (i / (hr.length - 1)) * minutes : 0, v }));
   const lo = Math.floor((Math.min(...hr) - 5) / 10) * 10;
   const hi = Math.ceil((Math.max(...hr) + 5) / 10) * 10;

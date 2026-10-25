@@ -21,7 +21,7 @@ function Section({ title, children, foot }: { title: string; children: ReactNode
   return (
     <div>
       <div className="label px-4 pb-1.5">{title}</div>
-      <div className="divide-y divide-line overflow-hidden rounded-2xl bg-card">{children}</div>
+      <div className="divide-y divide-line overflow-hidden cut bg-card">{children}</div>
       {foot && <div className="px-4 pt-1.5 text-xs text-muted">{foot}</div>}
     </div>
   );
@@ -125,16 +125,32 @@ export function Settings() {
           </Row>
         </Section>
 
-        <Section title="Look" foot="Accent colour used across the app.">
+        <Section title="Look" foot="Changes the accent, highlights, background and cards across the whole app.">
           <div className="grid grid-cols-4 gap-2 p-3">
-            {(Object.keys(THEMES) as ThemeId[]).map((id) => (
-              <button key={id} onClick={() => s.update({ theme: id })} className="press flex flex-col items-center gap-1.5 rounded-xl bg-card2 py-2.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: THEMES[id].hex, color: THEMES[id].ink }}>
-                  {s.theme === id && <Check size={18} strokeWidth={3} />}
-                </span>
-                <span className={`font-display text-xs font-semibold uppercase tracking-wider ${s.theme === id ? 'text-white' : 'text-muted'}`}>{THEMES[id].name}</span>
-              </button>
-            ))}
+            {(Object.keys(THEMES) as ThemeId[]).map((id) => {
+              const t = THEMES[id];
+              const on = s.theme === id;
+              return (
+                <button key={id} onClick={() => s.update({ theme: id })} className="press flex flex-col items-center gap-1.5">
+                  <span
+                    className="cut-sm relative flex h-16 w-full flex-col justify-end overflow-hidden p-1.5"
+                    style={{ background: t.bg, boxShadow: on ? `inset 0 0 0 2px ${t.accent}` : `inset 0 0 0 1px ${t.line}` }}
+                  >
+                    <span className="absolute inset-x-0 top-0 h-6" style={{ background: `linear-gradient(120deg, ${t.accent}, ${t.accent2})` }} />
+                    <span className="relative flex gap-1">
+                      <span className="h-3 flex-1" style={{ background: t.card }} />
+                      <span className="h-3 w-3" style={{ background: t.done }} />
+                    </span>
+                    {on && (
+                      <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full" style={{ background: t.ink, color: t.accent }}>
+                        <Check size={11} strokeWidth={4} />
+                      </span>
+                    )}
+                  </span>
+                  <span className={`font-display text-[11px] font-semibold uppercase tracking-wider ${on ? 'text-white' : 'text-muted'}`}>{t.name}</span>
+                </button>
+              );
+            })}
           </div>
         </Section>
 

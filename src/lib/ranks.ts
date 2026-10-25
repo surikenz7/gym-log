@@ -1,4 +1,4 @@
-import type { WSet, Workout } from '../types';
+import type { Exercise, LoadSetup, WSet, Workout } from '../types';
 import { epley1RM } from './stats';
 
 /**
@@ -144,6 +144,50 @@ export const STANDARDS: Record<string, Std> = {
   Ab_Crunch_Machine: r('core', [0.3, 0.55, 0.85, 1.2, 1.6]),
 };
 
+/**
+ * Dumbbell / cable standards measured per hand (one dumbbell, one handle).
+ * Every other standard is the total load on one implement (bar, rope, single dumbbell).
+ */
+const PER_SIDE = new Set([
+  'Dumbbell_Bench_Press', 'Incline_Dumbbell_Press', 'Dumbbell_Flyes', 'Cable_Crossover', 'One-Arm_Dumbbell_Row', 'Dumbbell_Shrug',
+  'Dumbbell_Shoulder_Press', 'Arnold_Dumbbell_Press', 'Side_Lateral_Raise', 'Cable_Seated_Lateral_Raise', 'Front_Dumbbell_Raise', 'Reverse_Flyes',
+  'Dumbbell_Bicep_Curl', 'Hammer_Curls', 'Concentration_Curls', 'Incline_Dumbbell_Curl',
+  'x_bulgarian_split_squat', 'Dumbbell_Lunges', 'Stiff-Legged_Dumbbell_Deadlift',
+]);
+
+const SPLIT_EQUIPMENT = ['Dumbbell', 'Cable'];
+
+/** Which "how did you log it" questions apply to an exercise. */
+export function loadQuestions(ex: Pick<Exercise, 'id' | 'equipment'>) {
+  const split = SPLIT_EQUIPMENT.includes(ex.equipment);
+  return {
+    // ranked single-implement lifts (rope pushdown, goblet squat) can't be "per side"
+    side: split && (STANDARDS[ex.id] ? PER_SIDE.has(ex.id) : true),
+    pulley: ex.equipment === 'Cable',
+  };
+}
+
+export function loadMissing(ex: Pick<Exercise, 'id' | 'equipment' | 'load'>) {
+  const q = loadQuestions(ex);
+  return (q.side && !ex.load?.side) || (q.pulley && !ex.load?.pulley);
+}
+
+/**
+ * Multiplier from the logged weight to the weight the standard expects, or null while the
+ * exercise still needs its load setup (so nobody gets a better rank from ambiguous numbers).
+ */
+export function loadFactor(ex: Pick<Exercise, 'id' | 'equipment' | 'load'>): number | null {
+  if (!STANDARDS[ex.id] || STANDARDS[ex.id].metric !== 'ratio') return 1;
+  if (loadMissing(ex)) return null;
+  const q = loadQuestions(ex);
+  let f = 1;
+  if (q.side && ex.load?.side === 'both') f /= 2;
+  if (q.pulley) f /= ex.load?.pulley ?? 1;
+  return f;
+}
+
+export type { LoadSetup };
+
 export interface Tier {
   name: string;
   min: number;
@@ -235,13 +279,13 @@ export function setValue(set: Pick<WSet, 'weight' | 'reps' | 'duration'>, std: S
   }
 }
 
-/** Weight (kg) needed to reach `score` with `reps` reps. Null for rep/time standards. */
-export function weightForScore(exerciseId: string, score: number, reps: number, bw: number, sex: Sex): number | null {
+/** Logged weight (kg) needed to reach `score` with `reps` reps. Null for rep/time standards. */
+export function weightForScore(exerciseId: string, score: number, reps: number, bw: number, sex: Sex, factor = 1): number | null {
   const std = STANDARDS[exerciseId];
   if (!std) return null;
   const v = valueForScore(score, anchors(std, sex));
   const f = reps === 1 ? 1 : 1 + reps / 30;
-  if (std.metric === 'ratio') return (v * bw) / bwScale(bw, sex) / f;
+  if (std.metric === 'ratio') return (v * bw) / bwScale(bw, sex) / f / factor;
   if (std.metric === 'bw') return (v * bw) / f - bw;
   return null;
 }
@@ -256,12 +300,14 @@ export interface RankCtx {
   sex: Sex;
   /** bodyweight in kg at a moment in time */
   bwAt: (t: number) => number;
+  /** logged → standard weight multiplier per exercise; null = not set up yet (unranked) */
+  factor?: (exerciseId: string) => number | null;
 }
 
-export function setScore(exerciseId: string, set: WSet, bw: number, sex: Sex) {
+export function setScore(exerciseId: string, set: WSet, bw: number, sex: Sex, factor: number | null = 1) {
   const std = STANDARDS[exerciseId];
-  if (!std || set.type === 'warmup') return 0;
-  const v = setValue(set, std, bw, sex);
+  if (!std || set.type === 'warmup' || factor == null) return 0;
+  const v = setValue(factor === 1 ? set : { ...set, weight: (set.weight ?? 0) * factor }, std, bw, sex);
   return v == null ? 0 : Math.round(scoreFor(v, anchors(std, sex)));
 }
 
@@ -280,9 +326,11 @@ export function exerciseRanks(workouts: Workout[], ctx: RankCtx): Map<string, Ex
     const bw = ctx.bwAt(w.start);
     for (const e of w.exercises) {
       if (!STANDARDS[e.exerciseId]) continue;
+      const factor = ctx.factor ? ctx.factor(e.exerciseId) : 1;
+      if (factor == null) continue;
       for (const s of e.sets) {
         if (!s.done) continue;
-        const score = setScore(e.exerciseId, s, bw, ctx.sex);
+        const score = setScore(e.exerciseId, s, bw, ctx.sex, factor);
         const cur = out.get(e.exerciseId);
         if (score > 0 && (!cur || score > cur.score)) out.set(e.exerciseId, { exerciseId: e.exerciseId, score, workoutId: w.id, setId: s.id, date: w.start });
       }

@@ -81,7 +81,7 @@ export function WatchSetup() {
           Web apps can’t read Apple Health directly, so a free Shortcut does it for Gym Log. You set it up once (about 5 minutes).
         </div>
         {STEPS.map((s, i) => (
-          <div key={s.title} className="rounded-2xl bg-card p-4">
+          <div key={s.title} className="cut bg-card p-4">
             <div className="mb-1 flex items-center gap-2 font-semibold">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold">{i + 1}</span>
               {s.title}

@@ -81,4 +81,13 @@ describe('hevy import', () => {
     expect(ws[0].exercises[1].supersetId).toBe(ws[0].exercises[2].supersetId);
     expect(ws[0].exerciseIds).toContain('id:Plank');
   });
+
+  it('never swaps machine flies for dumbbell flies', () => {
+    const w = ['weight', 'reps'] as const;
+    expect(matchExercise('Chest Fly (Machine)', [...w], BUILTIN)?.id).toBe('Butterfly');
+    expect(matchExercise('Butterfly (Pec Deck)', [...w], BUILTIN)?.id).toBe('Butterfly');
+    expect(matchExercise('Chest Fly (Dumbbell)', [...w], BUILTIN)?.id).toBe('Dumbbell_Flyes');
+    const m = matchExercise('Seated Fly Thing (Machine)', [...w], BUILTIN);
+    expect(m == null || BUILTIN.find((e) => e.id === m.id)!.equipment !== 'Dumbbell').toBe(true);
+  });
 });

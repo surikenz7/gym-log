@@ -32,7 +32,7 @@ export function RankSetup({ onDone, compact }: { onDone?: () => void; compact?: 
   };
 
   return (
-    <div className={compact ? '' : 'rounded-2xl border border-line bg-card p-4'}>
+    <div className={compact ? '' : 'cut bg-card p-4'}>
       {!compact && (
         <div className="mb-3 flex items-center gap-3">
           <Lock size={18} className="text-accent" />
@@ -44,17 +44,17 @@ export function RankSetup({ onDone, compact }: { onDone?: () => void; compact?: 
       )}
       <div className="grid grid-cols-2 gap-2">
         {(['male', 'female'] as Sex[]).map((x) => (
-          <button key={x} onClick={() => setSex(x)} className={`press rounded-xl py-2.5 font-semibold capitalize ${sex === x ? 'bg-accent' : 'bg-card2 text-white/80'}`}>
+          <button key={x} onClick={() => setSex(x)} className={`press cut-sm py-2.5 font-semibold capitalize ${sex === x ? 'bg-accent' : 'bg-card2 text-white/80'}`}>
             {x}
           </button>
         ))}
       </div>
-      <label className="mt-2 flex items-center gap-3 rounded-xl bg-card2 px-4 py-1.5">
+      <label className="mt-2 flex items-center gap-3 cut-sm bg-card2 px-4 py-1.5">
         <span className="flex-1 text-sm text-muted">Bodyweight</span>
         <NumInput value={bw} onChange={setBw} placeholder="0" className="!w-24 !text-right text-lg" />
         <span className="text-sm text-muted">{s.weightUnit}</span>
       </label>
-      <button onClick={save} className="press mt-3 w-full rounded-xl bg-accent py-3 font-display text-lg font-bold tracking-wider">
+      <button onClick={save} className="press cut-sm grad mt-3 w-full py-3 font-display text-lg font-bold tracking-wider">
         Save
       </button>
     </div>
@@ -90,13 +90,24 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
     );
   if (!ctx) return null;
 
+  const factor = ctx.factor ? ctx.factor(exerciseId) : 1;
+  if (factor == null)
+    return (
+      <div className="mt-5">
+        <div className="label mb-2">Rank</div>
+        <div className="cut flex items-center gap-4 bg-card p-4">
+          <RankBadge score={null} size={56} />
+          <div className="text-sm text-white/80">Answer “How you log the weight” above to get this exercise ranked.</div>
+        </div>
+      </div>
+    );
   const bw = ctx.bwAt(Date.now());
   const ti = score != null ? tierIndex(score) : -1;
   const next = TIERS[ti + 1];
   const isWeight = std.metric === 'ratio' || std.metric === 'bw';
   const target = (min: number, reps: number) => {
     if (isWeight) {
-      const kg = weightForScore(exerciseId, min, reps, bw, ctx.sex)!;
+      const kg = weightForScore(exerciseId, min, reps, bw, ctx.sex, factor)!;
       if (std.metric === 'bw' && kg <= 0) return 'BW'; // bodyweight alone is enough
       return `${std.metric === 'bw' ? '+' : ''}${fmtW(loadable(kg, s), s)} ${s.weightUnit}`;
     }
@@ -113,7 +124,7 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
   return (
     <div className="mt-5">
       <div className="label mb-2">Rank</div>
-      <div className="overflow-hidden rounded-2xl border border-line bg-card">
+      <div className="overflow-hidden cut bg-card">
         <button onClick={() => nav('/ranks')} className="flex w-full items-center gap-4 p-4 text-left">
           <motion.div initial={{ scale: 0.6, rotate: -10, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 14 }}>
             <RankBadge score={score} size={72} />

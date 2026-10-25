@@ -139,7 +139,7 @@ export function Profile() {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-3 divide-x divide-line rounded-2xl border border-line bg-card py-3 text-center">
+        <div className="mt-4 grid grid-cols-3 divide-x divide-line cut bg-card py-3 text-center">
           <div>
             <div className="font-display text-2xl font-bold">{workouts.length}</div>
             <div className="label !text-[10px]">Workouts</div>
@@ -162,7 +162,7 @@ export function Profile() {
 
         <motion.button
           onClick={() => nav('/ranks')}
-          className="press relative mt-3 flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-line bg-card p-4 text-left"
+          className="press relative mt-3 flex w-full items-center gap-4 overflow-hidden cut bg-card p-4 text-left"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -190,7 +190,7 @@ export function Profile() {
           <ChevronRight size={18} className="relative text-muted" />
         </motion.button>
 
-        <div className="mt-3 rounded-2xl border border-line bg-card p-4">
+        <div className="mt-3 cut bg-card p-4">
           <div className="font-display text-lg font-semibold">{headline}</div>
           <div className="mb-3 text-xs text-muted">Last 12 weeks</div>
           <BarsChart key={metric} data={weeks} fmt={fmtMetric} height={170} />
@@ -213,7 +213,7 @@ export function Profile() {
             <motion.button
               key={label}
               onClick={() => nav(to)}
-              className="press flex items-center gap-3 rounded-xl border border-line bg-card px-4 py-3.5 font-display font-semibold uppercase tracking-wide"
+              className="press flex items-center gap-3 cut-sm bg-card px-4 py-3.5 font-display font-semibold uppercase tracking-wide"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.04 }}
@@ -225,7 +225,7 @@ export function Profile() {
 
         <div className="label mb-2 mt-6">Workouts</div>
         {workouts.length === 0 ? (
-          <div className="rounded-2xl bg-card p-6 text-center text-sm text-muted">No workouts yet</div>
+          <div className="cut bg-card p-6 text-center text-sm text-muted">No workouts yet</div>
         ) : (
           <WorkoutList workouts={workouts} />
         )}

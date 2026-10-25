@@ -5,7 +5,7 @@ import { haptic } from '../lib/haptics';
 import { levelFromXp, levelTitle, type Achievement, type WorkoutReward } from '../lib/progress';
 import { tierIndex, TIERS } from '../lib/ranks';
 import { fanfare } from '../lib/sound';
-import { accentHex } from '../lib/theme';
+import { themeOf } from '../lib/theme';
 import { useSettings } from '../state/settings';
 import { RankBadge, Rays, TierName } from './RankBadge';
 import { Portal } from './ui';
@@ -27,7 +27,8 @@ export function CountUp({ value, from = 0, fmt = (v) => Math.round(v).toLocaleSt
 
 export function Confetti({ colors }: { colors?: string[] }) {
   const theme = useSettings((s) => s.theme);
-  const palette = colors ?? [accentHex(theme), '#ffffff', '#f2b705', '#22c55e', '#9ca3af'];
+  const t = themeOf(theme);
+  const palette = colors ?? [t.accent, t.accent2, '#ffffff', t.done, t.accent];
   const pieces = useMemo(
     () =>
       Array.from({ length: 80 }, (_, i) => ({
@@ -138,7 +139,7 @@ export function XpCard({ reward }: { reward: WorkoutReward }) {
   }, [leveled]);
   const startPct = leveled ? 0 : (before.into / before.need) * 100;
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-line bg-card p-4">
+    <div className="relative overflow-hidden cut bg-card p-4">
       <div className="flex items-end justify-between">
         <div>
           <div className="label">Experience</div>
@@ -173,7 +174,7 @@ export function XpCard({ reward }: { reward: WorkoutReward }) {
       <AnimatePresence>
         {leveled && phase === 1 && (
           <motion.div
-            className="mt-3 rounded-xl bg-accent py-2.5 text-center font-display text-xl font-bold tracking-widest"
+            className="mt-3 cut-sm grad py-2.5 text-center font-display text-xl font-bold tracking-widest"
             initial={{ scale: 0.4, opacity: 0 }}
             animate={{ scale: [0.4, 1.12, 1], opacity: 1 }}
             transition={{ duration: 0.5, delay: 1 }}
@@ -195,7 +196,7 @@ export interface RankChange {
 export function RankChanges({ changes }: { changes: RankChange[] }) {
   if (!changes.length) return null;
   return (
-    <div className="rounded-2xl border border-line bg-card p-4">
+    <div className="cut bg-card p-4">
       <div className="label mb-2">Ranks</div>
       <div className="space-y-2.5">
         {changes.map((c, i) => {
@@ -230,13 +231,13 @@ export function RankChanges({ changes }: { changes: RankChange[] }) {
 export function AchievementsUnlocked({ list }: { list: Achievement[] }) {
   if (!list.length) return null;
   return (
-    <div className="rounded-2xl border border-warn/40 bg-gradient-to-b from-warn/10 to-card p-4">
+    <div className="cut border border-warn/40 bg-gradient-to-b from-warn/10 to-card p-4">
       <div className="label mb-3 !text-warn">Trophy unlocked</div>
       <div className="grid grid-cols-2 gap-2">
         {list.map((a, i) => (
           <motion.div
             key={a.id}
-            className="flex items-center gap-2.5 rounded-xl bg-black/30 p-2.5"
+            className="flex items-center gap-2.5 cut-sm bg-black/30 p-2.5"
             initial={{ scale: 0.3, opacity: 0, rotate: -8 }}
             animate={{ scale: 1, opacity: 1, rotate: 0 }}
             transition={{ delay: 0.6 + i * 0.15, type: 'spring', stiffness: 300, damping: 14 }}

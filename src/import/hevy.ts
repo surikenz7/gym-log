@@ -152,17 +152,48 @@ const stem = (t: string) => {
 };
 const tokens = (s: string) => new Set(normalize(s).split(' ').filter(Boolean).map(stem));
 
+/** Hevy names whose library counterpart has a different name (checked before fuzzy matching). */
+const HEVY_ALIASES: Record<string, string> = {
+  'chest fly machine': 'Butterfly',
+  'pec deck machine': 'Butterfly',
+  'butterfly pec deck': 'Butterfly',
+  'seated chest fly machine': 'Butterfly',
+  'chest fly cable': 'Cable_Crossover',
+  'cable fly crossovers': 'Cable_Crossover',
+  'low cable fly crossovers': 'Cable_Crossover',
+  'rear delt reverse fly cable': 'Cable_Rear_Delt_Fly',
+  'chest fly band': 'Back_Flyes_-_With_Bands',
+  'incline chest fly dumbbell': 'Incline_Dumbbell_Flyes',
+  'decline chest fly dumbbell': 'Decline_Dumbbell_Flyes',
+};
+
+/** Equipment written in Hevy's "(…)" suffix, mapped to library equipment that may match it. */
+const EQUIPMENT_HINTS: [RegExp, string[]][] = [
+  [/smith/, ['Smith Machine']],
+  [/machine|pec deck/, ['Machine', 'Other']],
+  [/dumbbell/, ['Dumbbell']],
+  [/barbell/, ['Barbell', 'EZ Bar']],
+  [/cable/, ['Cable']],
+  [/kettlebell/, ['Kettlebell']],
+  [/band/, ['Resistance Band']],
+];
+
 /** Best library match for a Hevy exercise name, or null. */
 export function matchExercise(hevyName: string, fields: Field[], list: Exercise[]): { id: string; exact: boolean } | null {
   const n = normalize(hevyName);
   for (const e of list) {
     if ((normalize(e.name) === n || (e.alt && normalize(e.alt) === n)) && compatible(e.type, fields)) return { id: e.id, exact: true };
   }
+  const alias = list.find((e) => e.id === HEVY_ALIASES[n]);
+  if (alias && compatible(alias.type, fields)) return { id: alias.id, exact: true };
   const m = hevyName.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  // a "(Machine)" exercise must never become a dumbbell one, etc.
+  const hint = m ? EQUIPMENT_HINTS.find(([re]) => re.test(m[2].toLowerCase()))?.[1] : undefined;
   const want = tokens(m ? `${m[1]} ${m[2]}` : hevyName);
   let best: { id: string; score: number } | null = null;
   for (const e of list) {
     if (e.stretch || !compatible(e.type, fields)) continue;
+    if (hint && !hint.includes(e.equipment)) continue;
     const have = tokens(`${e.name} ${e.equipment}`);
     let inter = 0;
     want.forEach((t) => have.has(t) && inter++);

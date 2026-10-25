@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ACHIEVEMENTS, computeJourney, levelFromXp, volumeComparison, xpForLevel } from '../lib/progress';
-import { anchors, bodyweightTimeline, exerciseRanks, groupRanks, overallScore, scoreFor, setScore, STANDARDS, tierOf, valueForScore, weightForScore } from '../lib/ranks';
+import { anchors, bodyweightTimeline, loadFactor, loadQuestions, exerciseRanks, groupRanks, overallScore, scoreFor, setScore, STANDARDS, tierOf, valueForScore, weightForScore } from '../lib/ranks';
 import type { WSet, Workout } from '../types';
 
 const BENCH = 'Barbell_Bench_Press_-_Medium_Grip';
@@ -77,6 +77,40 @@ describe('ranks', () => {
     expect(bw(60)).toBe(80);
     expect(bw(200)).toBe(90);
     expect(bodyweightTimeline([])).toBeNull();
+  });
+});
+
+describe('load setup', () => {
+  const db = { id: 'Dumbbell_Bench_Press', equipment: 'Dumbbell' };
+  const rope = { id: 'Triceps_Pushdown_-_Rope_Attachment', equipment: 'Cable' };
+  const fly = { id: 'Cable_Crossover', equipment: 'Cable' };
+
+  it('asks only the questions that matter', () => {
+    expect(loadQuestions(db)).toEqual({ side: true, pulley: false });
+    expect(loadQuestions(rope)).toEqual({ side: false, pulley: true });
+    expect(loadQuestions(fly)).toEqual({ side: true, pulley: true });
+    expect(loadQuestions({ id: 'Barbell_Squat', equipment: 'Barbell' })).toEqual({ side: false, pulley: false });
+  });
+
+  it('leaves dumbbell / cable lifts unranked until set up, then converts the logged weight', () => {
+    expect(loadFactor(db)).toBeNull();
+    expect(loadFactor({ ...db, load: { side: 'one' } })).toBe(1);
+    expect(loadFactor({ ...db, load: { side: 'both' } })).toBe(0.5);
+    expect(loadFactor(rope)).toBeNull();
+    expect(loadFactor({ ...rope, load: { pulley: 2 } })).toBe(0.5);
+    expect(loadFactor({ ...fly, load: { side: 'both', pulley: 2 } })).toBe(0.25);
+    expect(loadFactor({ id: 'Barbell_Squat', equipment: 'Barbell' })).toBe(1);
+  });
+
+  it('applies the factor when ranking', () => {
+    const ws = [workout('a', 1, 'Dumbbell_Bench_Press', [set(60, 8)])];
+    const base = { sex: 'male' as const, bwAt: () => 80 };
+    expect(exerciseRanks(ws, { ...base, factor: () => null }).size).toBe(0);
+    const one = exerciseRanks(ws, { ...base, factor: () => 1 }).get('Dumbbell_Bench_Press')!.score;
+    const both = exerciseRanks(ws, { ...base, factor: () => 0.5 }).get('Dumbbell_Bench_Press')!.score;
+    expect(both).toBeLessThan(one);
+    expect(setScore('Dumbbell_Bench_Press', set(60, 8), 80, 'male', 0.5)).toBe(setScore('Dumbbell_Bench_Press', set(30, 8), 80, 'male'));
+    expect(weightForScore('Dumbbell_Bench_Press', 500, 5, 80, 'male', 0.5)).toBeCloseTo(2 * weightForScore('Dumbbell_Bench_Press', 500, 5, 80, 'male')!);
   });
 });
 

@@ -42,7 +42,7 @@ function StatGrid({ w, prs }: { w: Workout; prs: number }) {
     ['Records', String(prs)],
   ];
   return (
-    <div className="grid grid-cols-4 gap-2 rounded-2xl border border-line bg-card p-4">
+    <div className="grid grid-cols-4 gap-2 cut bg-card p-4">
       {items.map(([l, v]) => (
         <div key={l}>
           <div className="label !text-[10px]">{l}</div>
@@ -62,7 +62,7 @@ function ExerciseBlocks({ w, prs }: { w: Workout; prs: PR[] }) {
         const ex = getExercise(e.exerciseId);
         let n = 0;
         return (
-          <div key={e.id} className="rounded-2xl bg-card p-4">
+          <div key={e.id} className="cut bg-card p-4">
             <button className="flex items-center gap-3" onClick={() => nav(`/exercises/${ex.id}`)}>
               <ExerciseThumb ex={ex} size={36} />
               <span className="font-semibold text-accent">{ex.name}</span>
@@ -132,7 +132,7 @@ export function WorkoutDetail() {
           <div className="text-sm text-muted">{format(w.start, 'EEEE, d MMMM yyyy · HH:mm')}</div>
         </div>
         <StatGrid w={w} prs={prs.length} />
-        {w.notes && <div className="rounded-2xl bg-card p-4 text-sm text-white/85">{w.notes}</div>}
+        {w.notes && <div className="cut bg-card p-4 text-sm text-white/85">{w.notes}</div>}
         <WatchCard w={w} />
         <ExerciseBlocks w={w} prs={prs} />
       </div>
@@ -190,7 +190,7 @@ export function WorkoutEdit() {
       <div className="space-y-3 px-4 pb-4">
         <input value={w.name} onChange={(e) => setW({ ...w, name: e.target.value })} className="w-full bg-transparent py-2 text-2xl font-bold outline-none" />
         <div className="grid grid-cols-2 gap-2">
-          <label className="rounded-xl bg-card p-3">
+          <label className="cut-sm bg-card p-3">
             <div className="text-xs text-muted">Start</div>
             <input
               type="datetime-local"
@@ -202,7 +202,7 @@ export function WorkoutEdit() {
               className="w-full bg-transparent text-sm outline-none"
             />
           </label>
-          <label className="rounded-xl bg-card p-3">
+          <label className="cut-sm bg-card p-3">
             <div className="text-xs text-muted">Duration (min)</div>
             <input
               inputMode="numeric"
@@ -217,7 +217,7 @@ export function WorkoutEdit() {
           onChange={(e) => setW({ ...w, notes: e.target.value })}
           rows={2}
           placeholder="Notes"
-          className="w-full resize-none rounded-xl bg-card p-3 text-sm outline-none placeholder:text-muted"
+          className="w-full resize-none cut-sm bg-card p-3 text-sm outline-none placeholder:text-muted"
         />
       </div>
       <WorkoutEditor
@@ -334,7 +334,7 @@ export function Summary() {
           {tiles.map(([label, value, fmt], i) => (
             <motion.div
               key={label}
-              className="rounded-2xl border border-line bg-card px-4 py-3"
+              className="cut bg-card px-4 py-3"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 + i * 0.07 }}
@@ -347,7 +347,7 @@ export function Summary() {
           ))}
         </div>
         {comparison && (
-          <motion.div className="mt-2 rounded-2xl border border-line bg-card px-4 py-3 text-sm text-white/80" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
+          <motion.div className="mt-2 cut bg-card px-4 py-3 text-sm text-white/80" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
             💪 You moved <b className="text-white">{fmtVolume(vol, settings)}</b> — that’s like lifting <b className="text-white">{comparison}</b>.
           </motion.div>
         )}
@@ -357,7 +357,7 @@ export function Summary() {
           {reward && <AchievementsUnlocked list={reward.achievements} />}
           {ranks && <RankChanges changes={ranks.changes} />}
           {ctx === null && w.exerciseIds.some((x) => STANDARDS[x]) && (
-            <button onClick={() => nav('/ranks')} className="press flex w-full items-center gap-3 rounded-2xl border border-line bg-card p-4 text-left">
+            <button onClick={() => nav('/ranks')} className="press flex w-full items-center gap-3 cut bg-card p-4 text-left">
               <RankBadge score={null} size={40} />
               <div className="flex-1 text-sm">
                 <div className="font-display font-semibold uppercase">Unlock your ranks</div>
@@ -366,7 +366,7 @@ export function Summary() {
             </button>
           )}
           {prs.length > 0 && (
-            <div className="rounded-2xl border border-line bg-card p-4">
+            <div className="cut bg-card p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Trophy size={18} className="text-warn" /> <span className="label !text-white">New Personal Records</span>
               </div>
