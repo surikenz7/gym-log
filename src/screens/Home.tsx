@@ -68,18 +68,21 @@ export function Home() {
   return (
     <Page>
       <div className="space-y-3 px-4 pb-8 pt-safe">
-        <div className="flex items-end justify-between gap-3 pt-5">
-          <div className="min-w-0">
+        <div className="flex items-center justify-between gap-2 pt-5">
+          <div className="min-w-0 flex-1">
             <div className="label">{format(new Date(), 'EEEE · d MMMM')}</div>
-            <h1 className="mt-0.5 font-display text-[40px] font-bold uppercase leading-[0.95] tracking-tight">
+            <h1 className="mt-0.5 break-words font-display text-[38px] font-bold uppercase leading-[0.95] tracking-tight">
               {greeting()},
               <br />
               <span className="text-grad">{settings.name.trim() || 'Lifter'}</span>
             </h1>
           </div>
-          <button onClick={() => nav('/profile')} className="press relative shrink-0">
-            <Avatar size={58} ring={overall != null ? tierOf(overall).c[1] : undefined} />
-            <span className="cut-sm grad absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-1.5 font-display text-[10px] font-bold">LVL {lvl.level}</span>
+          {/* big profile picture filling the right side of the greeting, decoration included */}
+          <button onClick={() => nav('/profile')} className="press relative mr-3 mt-7 shrink-0">
+            <Avatar size={122} ring={overall != null ? tierOf(overall).c[1] : undefined} />
+            <span className="grad absolute -bottom-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full px-2.5 py-0.5 font-display text-xs font-bold shadow-lg">
+              LVL {lvl.level}
+            </span>
           </button>
         </div>
 

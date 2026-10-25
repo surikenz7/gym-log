@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Check, ChevronRight, Copy, Smartphone, Download, ImageDown, Shield, Trash2, Upload } from 'lucide-react';
+import { Check, ChevronRight, Copy, Smartphone, Sparkles, Download, ImageDown, Shield, Trash2, Upload } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { REST_OPTIONS } from '../components/ExerciseCard';
@@ -13,6 +13,10 @@ import { fmtDurationLong, fmtNum, kgTo } from '../lib/units';
 import { useLatestBodyweight } from '../lib/useProgress';
 import type { ModeId, StyleId, ThemeId } from '../types';
 import { AvatarPicker } from './Profile';
+import { unlockDecoration } from './Decorations';
+import { DECORATIONS } from '../lib/decorations';
+import { haptic } from '../lib/haptics';
+import { fanfare } from '../lib/sound';
 import { confirmDialog, toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
 import { useWorkout } from '../state/workout';
@@ -109,6 +113,18 @@ export function Settings() {
   const [img, setImg] = useState<{ done: number; total: number } | null>(null);
   const [rankSheet, setRankSheet] = useState(false);
   const [iconHelp, setIconHelp] = useState(false);
+  const taps = useRef<number[]>([]);
+  // easter egg: tap the version number 7 times quickly
+  const tapVersion = () => {
+    const now = Date.now();
+    taps.current = [...taps.current.filter((t) => now - t < 3000), now];
+    if (taps.current.length >= 7 && unlockDecoration('glitch')) {
+      taps.current = [];
+      haptic('success');
+      fanfare(true);
+      toast('👾 Secret decoration unlocked: Glitch');
+    }
+  };
   const bw = useLatestBodyweight();
   const [storage, setStorage] = useState<{ persisted: boolean; usage: number } | null>(null);
   const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as unknown as { standalone?: boolean }).standalone;
@@ -128,8 +144,14 @@ export function Settings() {
         <Section title="Profile">
           <div className="flex items-center gap-4 px-4 py-3">
             <AvatarPicker size={56} />
-            <div className="text-sm text-muted">Tap to add a profile picture from your photos or camera.</div>
+            <div className="text-sm text-muted">Tap to change your profile picture or decoration.</div>
           </div>
+          <Row label="Avatar decorations" icon={<Sparkles size={20} />} onClick={() => nav('/decorations')}>
+            <span className="text-sm text-muted">
+              {(s.decos ?? []).length}/{DECORATIONS.length}
+            </span>
+            <ChevronRight size={18} className="text-muted" />
+          </Row>
           <Row label="Name">
             <input
               value={s.name}
@@ -356,7 +378,7 @@ export function Settings() {
         </Sheet>
 
         <div className="text-center text-xs text-muted">
-          Gym Log · v{__APP_VERSION__}
+          <button onClick={tapVersion}>Gym Log · v{__APP_VERSION__}</button>
           <br />
           Exercise data & images: free-exercise-db (public domain)
           <br />

@@ -7,19 +7,29 @@ import { getExercise, typeOf } from '../lib/exercises';
 import { prCounts, workoutVolume } from '../lib/stats';
 import { fmtDurationLong, fmtVolume } from '../lib/units';
 import { useSettings } from '../state/settings';
+import { DecorationArt } from './Decorations';
 import { RankChip } from './RankBadge';
 import type { Workout } from '../types';
 
 /** Profile picture (or initial). `ring` draws a coloured border, e.g. the overall rank's metal. */
-export function Avatar({ size = 40, ring }: { size?: number; ring?: string }) {
+/**
+ * Profile picture (or initial) with the equipped decoration around it. `ring` draws a coloured
+ * border (e.g. the overall rank's metal) when no decoration is worn; `deco` overrides the equipped one.
+ */
+export function Avatar({ size = 40, ring, deco }: { size?: number; ring?: string; deco?: string | null }) {
   const name = useSettings((s) => s.name);
   const photo = useSettings((s) => s.avatar);
+  const equipped = useSettings((s) => s.deco);
+  const worn = deco !== undefined ? deco : equipped;
   return (
-    <div
-      className="flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-accent to-[#000] font-display font-bold text-[#fff]"
-      style={{ width: size, height: size, fontSize: size * 0.42, boxShadow: ring ? `0 0 0 ${Math.max(2, size / 22)}px rgb(var(--bg)), 0 0 0 ${Math.max(4, size / 11)}px ${ring}` : undefined }}
-    >
-      {photo ? <img src={photo} alt="" className="h-full w-full object-cover" draggable={false} /> : (name.trim()[0] ?? '🏋').toUpperCase()}
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <div
+        className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-accent to-[#000] font-display font-bold text-[#fff]"
+        style={{ fontSize: size * 0.42, boxShadow: ring && !worn ? `0 0 0 ${Math.max(2, size / 22)}px rgb(var(--bg)), 0 0 0 ${Math.max(4, size / 11)}px ${ring}` : undefined }}
+      >
+        {photo ? <img src={photo} alt="" className="h-full w-full object-cover" draggable={false} /> : (name.trim()[0] ?? '🏋').toUpperCase()}
+      </div>
+      <DecorationArt id={worn} size={size} />
     </div>
   );
 }

@@ -111,6 +111,10 @@ export interface Settings {
   name: string;
   /** profile picture as a small JPEG data URL */
   avatar?: string | null;
+  /** equipped avatar decoration */
+  deco?: string | null;
+  /** decorations unlocked so far (kept even if a rank later drops) */
+  decos?: string[];
   /** used for strength ranks */
   sex?: 'male' | 'female' | null;
   theme: ThemeId;

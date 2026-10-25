@@ -1,6 +1,6 @@
 import { format, startOfWeek, subWeeks } from 'date-fns';
 import { motion } from 'framer-motion';
-import { BarChart3, CalendarDays, Camera, ChevronRight, Dumbbell, Flame, Medal, Ruler, Settings as SettingsIcon, Shield, Trash2 } from 'lucide-react';
+import { BarChart3, CalendarDays, Camera, Sparkles, ChevronRight, Dumbbell, Flame, Medal, Ruler, Settings as SettingsIcon, Shield, Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarsChart, compact } from '../components/charts';
@@ -24,6 +24,7 @@ export function AvatarPicker({ size, ring }: { size: number; ring?: string }) {
   const update = useSettings((s) => s.update);
   const input = useRef<HTMLInputElement>(null);
   const [menu, setMenu] = useState(false);
+  const nav = useNavigate();
   const pick = async (f: File | undefined) => {
     if (!f) return;
     try {
@@ -35,7 +36,7 @@ export function AvatarPicker({ size, ring }: { size: number; ring?: string }) {
   };
   return (
     <>
-      <button onClick={() => (photo ? setMenu(true) : input.current?.click())} className="press relative shrink-0">
+      <button onClick={() => setMenu(true)} className="press relative shrink-0">
         <Avatar size={size} ring={ring} />
         <span className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-bg bg-accent">
           <Camera size={14} />
@@ -52,8 +53,9 @@ export function AvatarPicker({ size, ring }: { size: number; ring?: string }) {
         }}
       />
       <Sheet open={menu} onClose={() => setMenu(false)} title="Profile picture">
-        <SheetItem icon={<Camera size={20} />} label="Choose new photo" onClick={() => (setMenu(false), input.current?.click())} />
-        <SheetItem danger icon={<Trash2 size={20} />} label="Remove photo" onClick={() => (setMenu(false), update({ avatar: null }))} />
+        <SheetItem icon={<Camera size={20} />} label={photo ? 'Choose new photo' : 'Choose photo'} onClick={() => (setMenu(false), input.current?.click())} />
+        <SheetItem icon={<Sparkles size={20} />} label="Decoration" onClick={() => (setMenu(false), nav('/decorations'))} />
+        {photo && <SheetItem danger icon={<Trash2 size={20} />} label="Remove photo" onClick={() => (setMenu(false), update({ avatar: null }))} />}
       </Sheet>
     </>
   );

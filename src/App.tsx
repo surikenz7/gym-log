@@ -21,6 +21,7 @@ import { RoutineEditor } from './screens/RoutineEditor';
 import { Settings } from './screens/Settings';
 import { Statistics } from './screens/Statistics';
 import { Trophies } from './screens/Trophies';
+import { DecoSync, Decorations } from './screens/Decorations';
 import { Summary, WorkoutDetail, WorkoutEdit } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
 
@@ -121,6 +122,7 @@ export default function App() {
           <Route path="/measures" element={<Measures />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/trophies" element={<Trophies />} />
+          <Route path="/decorations" element={<Decorations />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/import/hevy" element={<HevyImport />} />
           <Route path="/routine/new" element={<RoutineEditor />} />
@@ -142,6 +144,7 @@ export default function App() {
       <ActiveWorkout />
       <RestWatcher />
       <RankSync />
+      <DecoSync />
       <DialogHost />
       <ToastHost />
       <UpdatePrompt />
