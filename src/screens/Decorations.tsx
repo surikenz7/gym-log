@@ -55,6 +55,8 @@ export function DecoSync() {
     first.current = false;
     if (!fresh.length) return;
     s.update({ decos: [...have, ...fresh] });
+    // stay quiet during the welcome flow; they're waiting in Decorations afterwards
+    if (!s.onboarded) return;
     if (firstRun && s.decos === undefined) {
       toast(`🎁 ${fresh.length} avatar decoration${fresh.length === 1 ? '' : 's'} unlocked — Settings → Decorations`);
       return;

@@ -136,6 +136,8 @@ export interface Settings {
   celebrations?: boolean;
   /** calmer UI: fewer and shorter animations */
   reduceMotion?: boolean;
+  /** finished the welcome / setup flow */
+  onboarded?: boolean;
   /** has shared a routine (unlocks a decoration) */
   shared?: boolean;
 }

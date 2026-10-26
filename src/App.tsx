@@ -1,7 +1,8 @@
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { useSettings } from './state/settings';
 import { Share } from 'lucide-react';
-import { lazy, Suspense, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { Onboarding, useOnboarding } from './screens/Onboarding';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { TabPager } from './components/TabPager';
 import { useRegisterSW } from 'virtual:pwa-register/react';
@@ -102,6 +103,12 @@ export default function App() {
   if (isTabRoot) lastTab.current = tabIndex;
   const miniBar = useWorkout((s) => !!s.active && !s.open);
   const reduceMotion = useSettings((s) => !!s.reduceMotion);
+  const needsOnboarding = useOnboarding();
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  useEffect(() => {
+    if (needsOnboarding) setOnboardingOpen(true);
+  }, [needsOnboarding]);
+  // Dock / pages stay underneath; the flow covers them until it's finished
   return (
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'never'}>
     <div className={`relative flex h-full flex-col ${isTabRoot ? 'has-dock' : ''} ${miniBar ? 'has-mini' : ''}`}>
@@ -147,6 +154,7 @@ export default function App() {
       <RestWatcher />
       <RankSync />
       <DecoSync />
+      <AnimatePresence>{onboardingOpen && <Onboarding key="onb" onDone={() => setOnboardingOpen(false)} />}</AnimatePresence>
       <CloudSync />
       <DialogHost />
       <ToastHost />

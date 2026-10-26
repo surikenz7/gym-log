@@ -14,6 +14,7 @@ import { useLatestBodyweight } from '../lib/useProgress';
 import type { ModeId, StyleId, ThemeId } from '../types';
 import { AvatarPicker } from './Profile';
 import { AccountSection } from './Social';
+import { useOnboardingReplay } from './Onboarding';
 import { unlockDecoration } from './Decorations';
 import { DECORATIONS } from '../lib/decorations';
 import { haptic } from '../lib/haptics';
@@ -170,6 +171,12 @@ export function Settings() {
               <span className="capitalize">{s.sex ?? 'Not set'}</span>
               {bw ? ` · ${fmtNum(kgTo(bw, s.weightUnit))} ${s.weightUnit}` : ''}
             </span>
+            <ChevronRight size={18} className="text-muted" />
+          </Row>
+        </Section>
+
+        <Section title="Setup">
+          <Row label="Run the welcome setup again" icon={<Sparkles size={20} />} onClick={() => useOnboardingReplay.setState({ open: true })}>
             <ChevronRight size={18} className="text-muted" />
           </Row>
         </Section>

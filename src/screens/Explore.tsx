@@ -66,7 +66,7 @@ export const PROGRAMS: Program[] = [
   },
 ];
 
-async function addProgram(p: Program) {
+export async function addProgram(p: Program) {
   const folderId = uid();
   const now = Date.now();
   await db.folders.add({ id: folderId, name: p.name, order: now });
