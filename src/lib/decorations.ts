@@ -22,6 +22,17 @@ export interface Decoration {
  */
 export const DECORATIONS: Decoration[] = [
   { id: 'iron_ring', name: 'Iron Ring', kind: 'achievement', how: 'Finish your first workout', pct: 95 },
+  { id: 'tag', name: 'Name Tag', kind: 'achievement', how: 'Set your name in Settings', pct: 90 },
+  { id: 'spark', name: 'First Spark', kind: 'achievement', how: 'Set your first personal record', pct: 88 },
+  { id: 'hearts', name: 'Heart Orbit', kind: 'achievement', how: 'Finish 5 workouts', pct: 82 },
+  { id: 'bubble', name: 'Bubbles', kind: 'achievement', how: 'Add a profile picture', pct: 72 },
+  { id: 'blueprint', name: 'Blueprint', kind: 'achievement', how: 'Create a routine', pct: 70 },
+  { id: 'sun', name: 'Weekend Sun', kind: 'achievement', how: 'Train on a Saturday or Sunday', pct: 66 },
+  { id: 'tape', name: 'Measuring Tape', kind: 'achievement', how: 'Log a body measurement', pct: 60 },
+  { id: 'ranked', name: 'Rank Spectrum', kind: 'rank', how: 'Unlock strength ranks (sex & bodyweight)', pct: 55 },
+  { id: 'clouds', name: 'Cloud Nine', kind: 'achievement', how: 'Create an account', pct: 40 },
+  { id: 'squad', name: 'Squad', kind: 'achievement', how: 'Follow a friend', pct: 30 },
+  { id: 'plane', name: 'Paper Plane', kind: 'achievement', how: 'Share a routine with someone', pct: 25 },
   { id: 'sweatband', name: 'Sweatband', kind: 'achievement', how: 'Finish 10 workouts', pct: 72 },
   { id: 'stars', name: 'Orbiting Stars', kind: 'achievement', how: 'Set 10 personal records', pct: 48 },
   { id: 'cap', name: 'Gym Cap', kind: 'achievement', how: 'Finish 25 workouts', pct: 52 },
@@ -68,11 +79,34 @@ export function rarityOf(pct: number) {
 export const fmtPct = (p: number) => (p >= 10 ? `${Math.round(p)}%` : p >= 1 ? `${p.toFixed(1).replace(/\.0$/, '')}%` : `${p}%`);
 
 /** Decorations earned from history and ranks (secret codes / taps are stored when they happen). */
-export function earnedDecorations(j: Journey, workouts: Workout[], overall: number | null): string[] {
+/** Things outside workout history that some decorations look at. */
+export interface DecoExtras {
+  name?: boolean;
+  avatar?: boolean;
+  routines?: number;
+  measures?: number;
+  ranked?: boolean;
+  account?: boolean;
+  following?: number;
+  shared?: boolean;
+}
+
+export function earnedDecorations(j: Journey, workouts: Workout[], overall: number | null, x: DecoExtras = {}): string[] {
   const has = (a: string) => j.unlocked.has(a);
   const out: string[] = [];
   const add = (id: string, ok: boolean) => ok && out.push(id);
   add('iron_ring', has('w1'));
+  add('spark', j.totals.prs >= 1);
+  add('hearts', j.totals.workouts >= 5);
+  add('tag', !!x.name);
+  add('bubble', !!x.avatar);
+  add('blueprint', (x.routines ?? 0) > 0);
+  add('tape', (x.measures ?? 0) > 0);
+  add('ranked', !!x.ranked);
+  add('clouds', !!x.account);
+  add('squad', (x.following ?? 0) > 0);
+  add('plane', !!x.shared);
+  add('sun', workouts.some((w) => [0, 6].includes(new Date(w.start).getDay())));
   add('sweatband', has('w10'));
   add('cap', has('w25'));
   add('laurel', has('w50'));

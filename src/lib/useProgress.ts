@@ -6,7 +6,7 @@ import { useSettings } from '../state/settings';
 import type { Workout } from '../types';
 import { typeOf, useLibrary } from './exercises';
 import { useAllWorkouts } from './hooks';
-import { computeJourney } from './progress';
+import { computeJourney, type Journey } from './progress';
 import { bodyweightTimeline, exerciseRanks, groupRanks, loadFactor, overallScore, type RankCtx } from './ranks';
 
 /** undefined while loading, null when sex or bodyweight hasn't been set yet. */
@@ -44,12 +44,18 @@ interface RankState {
 /** Ranks are computed once (by <RankSync/>) and shared, so any exercise name can show its rank cheaply. */
 const useRankStore = create<RankState>(() => ({ ctx: undefined, data: null, loading: true }));
 
+const useJourneyStore = create<{ journey: Journey | null }>(() => ({ journey: null }));
+
+/** Computes ranks and XP/trophies once per data change and shares them with every screen. */
 export function RankSync() {
   const ctx = useRankCtx();
   const workouts = useAllWorkouts();
   useEffect(() => {
     useRankStore.setState({ ctx, data: ctx && workouts ? computeRanks(workouts, ctx) : null, loading: ctx === undefined || !workouts });
   }, [ctx, workouts]);
+  useEffect(() => {
+    if (workouts) useJourneyStore.setState({ journey: computeJourney(workouts, typeOf) });
+  }, [workouts]);
   return null;
 }
 
@@ -63,6 +69,5 @@ export function useExerciseScore(exerciseId: string) {
 }
 
 export function useJourney() {
-  const workouts = useAllWorkouts();
-  return useMemo(() => (workouts ? computeJourney(workouts, typeOf) : null), [workouts]);
+  return useJourneyStore((s) => s.journey);
 }

@@ -76,7 +76,7 @@ export function CalendarPage() {
       <div className="px-4 pb-12">
         <div className="mb-3 grid grid-cols-2 gap-2">
           <div className="cut bg-card p-4">
-            <div className="text-xs text-muted">Workouts in {year}</div>
+            <div className="label">Workouts in {year}</div>
             <div className="text-xl font-semibold">{yearCount}</div>
           </div>
           <div className="cut bg-card p-4">
@@ -88,7 +88,7 @@ export function CalendarPage() {
           <button onClick={() => go(-1)} className="press p-2 text-accent">
             <ChevronLeft size={22} />
           </button>
-          <div className="text-lg font-semibold">{year}</div>
+          <div className="font-display text-2xl font-bold">{year}</div>
           <button onClick={() => go(1)} disabled={year >= thisYear} className="press p-2 text-accent disabled:opacity-30">
             <ChevronRight size={22} />
           </button>

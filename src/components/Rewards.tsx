@@ -27,6 +27,7 @@ export function CountUp({ value, from = 0, fmt = (v) => Math.round(v).toLocaleSt
 
 export function Confetti({ colors }: { colors?: string[] }) {
   const theme = useSettings((s) => s.theme);
+  const on = useSettings((s) => s.celebrations !== false && !s.reduceMotion);
   const t = paletteOf(theme, useSettings.getState().mode);
   const palette = colors ?? [t.accent, t.accent2, '#ffffff', t.done, t.accent];
   const pieces = useMemo(
@@ -43,6 +44,7 @@ export function Confetti({ colors }: { colors?: string[] }) {
       })),
     [],
   );
+  if (!on) return null;
   return (
     <Portal>
       <div className="pointer-events-none fixed inset-0 z-[65] overflow-hidden">

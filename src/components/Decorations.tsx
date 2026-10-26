@@ -47,6 +47,138 @@ const GOLD = (g: (n: string) => string) => (
 );
 
 export const DECO_ART: Record<string, Art> = {
+  spark: () => (
+    <g>
+      {spin(14)}
+      {[20, 140, 260].map((d, i) => {
+        const [x, y] = polar(d, 60);
+        return (
+          <path key={d} d={`M${x} ${y - 8} Q${x} ${y} ${x + 8} ${y} Q${x} ${y} ${x} ${y + 8} Q${x} ${y} ${x - 8} ${y} Q${x} ${y} ${x} ${y - 8} Z`} fill="#fff7c2">
+            {pulse(1 + i * 0.35, 0.3)}
+          </path>
+        );
+      })}
+    </g>
+  ),
+  tag: () => (
+    <g transform="translate(0 56) rotate(-6)">
+      <rect x="-30" y="-9" width="60" height="20" rx="5" fill="#e5262d" stroke="#7a0f12" strokeWidth="1.2" />
+      <rect x="-26" y="-1" width="52" height="9" rx="2" fill="#fff" />
+      <text y="-2.5" textAnchor="middle" fontSize="6" fontWeight="800" fill="#fff" fontFamily="system-ui, sans-serif">
+        HELLO I LIFT
+      </text>
+    </g>
+  ),
+  bubble: () => (
+    <g>
+      {[
+        [-58, 30, 6, 0],
+        [-62, -4, 4, 0.4],
+        [56, 24, 5, 0.8],
+        [62, -14, 3.5, 1.2],
+        [-40, 52, 3, 0.6],
+        [44, 50, 4, 1],
+      ].map(([x, y, r, d], i) => (
+        <circle key={i} cx={x} cy={y} r={r} fill="#bae6fd" fillOpacity=".25" stroke="#e0f2fe" strokeWidth="1">
+          <animateTransform attributeName="transform" type="translate" values="0 6;0 -8;0 6" dur={`${2.6 + d}s`} repeatCount="indefinite" />
+        </circle>
+      ))}
+    </g>
+  ),
+  hearts: () => (
+    <g>
+      {spin(12)}
+      {[0, 90, 180, 270].map((d) => {
+        const [x, y] = polar(d, 59);
+        return <path key={d} d={`M${x} ${y + 5} C${x - 9} ${y - 2} ${x - 5} ${y - 9} ${x} ${y - 4} C${x + 5} ${y - 9} ${x + 9} ${y - 2} ${x} ${y + 5} Z`} fill="#f43f5e" stroke="#fff" strokeWidth=".8" />;
+      })}
+    </g>
+  ),
+  sun: () => (
+    <g transform="translate(46 -48)">
+      <g>
+        {spin(16)}
+        {Array.from({ length: 10 }, (_, i) => {
+          const [x1, y1] = polar(i * 36, 12);
+          const [x2, y2] = polar(i * 36, 19);
+          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" />;
+        })}
+      </g>
+      <circle r="10" fill="#fde047" stroke="#f59e0b" strokeWidth="1.5" />
+      <rect x="-9" y="-3" width="7" height="4" rx="1.5" fill="#111" />
+      <rect x="2" y="-3" width="7" height="4" rx="1.5" fill="#111" />
+      <line x1="-2" y1="-1" x2="2" y2="-1" stroke="#111" strokeWidth="1" />
+    </g>
+  ),
+  blueprint: () => (
+    <g>
+      <circle r="57" fill="none" stroke="#60a5fa" strokeWidth="1.5" strokeDasharray="4 3" />
+      <circle r="62" fill="none" stroke="#3b82f6" strokeWidth="1" opacity=".7" />
+      {Array.from({ length: 24 }, (_, i) => {
+        const [x1, y1] = polar(i * 15, 57);
+        const [x2, y2] = polar(i * 15, i % 6 === 0 ? 67 : 62);
+        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#93c5fd" strokeWidth={i % 6 === 0 ? 1.8 : 1} />;
+      })}
+    </g>
+  ),
+  tape: () => (
+    <g>
+      <path d="M-58 22 A62 62 0 0 1 -30 -52" fill="none" stroke="#facc15" strokeWidth="9" />
+      <path d="M-58 22 A62 62 0 0 1 -30 -52" fill="none" stroke="#713f12" strokeWidth="9" strokeDasharray="1 5" opacity=".7" />
+      <rect x="-70" y="16" width="20" height="20" rx="4" fill="#facc15" stroke="#a16207" strokeWidth="1.5" />
+      <circle cx="-60" cy="26" r="4" fill="#a16207" />
+    </g>
+  ),
+  ranked: () => (
+    <g>
+      {['#8b5a2b', '#c87533', '#aab3bf', '#f2b705', '#4fd1c5', '#60a5fa', '#e11d48', '#a855f7', '#fcd34d'].map((c, i) => {
+        const a1 = -90 + i * 40 + 3;
+        const a2 = a1 + 34;
+        const [x1, y1] = polar(a1, 58);
+        const [x2, y2] = polar(a2, 58);
+        return <path key={c} d={`M${x1} ${y1} A58 58 0 0 1 ${x2} ${y2}`} fill="none" stroke={c} strokeWidth="5" strokeLinecap="round" />;
+      })}
+    </g>
+  ),
+  clouds: () => (
+    <g fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1">
+      {[
+        [-36, -58, 1],
+        [34, -62, 0.8],
+        [60, -26, 0.65],
+      ].map(([x, y, s], i) => (
+        <g key={i} transform={`translate(${x} ${y}) scale(${s})`}>
+          <g>
+            {bob(2, 2 + i * 0.5)}
+            <path d="M-14 6 a8 8 0 0 1 2 -14 a10 10 0 0 1 18 -2 a8 8 0 0 1 8 14 Z" />
+          </g>
+        </g>
+      ))}
+    </g>
+  ),
+  squad: () => (
+    <g>
+      {spin(18)}
+      {[0, 120, 240].map((d, i) => {
+        const [x, y] = polar(d, 60);
+        const c = ['#22c55e', '#3b82f6', '#f59e0b'][i];
+        return (
+          <g key={d}>
+            <circle cx={x} cy={y} r="8" fill={c} stroke="#fff" strokeWidth="1.5" />
+            <circle cx={x} cy={y - 2.5} r="2.6" fill="#fff" />
+            <path d={`M${x - 4.5} ${y + 5} Q${x} ${y - 1} ${x + 4.5} ${y + 5}`} fill="#fff" />
+          </g>
+        );
+      })}
+    </g>
+  ),
+  plane: () => (
+    <g>
+      {spin(7, true)}
+      <circle r="60" fill="none" stroke="#fff" strokeOpacity=".25" strokeWidth="1" strokeDasharray="2 5" />
+      <path d="M0 -70 L10 -54 L0 -58 L-10 -54 Z" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1" transform="rotate(90 0 -60)" />
+    </g>
+  ),
   iron_ring: (g) => (
     <>
       <defs>

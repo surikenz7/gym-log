@@ -122,12 +122,28 @@ export interface Settings {
   style: StyleId;
   /** light / dark surfaces */
   mode: ModeId;
+  textSize?: 'sm' | 'md' | 'lg';
+  /** coloured glow at the top of pages */
+  glow?: boolean;
+  /** film grain: auto = only in the Raw style */
+  grain?: 'auto' | 'on' | 'off';
+  /** labels under the tab-bar icons */
+  tabLabels?: boolean;
+  /** what the Home screen says at the top */
+  headline?: 'greeting' | 'motto' | 'date';
+  motto?: string;
+  /** confetti and fanfare sounds */
+  celebrations?: boolean;
+  /** calmer UI: fewer and shorter animations */
+  reduceMotion?: boolean;
+  /** has shared a routine (unlocks a decoration) */
+  shared?: boolean;
 }
 
 export type StyleId = 'raw' | 'elegant' | 'minimal' | 'playful';
 export type ModeId = 'dark' | 'amoled' | 'dim' | 'light';
 
-export type ThemeId = 'blood' | 'inferno' | 'gold' | 'toxic' | 'steel' | 'cobalt' | 'venom' | 'pump';
+export type ThemeId = 'blood' | 'inferno' | 'gold' | 'toxic' | 'steel' | 'cobalt' | 'venom' | 'pump' | 'ocean' | 'mint' | 'royal' | 'sunset' | 'forest' | 'ice' | 'mono' | 'coffee';
 
 export const DEFAULT_SETTINGS: Settings = {
   weightUnit: 'kg',

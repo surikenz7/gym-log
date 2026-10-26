@@ -1,3 +1,5 @@
+import { useSettings } from '../state/settings';
+
 // iOS only lets audio play after a user gesture, so the context is unlocked on the first tap.
 let ctx: AudioContext | null = null;
 
@@ -53,7 +55,7 @@ function chord(freq: number, at: number, len: number, type: OscillatorType = 'tr
 
 /** Short rising arpeggio for finishing a workout / a new record. */
 export function fanfare(big = false) {
-  if (!ctx) return;
+  if (!ctx || useSettings.getState().celebrations === false) return;
   const t = ctx.currentTime;
   const notes = big ? [392, 523.25, 659.25, 783.99, 1046.5] : [523.25, 659.25, 783.99];
   notes.forEach((f, i) => chord(f, t + i * 0.09, 0.35));

@@ -8,6 +8,7 @@ import { getExercise } from '../lib/exercises';
 import { haptic } from '../lib/haptics';
 import { startWorkout } from '../screens/WorkoutTab';
 import { useWorkout } from '../state/workout';
+import { useSettings } from '../state/settings';
 import { Sheet } from './ui';
 
 export const DOCK_TABS = [
@@ -18,6 +19,7 @@ export const DOCK_TABS = [
 ];
 
 function Tab({ to, label, icon: Icon }: (typeof DOCK_TABS)[number]) {
+  const labels = useSettings((s) => s.tabLabels !== false);
   return (
     <NavLink
       to={to}
@@ -30,7 +32,7 @@ function Tab({ to, label, icon: Icon }: (typeof DOCK_TABS)[number]) {
         <>
           {isActive && <motion.div layoutId="dock-active" className="glass-lens absolute inset-y-[5px] inset-x-0 rounded-full" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
           <Icon size={23} className={`relative ${isActive ? 'text-accent' : 'text-white/75'}`} strokeWidth={isActive ? 2.4 : 2} />
-          <span className={`relative text-[10px] font-semibold leading-none tracking-[0.01em] ${isActive ? 'text-accent' : 'text-white/75'}`}>{label}</span>
+          {labels && <span className={`relative text-[10px] font-semibold leading-none tracking-[0.01em] ${isActive ? 'text-accent' : 'text-white/75'}`}>{label}</span>}
         </>
       )}
     </NavLink>

@@ -13,6 +13,7 @@ import { fmtDurationLong, fmtNum, kgTo } from '../lib/units';
 import { useLatestBodyweight } from '../lib/useProgress';
 import type { ModeId, StyleId, ThemeId } from '../types';
 import { AvatarPicker } from './Profile';
+import { AccountSection } from './Social';
 import { unlockDecoration } from './Decorations';
 import { DECORATIONS } from '../lib/decorations';
 import { haptic } from '../lib/haptics';
@@ -50,13 +51,13 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
   );
 }
 
-function Segmented<T extends string>({ value, options, onChange }: { value: T; options: T[]; onChange: (v: T) => void }) {
+function Segmented<T extends string>({ value, options, onChange, labels }: { value: T; options: T[]; onChange: (v: T) => void; labels?: Record<T, string> }) {
   return (
     <div className="relative flex rounded-lg bg-card2 p-0.5">
       {options.map((o) => (
         <button key={o} onClick={() => onChange(o)} className={`relative z-10 min-w-[52px] px-3 py-1 text-sm font-semibold ${value === o ? 'text-ink' : ''}`}>
           {value === o && <motion.span layoutId={`seg-${options.join()}`} className="absolute inset-0 -z-10 rounded-md bg-accent" />}
-          {o}
+          {labels?.[o] ?? o}
         </button>
       ))}
     </div>
@@ -141,6 +142,10 @@ export function Settings() {
     <Page pushed>
       <Header back title="Settings" />
       <div className="space-y-6 px-4 pb-12 pt-2">
+        <Section title="Account">
+          <AccountSection />
+        </Section>
+
         <Section title="Profile">
           <div className="flex items-center gap-4 px-4 py-3">
             <AvatarPicker size={56} />
@@ -281,6 +286,40 @@ export function Settings() {
           </div>
         </Sheet>
 
+        <Section title="Display">
+          <Row label="Text size">
+            <Segmented value={s.textSize ?? 'md'} options={['sm', 'md', 'lg']} labels={{ sm: 'S', md: 'M', lg: 'L' }} onChange={(textSize) => s.update({ textSize })} />
+          </Row>
+          <Row label="Background glow">
+            <Toggle on={s.glow !== false} onChange={(glow) => s.update({ glow })} />
+          </Row>
+          <Row label="Film grain">
+            <Segmented value={s.grain ?? 'auto'} options={['auto', 'on', 'off']} labels={{ auto: 'Auto', on: 'On', off: 'Off' }} onChange={(grain) => s.update({ grain })} />
+          </Row>
+          <Row label="Tab bar labels">
+            <Toggle on={s.tabLabels !== false} onChange={(tabLabels) => s.update({ tabLabels })} />
+          </Row>
+          <Row label="Reduce motion">
+            <Toggle on={!!s.reduceMotion} onChange={(reduceMotion) => s.update({ reduceMotion })} />
+          </Row>
+        </Section>
+
+        <Section title="Home screen" foot={s.headline === 'motto' ? 'Your motto shows in big letters at the top of Home.' : undefined}>
+          <Row label="Headline">
+            <Segmented value={s.headline ?? 'greeting'} options={['greeting', 'motto', 'date']} labels={{ greeting: 'Hello', motto: 'Motto', date: 'Date' }} onChange={(headline) => s.update({ headline })} />
+          </Row>
+          {s.headline === 'motto' && (
+            <Row label="Motto">
+              <input
+                value={s.motto ?? ''}
+                onChange={(e) => s.update({ motto: e.target.value.slice(0, 40) })}
+                placeholder="No days off"
+                className="w-44 bg-transparent text-right outline-none placeholder:text-muted"
+              />
+            </Row>
+          )}
+        </Section>
+
         <Section title="Units">
           <Row label="Weight">
             <Segmented value={s.weightUnit} options={['kg', 'lbs']} onChange={(weightUnit) => s.update({ weightUnit })} />
@@ -311,6 +350,9 @@ export function Settings() {
           </Row>
           <Row label="Show RPE column">
             <Toggle on={s.showRpe} onChange={(showRpe) => s.update({ showRpe })} />
+          </Row>
+          <Row label="Celebrations (confetti & fanfare)">
+            <Toggle on={s.celebrations !== false} onChange={(celebrations) => s.update({ celebrations })} />
           </Row>
         </Section>
 

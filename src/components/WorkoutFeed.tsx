@@ -16,11 +16,14 @@ import type { Workout } from '../types';
  * Profile picture (or initial) with the equipped decoration around it. `ring` draws a coloured
  * border (e.g. the overall rank's metal) when no decoration is worn; `deco` overrides the equipped one.
  */
-export function Avatar({ size = 40, ring, deco }: { size?: number; ring?: string; deco?: string | null }) {
-  const name = useSettings((s) => s.name);
-  const photo = useSettings((s) => s.avatar);
+export function Avatar({ size = 40, ring, deco, src, initial }: { size?: number; ring?: string; deco?: string | null; src?: string | null; initial?: string }) {
+  const myName = useSettings((s) => s.name);
+  const myPhoto = useSettings((s) => s.avatar);
   const equipped = useSettings((s) => s.deco);
   const worn = deco !== undefined ? deco : equipped;
+  // someone else's avatar (friends) when src / initial are given
+  const photo = src !== undefined ? src : myPhoto;
+  const name = initial ?? myName;
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <div
@@ -34,7 +37,8 @@ export function Avatar({ size = 40, ring, deco }: { size?: number; ring?: string
   );
 }
 
-export function WorkoutCard({ w, prs, index = 0 }: { w: Workout; prs: number; index?: number }) {
+/** `friend` = someone else's workout (no link into local history, no rank chips). */
+export function WorkoutCard({ w, prs, index = 0, friend }: { w: Workout; prs: number; index?: number; friend?: boolean }) {
   const settings = useSettings();
   const nav = useNavigate();
   const shown = w.exercises.slice(0, 4);
@@ -44,7 +48,7 @@ export function WorkoutCard({ w, prs, index = 0 }: { w: Workout; prs: number; in
       initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: Math.min(index, 6) * 0.04 }}
-      onClick={() => nav(`/history/${w.id}`)}
+      onClick={() => !friend && nav(`/history/${w.id}`)}
       className="press cut flex w-full bg-card text-left"
     >
       <div className="flex w-[58px] shrink-0 flex-col items-center justify-center gap-0.5 bg-card2 py-3" style={{ boxShadow: 'inset -2px 0 0 rgb(var(--accent))' }}>
@@ -75,7 +79,7 @@ export function WorkoutCard({ w, prs, index = 0 }: { w: Workout; prs: number; in
             <div key={e.id} className="flex items-baseline gap-2 text-sm">
               <span className="w-6 shrink-0 text-right font-display font-bold text-accent">{e.sets.length}×</span>
               <span className="truncate text-white/85">{getExercise(e.exerciseId).name}</span>
-              <RankChip exerciseId={e.exerciseId} size={22} inline />
+              {!friend && <RankChip exerciseId={e.exerciseId} size={22} inline />}
             </div>
           ))}
           {w.exercises.length > shown.length && <div className="pl-8 text-xs text-muted">+{w.exercises.length - shown.length} more</div>}

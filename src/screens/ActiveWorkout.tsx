@@ -255,7 +255,7 @@ export function ActiveWorkout() {
             <div className="scroll-area flex-1 pb-40 pt-2">
               {w.exercises.length === 0 && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-8 py-10 text-center">
-                  <div className="text-lg font-semibold">Get started</div>
+                  <div className="font-display text-2xl font-bold uppercase">Get started</div>
                   <div className="mt-1 text-sm text-muted">Add an exercise to start your workout</div>
                 </motion.div>
               )}

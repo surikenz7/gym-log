@@ -1,9 +1,10 @@
 import { format, startOfWeek, subWeeks } from 'date-fns';
 import { motion } from 'framer-motion';
-import { BarChart3, CalendarDays, Camera, Sparkles, ChevronRight, Dumbbell, Flame, Medal, Ruler, Settings as SettingsIcon, Shield, Trash2 } from 'lucide-react';
+import { BarChart3, CalendarDays, Camera, Sparkles, Users, ChevronRight, Dumbbell, Flame, Medal, Ruler, Settings as SettingsIcon, Shield, Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarsChart, compact } from '../components/charts';
+import { BarsChart } from '../components/LazyCharts';
+import { compact } from '../lib/units';
 import { RankBadge, TierBar, TierName } from '../components/RankBadge';
 import { Avatar, WorkoutList } from '../components/WorkoutFeed';
 import { Header, Page, Sheet, SheetItem } from '../components/ui';
@@ -108,6 +109,8 @@ export function Profile() {
     { label: 'Calendar', icon: CalendarDays, to: '/calendar' },
     { label: 'Ranks', icon: Shield, to: '/ranks' },
     { label: 'Trophies', icon: Medal, to: '/trophies' },
+    { label: 'Friends', icon: Users, to: '/friends' },
+    { label: 'Decorations', icon: Sparkles, to: '/decorations' },
   ];
   const trophies = journey ? journey.unlocked.size : 0;
 

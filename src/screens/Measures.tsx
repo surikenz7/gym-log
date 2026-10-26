@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Plus, Ruler, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { ProgressChart } from '../components/charts';
+import { ProgressChart } from '../components/LazyCharts';
 import { NumInput } from '../components/inputs';
 import { Button, Empty, Header, Page, Sheet } from '../components/ui';
 import { db } from '../db/db';

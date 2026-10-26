@@ -68,13 +68,25 @@ export function Home() {
   return (
     <Page>
       <div className="space-y-3 px-4 pb-8 pt-safe">
-        <div className="flex items-center justify-between gap-2 pt-5">
+        <div className="flex items-center justify-between gap-5 pt-5">
           <div className="min-w-0 flex-1">
-            <div className="label">{format(new Date(), 'EEEE · d MMMM')}</div>
+            <div className="label">{settings.headline === 'date' ? `Week ${format(new Date(), 'w')}` : format(new Date(), 'EEEE · d MMMM')}</div>
             <h1 className="mt-0.5 break-words font-display text-[38px] font-bold uppercase leading-[0.95] tracking-tight">
-              {greeting()},
-              <br />
-              <span className="text-grad">{settings.name.trim() || 'Lifter'}</span>
+              {settings.headline === 'motto' ? (
+                <span className={`text-grad ${(settings.motto?.length ?? 0) > 14 ? 'text-[30px]' : ''}`}>{settings.motto?.trim() || 'No days off'}</span>
+              ) : settings.headline === 'date' ? (
+                <>
+                  {format(new Date(), 'EEEE')}
+                  <br />
+                  <span className="text-grad">{format(new Date(), 'd MMMM')}</span>
+                </>
+              ) : (
+                <>
+                  {greeting()},
+                  <br />
+                  <span className="text-grad">{settings.name.trim() || 'Lifter'}</span>
+                </>
+              )}
             </h1>
           </div>
           {/* big profile picture filling the right side of the greeting, decoration included */}

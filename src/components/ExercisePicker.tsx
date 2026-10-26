@@ -83,9 +83,9 @@ export function ExerciseList({
     <div>
       {recent.length > 0 && (
         <>
-          <div className="px-4 pb-1 pt-3 text-sm font-semibold text-muted">Recent Exercises</div>
+          <div className="label px-4 pb-1 pt-3">Recent exercises</div>
           {recent.map((e) => row(e, 'r' + e.id))}
-          <div className="px-4 pb-1 pt-4 text-sm font-semibold text-muted">All Exercises</div>
+          <div className="label px-4 pb-1 pt-4">All exercises</div>
         </>
       )}
       {filtered.map((e) => row(e, e.id))}

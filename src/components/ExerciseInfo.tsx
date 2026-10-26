@@ -10,7 +10,7 @@ import { bestSessionVolume, exerciseBests, exerciseSessions, PR_LABELS, repRecor
 import { distLabel, distTo, fmtDuration, fmtNum, fmtSet, isShortDistance, kgTo, round, TYPE_LABELS } from '../lib/units';
 import { useSettings } from '../state/settings';
 import type { ExerciseType, Settings } from '../types';
-import { ProgressChart } from './charts';
+import { ProgressChart } from './LazyCharts';
 import { exerciseRanks, standardFor } from '../lib/ranks';
 import { useRankCtx } from '../lib/useProgress';
 import { CustomExerciseSheet } from './CustomExerciseSheet';

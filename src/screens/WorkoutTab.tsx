@@ -1,11 +1,16 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AnimatePresence, motion, Reorder, useDragControls } from 'framer-motion';
-import { ChevronDown, ClipboardList, Compass, Copy, FolderInput, FolderPlus, GripVertical, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { formatDistanceToNowStrict } from 'date-fns';
+import { ChevronDown, ClipboardList, Compass, Copy, Dumbbell, FolderInput, FolderPlus, GripVertical, Link2, MoreHorizontal, Pencil, Plus, Share2, Sparkles, Trash2 } from 'lucide-react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Empty, Header, Page, Sheet, SheetItem } from '../components/ui';
 import { db } from '../db/db';
+import { ExerciseThumb, muscleColor } from '../components/ExerciseImage';
 import { getExercise } from '../lib/exercises';
+import { useAllWorkouts } from '../lib/hooks';
+import { codeFromText, shareRoutine } from '../lib/share';
+import { PROGRAM_COLORS, PROGRAMS } from './Explore';
 import { uid } from '../lib/id';
 import { ask, confirmDialog, toast } from '../state/dialog';
 import { cloneExercises, useWorkout } from '../state/workout';
@@ -34,21 +39,126 @@ async function promptName(title: string, initial = ''): Promise<string | null> {
   return v?.trim() ? v.trim() : null;
 }
 
-function RoutineCard({ r, onMenu }: { r: Routine; onMenu: () => void }) {
+/** Muscles a routine trains most, by number of sets. */
+function routineMuscles(r: Routine) {
+  const count = new Map<string, number>();
+  for (const e of r.exercises) {
+    const m = getExercise(e.exerciseId).muscle;
+    count.set(m, (count.get(m) ?? 0) + Math.max(1, e.sets.length));
+  }
+  return [...count.entries()].sort((a, b) => b[1] - a[1]).map(([m]) => m);
+}
+
+function RoutineCard({ r, last, onMenu, index }: { r: Routine; last?: number; onMenu: () => void; index: number }) {
   const nav = useNavigate();
-  const names = r.exercises.map((e) => getExercise(e.exerciseId).name).join(', ');
+  const muscles = routineMuscles(r);
+  const color = muscleColor(muscles[0] ?? 'Other');
+  const sets = r.exercises.reduce((n, e) => n + e.sets.length, 0);
+  const minutes = Math.round((sets * 2.5 + r.exercises.length) / 5) * 5;
+  const exs = r.exercises.map((e) => getExercise(e.exerciseId));
   return (
-    <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="cut bg-card p-4">
-      <div className="flex items-start gap-2">
-        <button className="min-w-0 flex-1 text-left" onClick={() => nav(`/routine/${r.id}`)}>
-          <div className="truncate font-display text-xl font-bold uppercase">{r.name}</div>
-          <div className="mt-0.5 line-clamp-2 text-sm text-muted">{names || 'No exercises'}</div>
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ delay: Math.min(index, 6) * 0.04 }}
+      className="cut relative overflow-hidden bg-card"
+      style={{ backgroundImage: `linear-gradient(135deg, ${color}2e, transparent 55%)` }}
+    >
+      <div className="absolute inset-y-0 left-0 w-1" style={{ background: color }} />
+      <button className="block w-full px-4 pb-3 pt-3.5 text-left" onClick={() => nav(`/routine/${r.id}`)}>
+        <div className="flex items-start gap-2 pr-16">
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-display text-[22px] font-bold uppercase leading-tight">{r.name}</div>
+            <div className="mt-0.5 text-xs text-muted">
+              {r.exercises.length} exercise{r.exercises.length === 1 ? '' : 's'} · {sets} sets · ~{minutes || 5} min
+            </div>
+          </div>
+        </div>
+        {muscles.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {muscles.slice(0, 4).map((m) => (
+              <span key={m} className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: muscleColor(m) + '26', color: muscleColor(m) }}>
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: muscleColor(m) }} />
+                {m}
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="flex -space-x-2.5">
+            {exs.slice(0, 6).map((ex, i) => (
+              <div key={i} className="rounded-full ring-2 ring-card">
+                <ExerciseThumb ex={ex} size={30} />
+              </div>
+            ))}
+            {exs.length > 6 && (
+              <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-card2 text-[10px] font-bold ring-2 ring-card">+{exs.length - 6}</div>
+            )}
+          </div>
+          <div className="text-right text-[11px] text-muted">{last ? `Done ${formatDistanceToNowStrict(last, { addSuffix: true })}` : 'Not done yet'}</div>
+        </div>
+      </button>
+      <div className="absolute right-2 top-2 flex">
+        <button
+          onClick={async () => {
+            const how = await shareRoutine(r);
+            if (how === 'copied') toast('Link copied — send it to a friend');
+          }}
+          className="press p-2 text-muted"
+          aria-label="Share routine"
+        >
+          <Share2 size={19} />
         </button>
-        <button onClick={onMenu} className="press -mr-1 -mt-1 p-1.5 text-muted">
-          <MoreHorizontal size={22} />
+        <button onClick={onMenu} className="press p-2 text-muted" aria-label="Routine menu">
+          <MoreHorizontal size={21} />
         </button>
       </div>
     </motion.div>
+  );
+}
+
+
+/** Ready-made programs as a swipeable row of colourful cards. */
+function ProgramCarousel() {
+  const nav = useNavigate();
+  return (
+    <div className="overflow-x-auto no-scrollbar -mx-4 mt-2 flex snap-x snap-mandatory gap-2.5 px-4 pb-1" data-no-swipe>
+      {PROGRAMS.map((p, i) => {
+        const [a, b] = PROGRAM_COLORS[i % PROGRAM_COLORS.length];
+        return (
+          <motion.button
+            key={p.name}
+            onClick={() => nav('/explore')}
+            className="press cut relative h-[118px] w-[200px] shrink-0 snap-start overflow-hidden p-3 text-left text-[#fff]"
+            style={{ background: `linear-gradient(135deg, ${a}, ${b})` }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.05 }}
+          >
+            <Dumbbell size={74} className="absolute -bottom-3 -right-3 rotate-[-25deg] opacity-20" />
+            <div className="text-[10px] font-bold uppercase tracking-widest opacity-80">{p.routines.length} routines</div>
+            <div className="mt-0.5 font-display text-xl font-bold uppercase leading-tight">{p.name}</div>
+            <div className="mt-1 line-clamp-2 text-[11px] leading-snug opacity-85">{p.level}</div>
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
+function QuickTile({ icon, label, sub, onClick, color }: { icon: ReactNode; label: string; sub: string; onClick: () => void; color: string }) {
+  return (
+    <button onClick={onClick} className="press cut-sm flex flex-col items-start gap-2 bg-card p-3 text-left">
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl text-[#fff]" style={{ background: color }}>
+        {icon}
+      </span>
+      <span>
+        <span className="block text-sm font-semibold leading-tight">{label}</span>
+        <span className="block text-[11px] leading-tight text-muted">{sub}</span>
+      </span>
+    </button>
   );
 }
 
@@ -73,6 +183,24 @@ export function WorkoutTab() {
   const [moving, setMoving] = useState<Routine | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [reorder, setReorder] = useState<string[] | null>(null);
+  const workouts = useAllWorkouts();
+  const lastDone = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const w of workouts ?? []) if (w.routineId && !m.has(w.routineId)) m.set(w.routineId, w.start);
+    return m;
+  }, [workouts]);
+
+  const pasteLink = async () => {
+    let text = '';
+    try {
+      text = await navigator.clipboard.readText();
+    } catch {
+      text = window.prompt('Paste the routine link') ?? '';
+    }
+    const code = codeFromText(text);
+    if (!code) return toast('Copy a Gym Log routine link first');
+    nav(`/r/${code}`);
+  };
 
   const groups: { folder: Folder | null; items: Routine[] }[] = [
     ...folders.map((f) => ({ folder: f, items: (routines ?? []).filter((r) => r.folderId === f.id) })),
@@ -92,38 +220,42 @@ export function WorkoutTab() {
 
   return (
     <Page>
-      <Header title="Routines" large />
-      <div className="px-4 pb-6">
-        <div className="mt-2 flex items-center justify-between">
-          <div className="label">Your routines</div>
-          <button onClick={newFolder} className="press p-1 text-muted">
+      <Header
+        title="Routines"
+        large
+        right={
+          <button onClick={newFolder} className="press p-1 text-accent" aria-label="New folder">
             <FolderPlus size={22} />
           </button>
-        </div>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <Button variant="secondary" onClick={() => nav('/routine/new')}>
-            <ClipboardList size={18} /> New Routine
-          </Button>
-          <Button variant="secondary" onClick={() => nav('/explore')}>
-            <Compass size={18} /> Explore
-          </Button>
+        }
+      />
+      <div className="px-4 pb-6">
+        <div className="grid grid-cols-3 gap-2">
+          <QuickTile icon={<Plus size={20} strokeWidth={2.6} />} label="New" sub="Build your own" color="rgb(var(--accent))" onClick={() => nav('/routine/new')} />
+          <QuickTile icon={<Compass size={20} />} label="Explore" sub="Ready programs" color="#6366f1" onClick={() => nav('/explore')} />
+          <QuickTile icon={<Link2 size={20} />} label="Paste link" sub="From a friend" color="#22c55e" onClick={pasteLink} />
         </div>
 
+        <div className="label mt-6 flex items-center gap-2">
+          <Sparkles size={13} className="text-accent" /> Programs
+        </div>
+        <ProgramCarousel />
+
         {routines && routines.length === 0 && (
-          <Empty icon={<ClipboardList size={48} />} title="No routines yet" text="Create as many routines as you like. No limits here." />
+          <Empty icon={<ClipboardList size={48} />} title="No routines yet" text="Create as many as you like, with no limits. Or grab a program above, or paste a link from a friend." />
         )}
 
         {groups.map(({ folder, items }) =>
           !folder && items.length === 0 ? null : (
             <div key={folder?.id ?? 'none'} className="mt-5">
               <div className="mb-2 flex items-center gap-1">
-                <button className="flex flex-1 items-center gap-1 text-left text-sm font-semibold text-muted" onClick={() => folder && setCollapsed((c) => ({ ...c, [folder.id]: !c[folder.id] }))}>
+                <button className="label flex flex-1 items-center gap-1 text-left" onClick={() => folder && setCollapsed((c) => ({ ...c, [folder.id]: !c[folder.id] }))}>
                   {folder && (
                     <motion.span animate={{ rotate: collapsed[folder.id] ? -90 : 0 }}>
                       <ChevronDown size={18} />
                     </motion.span>
                   )}
-                  {folder ? folder.name : folders.length ? 'My Routines' : `My Routines (${items.length})`}
+                  {folder ? folder.name : `My routines (${items.length})`}
                   {folder && <span className="font-normal"> ({items.length})</span>}
                 </button>
                 {folder && (
@@ -136,8 +268,8 @@ export function WorkoutTab() {
                 {!(folder && collapsed[folder.id]) && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2 overflow-hidden">
                     <AnimatePresence>
-                      {items.map((r) => (
-                        <RoutineCard key={r.id} r={r} onMenu={() => setMenu(r)} />
+                      {items.map((r, i) => (
+                        <RoutineCard key={r.id} r={r} index={i} last={lastDone.get(r.id)} onMenu={() => setMenu(r)} />
                       ))}
                     </AnimatePresence>
                     {folder && items.length === 0 && <div className="rounded-2xl border border-dashed border-line p-4 text-center text-sm text-muted">Empty folder</div>}
@@ -151,6 +283,15 @@ export function WorkoutTab() {
 
       <Sheet open={!!menu} onClose={() => setMenu(null)} title={menu?.name}>
         <SheetItem icon={<Pencil size={20} />} label="Edit Routine" onClick={() => (setMenu(null), nav(`/routine/${menu!.id}`))} />
+        <SheetItem
+          icon={<Share2 size={20} />}
+          label="Share Routine"
+          onClick={async () => {
+            const r = menu!;
+            setMenu(null);
+            if ((await shareRoutine(r)) === 'copied') toast('Link copied — send it to a friend');
+          }}
+        />
         <SheetItem icon={<Copy size={20} />} label="Duplicate Routine" onClick={() => (setMenu(null), duplicate(menu!))} />
         <SheetItem icon={<FolderInput size={20} />} label="Move to Folder" onClick={() => (setMenu(null), setMoving(menu))} />
         <SheetItem icon={<GripVertical size={20} />} label="Reorder Routines" onClick={() => (setMenu(null), setReorder((routines ?? []).map((r) => r.id)))} />

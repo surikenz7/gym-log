@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { compact } from '../components/charts';
+import { compact } from '../lib/units';
 import { ExerciseThumb, muscleColor } from '../components/ExerciseImage';
 import { formatMetric } from '../components/ExerciseInfo';
 import { Header, Page } from '../components/ui';
@@ -70,7 +70,7 @@ export function Statistics() {
           {PERIODS.map((p, i) => (
             <button key={p.label} onClick={() => setPeriod(i)} className="relative rounded-lg py-1.5 text-sm font-semibold">
               {period === i && <motion.span layoutId="period" className="absolute inset-0 rounded-lg bg-accent" />}
-              <span className="relative">{p.label}</span>
+              <span className={`relative ${period === i ? 'text-ink' : ''}`}>{p.label}</span>
             </button>
           ))}
         </div>
@@ -85,14 +85,14 @@ export function Statistics() {
             ['Avg. workout', ws.length ? fmtDurationLong(totals.time / ws.length) : '–'],
           ].map(([l, v]) => (
             <div key={l} className="cut bg-card p-4">
-              <div className="text-xs text-muted">{l}</div>
-              <div className="mt-0.5 text-xl font-semibold">{v}</div>
+              <div className="label">{l}</div>
+              <div className="mt-0.5 font-display text-2xl font-bold">{v}</div>
             </div>
           ))}
         </div>
 
         <div className="cut bg-card p-4">
-          <div className="font-semibold">Muscle distribution</div>
+          <div className="label !text-white">Muscle distribution</div>
           <div className="mb-3 text-xs text-muted">Working sets per muscle group</div>
           {muscles.length === 0 && <div className="py-4 text-center text-sm text-muted">No workouts in this period</div>}
           <div className="space-y-2.5">
@@ -121,7 +121,7 @@ export function Statistics() {
 
         {main.length > 0 && (
           <div>
-            <div className="mb-2 font-semibold">Main exercises</div>
+            <div className="label mb-2">Main exercises</div>
             <div className="divide-y divide-line overflow-hidden cut bg-card">
               {main.map(({ ex, n, best }) => (
                 <button key={ex.id} onClick={() => nav(`/exercises/${ex.id}`)} className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-card2">

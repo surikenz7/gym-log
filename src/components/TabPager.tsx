@@ -27,9 +27,18 @@ export function TabPager({ index, pages }: { index: number; pages: ReactNode[] }
   const drag = useRef<{ x: number; y: number; start: number; width: number; lock?: 'x' | 'y'; samples: [number, number][] } | null>(null);
 
   /** velocity in pages per second */
+  const panes = useRef<(HTMLDivElement | null)[]>([]);
+  /** while idle only the current page is visible; during a drag / glide all are */
+  const showAll = (on: boolean) => {
+    panes.current.forEach((el, i) => el && (el.style.visibility = on || i === current.current ? 'visible' : 'hidden'));
+  };
+
   const glide = (i: number, velocity = 0) => {
     anim.current?.stop();
-    anim.current = animate(pos, i, { ...SPRING, velocity });
+    showAll(true);
+    const a = animate(pos, i, { ...SPRING, velocity });
+    anim.current = a;
+    void a.then(() => anim.current === a && showAll(false));
   };
 
   // after a rotation / resize, snap straight to the current page
@@ -37,7 +46,9 @@ export function TabPager({ index, pages }: { index: number; pages: ReactNode[] }
     const snap = () => {
       anim.current?.stop();
       pos.set(current.current);
+      showAll(false);
     };
+    showAll(false);
     addEventListener('orientlock', snap);
     addEventListener('resize', snap);
     return () => {
@@ -94,6 +105,7 @@ export function TabPager({ index, pages }: { index: number; pages: ReactNode[] }
           if (d.lock === 'x') {
             // grab the strip where it is, even mid-glide
             anim.current?.stop();
+            showAll(true);
             d.start = pos.get() + dx / d.width;
           }
         }
@@ -125,7 +137,7 @@ export function TabPager({ index, pages }: { index: number; pages: ReactNode[] }
     >
       <motion.div className="flex h-full" style={{ transform, willChange: 'transform' }}>
         {pages.map((page, i) => (
-          <div key={i} className="relative h-full w-full min-w-full shrink-0" aria-hidden={i !== index} style={{ transform: 'translateZ(0)' }}>
+          <div key={i} ref={(el) => void (panes.current[i] = el)} className="relative h-full w-full min-w-full shrink-0" aria-hidden={i !== index} style={{ transform: 'translateZ(0)' }}>
             {mounted.has(i) ? page : null}
           </div>
         ))}

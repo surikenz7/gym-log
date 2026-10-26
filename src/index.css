@@ -143,7 +143,14 @@ body::after {
   filter: invert(1);
   opacity: 0.05;
 }
-:root:not([data-style='raw']) body::after {
+:root:not([data-style='raw']) body::after,
+:root[data-grain='off'] body::after {
+  display: none;
+}
+:root[data-grain='on'] body::after {
+  display: block;
+}
+:root[data-glow='off'] body::before {
   display: none;
 }
 

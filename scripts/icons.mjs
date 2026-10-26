@@ -13,9 +13,17 @@ const THEMES = {
   cobalt: ['#2f7cf6', '#22d3ee'],
   venom: ['#a855f7', '#ec4899'],
   pump: ['#ff2e7e', '#ffb020'],
+  ocean: ['#0ea5e9', '#2dd4bf'],
+  mint: ['#10b981', '#a7f3d0'],
+  royal: ['#6366f1', '#c084fc'],
+  sunset: ['#fb7185', '#fdba74'],
+  forest: ['#16a34a', '#bef264'],
+  ice: ['#7dd3fc', '#e0f2fe'],
+  mono: ['#f4f4f5', '#a1a1aa'],
+  coffee: ['#c08457', '#f5deb3'],
 };
 
-const INK = { gold: '#141414', toxic: '#141414', steel: '#141414', inferno: '#ffffff' };
+const INK = { gold: '#141414', toxic: '#141414', steel: '#141414', inferno: '#ffffff', ice: '#0c2433', mono: '#141414', mint: '#ffffff', sunset: '#ffffff', coffee: '#ffffff' };
 
 const shade = (hex, f) => {
   const n = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));

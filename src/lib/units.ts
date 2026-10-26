@@ -148,3 +148,10 @@ export function fmtVolume(kg: number, s: Settings) {
   const v = kgTo(kg, s.weightUnit);
   return `${Math.round(v).toLocaleString('en-US')} ${s.weightUnit}`;
 }
+
+/** 1234 → 1.2K, 2500000 → 2.5M */
+export function compact(n: number) {
+  if (Math.abs(n) >= 1e6) return `${+(n / 1e6).toFixed(1)}M`;
+  if (Math.abs(n) >= 1e3) return `${+(n / 1e3).toFixed(1)}K`;
+  return `${+n.toFixed(1)}`;
+}

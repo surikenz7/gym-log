@@ -1,6 +1,7 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
+import { useSettings } from './state/settings';
 import { Share } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { TabPager } from './components/TabPager';
 import { useRegisterSW } from 'virtual:pwa-register/react';
@@ -9,21 +10,28 @@ import { Dock, DOCK_TABS } from './components/Dock';
 import { RankSync } from './lib/useProgress';
 import { ActiveWorkout, MiniWorkoutBar, RestWatcher } from './screens/ActiveWorkout';
 import { useWorkout } from './state/workout';
-import { CalendarPage } from './screens/CalendarPage';
 import { ExercisePage, Exercises } from './screens/Exercises';
-import { Explore } from './screens/Explore';
-import { HevyImport } from './screens/HevyImport';
 import { Home } from './screens/Home';
-import { Measures } from './screens/Measures';
 import { Profile } from './screens/Profile';
 import { Ranks } from './screens/Ranks';
 import { RoutineEditor } from './screens/RoutineEditor';
-import { Settings } from './screens/Settings';
-import { Statistics } from './screens/Statistics';
-import { Trophies } from './screens/Trophies';
-import { DecoSync, Decorations } from './screens/Decorations';
+import { DecoSync } from './screens/Decorations';
+import { CloudSync } from './cloud/CloudSync';
 import { Summary, WorkoutDetail, WorkoutEdit } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
+// screens you open now and then are loaded the first time they're needed
+const CalendarPage = lazy(() => import('./screens/CalendarPage').then((m) => ({ default: m.CalendarPage })));
+const Explore = lazy(() => import('./screens/Explore').then((m) => ({ default: m.Explore })));
+const HevyImport = lazy(() => import('./screens/HevyImport').then((m) => ({ default: m.HevyImport })));
+const Measures = lazy(() => import('./screens/Measures').then((m) => ({ default: m.Measures })));
+const Statistics = lazy(() => import('./screens/Statistics').then((m) => ({ default: m.Statistics })));
+const Trophies = lazy(() => import('./screens/Trophies').then((m) => ({ default: m.Trophies })));
+const Decorations = lazy(() => import('./screens/Decorations').then((m) => ({ default: m.Decorations })));
+const Friends = lazy(() => import('./screens/Social').then((m) => ({ default: m.Friends })));
+const FriendProfile = lazy(() => import('./screens/Social').then((m) => ({ default: m.FriendProfile })));
+const SharedRoutine = lazy(() => import('./screens/SharedRoutine').then((m) => ({ default: m.SharedRoutine })));
+const Settings = lazy(() => import('./screens/Settings').then((m) => ({ default: m.Settings })));
+
 
 function UpdatePrompt() {
   const {
@@ -93,12 +101,15 @@ export default function App() {
   const lastTab = useRef(Math.max(0, tabIndex));
   if (isTabRoot) lastTab.current = tabIndex;
   const miniBar = useWorkout((s) => !!s.active && !s.open);
+  const reduceMotion = useSettings((s) => !!s.reduceMotion);
   return (
+    <MotionConfig reducedMotion={reduceMotion ? 'always' : 'never'}>
     <div className={`relative flex h-full flex-col ${isTabRoot ? 'has-dock' : ''} ${miniBar ? 'has-mini' : ''}`}>
       <main className="relative min-h-0 flex-1">
         <TabPager index={lastTab.current} pages={[<Home key="home" />, <WorkoutTab key="workout" />, <Ranks key="ranks" />, <Profile key="profile" />]} />
         {!isTabRoot && (
           <div className="absolute inset-0 z-10 bg-bg">
+            <Suspense fallback={null}>
             <Routes location={location} key={location.pathname}>
           <Route path="/explore" element={<Explore />} />
           <Route path="/history/:id" element={<WorkoutDetail />} />
@@ -110,6 +121,9 @@ export default function App() {
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/trophies" element={<Trophies />} />
           <Route path="/decorations" element={<Decorations />} />
+          <Route path="/friends" element={<Friends />} />
+          <Route path="/u/:uid" element={<FriendProfile />} />
+          <Route path="/r/:code" element={<SharedRoutine />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/import/hevy" element={<HevyImport />} />
           <Route path="/routine/new" element={<RoutineEditor />} />
@@ -117,6 +131,7 @@ export default function App() {
           <Route path="/summary/:id" element={<Summary />} />
           <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </Suspense>
           </div>
         )}
       </main>
@@ -132,9 +147,11 @@ export default function App() {
       <RestWatcher />
       <RankSync />
       <DecoSync />
+      <CloudSync />
       <DialogHost />
       <ToastHost />
       <UpdatePrompt />
     </div>
+    </MotionConfig>
   );
 }

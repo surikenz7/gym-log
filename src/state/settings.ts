@@ -17,9 +17,10 @@ export const useSettings = create<SettingsState>((set, get) => ({
 }));
 
 if (typeof document !== 'undefined') {
-  applyLook(DEFAULT_SETTINGS.theme, DEFAULT_SETTINGS.style, DEFAULT_SETTINGS.mode);
+  const look = (s: Settings) => applyLook(s.theme, s.style, s.mode, { textSize: s.textSize, glow: s.glow, grain: s.grain });
+  look(DEFAULT_SETTINGS);
   useSettings.subscribe((s, prev) => {
-    if (s.theme !== prev.theme || s.style !== prev.style || s.mode !== prev.mode) applyLook(s.theme, s.style, s.mode);
+    if (s.theme !== prev.theme || s.style !== prev.style || s.mode !== prev.mode || s.textSize !== prev.textSize || s.glow !== prev.glow || s.grain !== prev.grain) look(s);
   });
 }
 

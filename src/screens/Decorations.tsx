@@ -1,4 +1,7 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { motion } from 'framer-motion';
+import { useAccount } from '../cloud/account';
+import { db } from '../db/db';
 import { Check, Gift, Lock } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '../components/WorkoutFeed';
@@ -23,13 +26,19 @@ export function unlockDecoration(id: string) {
 export function DecoSync() {
   const journey = useJourney();
   const workouts = useAllWorkouts();
-  const { data, loading } = useRanks();
+  const { data, loading, ctx } = useRanks();
+  const settings = useSettings();
+  const routines = useLiveQuery(() => db.routines.count(), []);
+  const measures = useLiveQuery(() => db.measures.count(), []);
+  const account = useAccount((a) => a.status === 'signedIn');
+  const following = useAccount((a) => a.following.length);
   const first = useRef(true);
   useEffect(() => {
-    if (!journey || !workouts || loading) return;
+    if (!journey || !workouts || loading || routines === undefined || measures === undefined) return;
     const s = useSettings.getState();
     const have = new Set(s.decos ?? []);
-    const fresh = earnedDecorations(journey, workouts, data?.overall ?? null).filter((id) => !have.has(id));
+    const extras = { name: !!s.name.trim(), avatar: !!s.avatar, routines, measures, ranked: !!ctx, account, following, shared: !!s.shared };
+    const fresh = earnedDecorations(journey, workouts, data?.overall ?? null, extras).filter((id) => !have.has(id));
     const firstRun = first.current;
     first.current = false;
     if (!fresh.length) return;
@@ -41,7 +50,7 @@ export function DecoSync() {
     haptic('success');
     fanfare();
     toast(`🎁 New decoration: ${fresh.map((id) => decoById(id)?.name).join(', ')}`);
-  }, [journey, workouts, data?.overall, loading]);
+  }, [journey, workouts, data?.overall, loading, ctx, routines, measures, account, following, settings.name, settings.avatar, settings.shared]);
   return null;
 }
 
@@ -143,8 +152,7 @@ export function Decorations() {
         </div>
 
         <div className="mt-2 px-1 text-[11px] leading-snug text-muted">
-          Percentages are estimates of how many lifters ever earn each decoration (there’s no server, so they can’t count real players). Rank decorations stay yours even if your rank
-          drops later.
+          Percentages estimate how many lifters ever earn each decoration — they’re not live counts. Rank decorations stay yours even if your rank drops later.
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-2">

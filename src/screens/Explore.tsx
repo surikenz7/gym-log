@@ -89,6 +89,15 @@ async function addProgram(p: Program) {
   await db.routines.bulkAdd(routines);
 }
 
+/** Each program's gradient (shared with the Routines tab carousel). */
+export const PROGRAM_COLORS = [
+  ['#ef4444', '#f97316'],
+  ['#6366f1', '#22d3ee'],
+  ['#22c55e', '#a3e635'],
+  ['#a855f7', '#ec4899'],
+  ['#f59e0b', '#fde047'],
+];
+
 export function Explore() {
   const [added, setAdded] = useState<string[]>([]);
   return (
@@ -97,9 +106,11 @@ export function Explore() {
       <div className="space-y-4 px-4 pb-12">
         {PROGRAMS.map((p, i) => (
           <motion.div key={p.name} className="cut bg-card p-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-            <div className="text-lg font-semibold">{p.name}</div>
-            <div className="text-xs font-medium text-accent">{p.level}</div>
-            <div className="mt-1 text-sm text-muted">{p.description}</div>
+            <div className="-mx-4 -mt-4 mb-3 px-4 pb-3 pt-4 text-[#fff]" style={{ background: `linear-gradient(135deg, ${PROGRAM_COLORS[i % PROGRAM_COLORS.length][0]}, ${PROGRAM_COLORS[i % PROGRAM_COLORS.length][1]})` }}>
+              <div className="font-display text-2xl font-bold uppercase">{p.name}</div>
+              <div className="text-xs font-semibold opacity-85">{p.level}</div>
+            </div>
+            <div className="text-sm text-muted">{p.description}</div>
             <div className="mt-3 space-y-3">
               {p.routines.map((r) => (
                 <div key={r.name}>
