@@ -3,8 +3,14 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import pkg from './package.json';
 
+/**
+ * Where the app lives: GitHub Pages serves it under /gym-log/, hosts with their own
+ * (sub)domain — Netlify, Vercel, Cloudflare Pages — at the root. BASE_PATH overrides.
+ */
+const base = process.env.BASE_PATH ?? (process.env.NETLIFY || process.env.VERCEL || process.env.CF_PAGES ? '/' : '/gym-log/');
+
 export default defineConfig({
-  base: '/gym-log/',
+  base,
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   plugins: [
     react(),
@@ -19,9 +25,9 @@ export default defineConfig({
         background_color: '#090909',
         display: 'standalone',
         orientation: 'portrait',
-        id: '/gym-log/',
-        start_url: '/gym-log/',
-        scope: '/gym-log/',
+        id: base,
+        start_url: base,
+        scope: base,
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },

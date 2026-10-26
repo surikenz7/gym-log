@@ -2,7 +2,15 @@ import { create } from 'zustand';
 import { db, getKv, setKv } from '../db/db';
 import { cloudEnabled, LOGIN_DOMAIN } from './config';
 import { firebase } from './firebase';
+import { dedupeTotal, describeDedupe, type DedupeResult } from './dedupe';
 import { resetSyncState, syncNow } from './sync';
+
+/** Tell the user and take back progress that only existed because of the duplicates. */
+export async function afterDedupe(r: DedupeResult) {
+  const [{ toast }, { revokeHistoryDecorations }] = await Promise.all([import('../state/dialog'), import('../screens/Decorations')]);
+  await revokeHistoryDecorations();
+  toast(`🧹 ${describeDedupe(r)}`);
+}
 
 const KV_ACCOUNT = 'cloudAccount';
 
@@ -121,7 +129,8 @@ export function requestSync(profile: Record<string, unknown> | null) {
       const { auth } = await firebase();
       await auth.authStateReady();
       if (!auth.currentUser) return;
-      await syncNow(uid, profile);
+      const res = await syncNow(uid, profile);
+      if (dedupeTotal(res.deduped)) await afterDedupe(res.deduped);
       const { getProfile } = await import('./social');
       const me = await getProfile(uid);
       useAccount.setState({ lastSync: Date.now(), error: null, following: me?.following ?? [] });

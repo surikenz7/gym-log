@@ -67,6 +67,9 @@ export const DECORATIONS: Decoration[] = [
 
 export const decoById = (id: string) => DECORATIONS.find((d) => d.id === id);
 
+/** Decorations that depend only on workout history (counts, volume, streaks, PRs) — these can be taken back if history shrinks. */
+export const HISTORY_BASED = new Set(['iron_ring', 'hearts', 'sweatband', 'cap', 'laurel', 'viking', 'pillars', 'headphones', 'flames', 'year_ring', 'stars', 'spark', 'lightning', 'plates', 'gold_1m', 'overhead', 'sunburst']);
+
 export function rarityOf(pct: number) {
   if (pct >= 40) return { label: 'Common', color: '#9ca3af' };
   if (pct >= 15) return { label: 'Uncommon', color: '#22c55e' };

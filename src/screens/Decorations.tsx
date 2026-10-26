@@ -6,13 +6,25 @@ import { Check, Gift, Lock } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '../components/WorkoutFeed';
 import { Header, Page } from '../components/ui';
-import { DECORATIONS, decoById, earnedDecorations, fmtPct, rarityOf, redeemCode, type Decoration } from '../lib/decorations';
+import { DECORATIONS, decoById, earnedDecorations, fmtPct, HISTORY_BASED, rarityOf, redeemCode, type Decoration } from '../lib/decorations';
+import { typeOf } from '../lib/exercises';
+import { computeJourney } from '../lib/progress';
 import { haptic } from '../lib/haptics';
 import { useAllWorkouts } from '../lib/hooks';
 import { fanfare } from '../lib/sound';
 import { useJourney, useRanks } from '../lib/useProgress';
 import { toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
+
+/** Removes history-based decorations that the (cleaned-up) history no longer earns. */
+export async function revokeHistoryDecorations() {
+  const workouts = await db.workouts.toArray();
+  const earned = new Set(earnedDecorations(computeJourney(workouts, typeOf), workouts, null));
+  const s = useSettings.getState();
+  const keep = (s.decos ?? []).filter((id) => !HISTORY_BASED.has(id) || earned.has(id));
+  if (keep.length === (s.decos ?? []).length) return;
+  s.update({ decos: keep, deco: s.deco && keep.includes(s.deco) ? s.deco : null });
+}
 
 export function unlockDecoration(id: string) {
   const s = useSettings.getState();

@@ -84,4 +84,32 @@ describe('cloud sync', () => {
     expect((await db.workouts.get('a'))!.name).toBe('Push v2');
     expect(JSON.parse(store.get('users/u1/workouts/a')!.data as string).name).toBe('Push v2');
   });
+
+  it('merging the same history imported twice (different ids) does not double it — on any device', async () => {
+    const hist = (prefix: string) => [
+      { ...w(prefix + '1', 'Push'), start: 1_000_000 },
+      { ...w(prefix + '2', 'Pull'), start: 2_000_000 },
+    ];
+    // Safari copy: imported, account created, backed up
+    await db.workouts.bulkPut(hist('x'));
+    await db.routines.put({ id: 'rx', name: 'PPL Push', order: 1, createdAt: 1, updatedAt: 1, exercises: [{ id: 'e', exerciseId: 'Plank', sets: [] }] });
+    await syncNow('u2', null);
+    // Home Screen app: same history imported separately (other ids), then logs in
+    await newDevice();
+    await db.workouts.bulkPut(hist('a'));
+    await db.routines.put({ id: 'ra', name: 'PPL Push', order: 1, createdAt: 1, updatedAt: 1, exercises: [{ id: 'f', exerciseId: 'Plank', sets: [] }] });
+    const res = await syncNow('u2', null);
+    expect(res.deduped.workouts).toBe(2);
+    expect(res.deduped.routines).toBe(1);
+    expect(await db.workouts.count()).toBe(2);
+    expect(await db.routines.count()).toBe(1);
+    // the cloud ends up with one live copy of each workout
+    const live = [...store.entries()].filter(([k, v]) => k.startsWith('users/u2/workouts/') && !v.deleted);
+    expect(live).toHaveLength(2);
+    // and a third device sees no duplicates either
+    await newDevice();
+    await syncNow('u2', null);
+    expect((await db.workouts.toArray()).map((x) => x.name).sort()).toEqual(['Pull', 'Push']);
+    expect(await db.routines.count()).toBe(1);
+  });
 });

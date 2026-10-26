@@ -2,6 +2,7 @@ import { db, getKv, KV_SETTINGS, setKv } from '../db/db';
 import { useLibrary } from '../lib/exercises';
 import { loadSettings } from '../state/settings';
 import type { Folder, Exercise, Measure, Routine, Settings, Workout } from '../types';
+import { dedupeLocal, type DedupeResult } from './dedupe';
 import { firebase } from './firebase';
 
 /**
@@ -71,6 +72,7 @@ export async function resetSyncState() {
 export interface SyncResult {
   pulled: number;
   pushed: number;
+  deduped: DedupeResult;
 }
 
 export async function syncNow(uid: string, profile: Record<string, unknown> | null): Promise<SyncResult> {
@@ -119,6 +121,9 @@ export async function syncNow(uid: string, profile: Record<string, unknown> | nu
       pulled++;
     }
   }
+
+  // ---------- merge clean-up: the same workout from two sources must not count twice ----------
+  const deduped = await dedupeLocal();
 
   // ---------- push: new / changed / deleted records ----------
   let batch = fs.writeBatch(fdb);
@@ -172,5 +177,5 @@ export async function syncNow(uid: string, profile: Record<string, unknown> | nu
   // next time, pull everything written since just before this sync began
   st.pulledAt = Math.max(st.pulledAt, started - 1);
   await setKv(KV_CLOUD, st);
-  return { pulled, pushed };
+  return { pulled, pushed, deduped };
 }

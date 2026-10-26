@@ -4,7 +4,8 @@ import { DECORATIONS } from '../lib/decorations';
 import { levelFromXp, levelTitle } from '../lib/progress';
 import { useJourney, useRanks } from '../lib/useProgress';
 import { useSettings } from '../state/settings';
-import { initAccount, requestSync, useAccount } from './account';
+import { afterDedupe, initAccount, requestSync, useAccount } from './account';
+import { dedupeLocal, dedupeTotal } from './dedupe';
 
 let dirty: (() => void) | null = null;
 let hooked = false;
@@ -32,7 +33,13 @@ export function CloudSync() {
   const settings = useSettings();
   const profile = useRef<Record<string, unknown> | null>(null);
 
-  useEffect(() => void initAccount(), []);
+  useEffect(() => {
+    void initAccount();
+    // clean up copies left by an earlier merge (works offline / without an account too)
+    void dedupeLocal().then((r) => {
+      if (dedupeTotal(r)) void afterDedupe(r);
+    });
+  }, []);
 
   // public summary shown on your profile to people who follow you
   useEffect(() => {

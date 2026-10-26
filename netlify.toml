@@ -1,0 +1,7 @@
+# Netlify: connect the GitHub repo and it builds + publishes on every push.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
