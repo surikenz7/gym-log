@@ -55,8 +55,9 @@ export function DecoSync() {
     first.current = false;
     if (!fresh.length) return;
     s.update({ decos: [...have, ...fresh] });
-    // stay quiet during the welcome flow; they're waiting in Decorations afterwards
-    if (!s.onboarded) return;
+    // stay quiet during the welcome flow and while an account's history is being restored
+    const acct = useAccount.getState();
+    if (!s.onboarded || (acct.status === 'signedIn' && (acct.syncing || !acct.lastSync))) return;
     if (firstRun && s.decos === undefined) {
       toast(`🎁 ${fresh.length} avatar decoration${fresh.length === 1 ? '' : 's'} unlocked — Settings → Decorations`);
       return;

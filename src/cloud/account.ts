@@ -1,5 +1,8 @@
 import { create } from 'zustand';
-import { db, getKv, setKv } from '../db/db';
+import { db, getKv, KV_ACTIVE, setKv } from '../db/db';
+import { useLibrary } from '../lib/exercises';
+import { useSettings } from '../state/settings';
+import { useWorkout } from '../state/workout';
 import { cloudEnabled, LOGIN_DOMAIN } from './config';
 import { firebase } from './firebase';
 import { dedupeTotal, describeDedupe, type DedupeResult } from './dedupe';
@@ -71,7 +74,38 @@ export async function initAccount() {
 
 async function remember(uid: string, nick: string) {
   await setKv(KV_ACCOUNT, { uid, nick });
+  useSettings.getState().update({ guest: false });
   useAccount.setState({ status: 'signedIn', uid, nick, error: null });
+}
+
+/** One last backup before logging out. Returns false if the cloud couldn't be reached. */
+export async function backupNow(): Promise<boolean> {
+  const { uid } = useAccount.getState();
+  if (!uid || !navigator.onLine) return false;
+  try {
+    while (running) await running; // let a sync that's already going finish first
+    const { auth } = await firebase();
+    await auth.authStateReady();
+    if (!auth.currentUser) return false;
+    await syncNow(uid, null);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Removes this account's data from the phone (it lives on in the cloud), so the next person to
+ * log in starts clean and accounts never mix. Look & feel settings stay.
+ */
+async function wipeLocalData() {
+  await db.transaction('rw', [db.workouts, db.routines, db.folders, db.exercises, db.measures], async () => {
+    await Promise.all([db.workouts.clear(), db.routines.clear(), db.folders.clear(), db.exercises.clear(), db.measures.clear()]);
+  });
+  await db.kv.delete(KV_ACTIVE);
+  useWorkout.getState().discard();
+  useSettings.getState().update({ name: '', avatar: null, sex: null, decos: [], deco: null, shared: false, guest: false, motto: '' });
+  await useLibrary.getState().reload();
 }
 
 export async function signUp(nick: string, password: string) {
@@ -109,6 +143,7 @@ export async function signOut() {
   await db.kv.delete(KV_ACCOUNT);
   await resetSyncState();
   useAccount.setState({ status: 'signedOut', uid: null, nick: null, lastSync: null, following: [] });
+  await wipeLocalData();
 }
 
 let running: Promise<void> | null = null;

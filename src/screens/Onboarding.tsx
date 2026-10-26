@@ -25,15 +25,24 @@ type Step = 'welcome' | 'account' | 'profile' | 'body' | 'look' | 'start' | 'don
 /** Settings → "Run setup again" opens the flow on demand. */
 export const useOnboardingReplay = create<{ open: boolean }>(() => ({ open: false }));
 
-/** Show the welcome flow until it has been finished once (signed-in users skip it). */
-export function useOnboarding() {
+export type OnboardingStart = 'welcome' | 'account' | 'setup';
+
+/**
+ * When the welcome flow / login screen has to cover the app:
+ *  - logged out (and not a guest) → the login screen (with the intro the very first time)
+ *  - no cloud: the intro + setup until done once
+ *  - "Run setup again" → just the setup slides
+ */
+export function useOnboarding(): OnboardingStart | null {
   const onboarded = useSettings((s) => s.onboarded);
+  const guest = useSettings((s) => s.guest);
   const status = useAccount((s) => s.status);
   const replay = useOnboardingReplay((s) => s.open);
-  useEffect(() => {
-    if (!onboarded && status === 'signedIn') useSettings.getState().update({ onboarded: true });
-  }, [onboarded, status]);
-  return replay || (!onboarded && status !== 'loading' && status !== 'signedIn');
+  if (replay) return cloudEnabled && status === 'signedOut' && !guest ? 'account' : 'setup';
+  if (status === 'loading') return null;
+  if (cloudEnabled && status === 'signedOut' && !guest) return onboarded ? 'account' : 'welcome';
+  if (!onboarded && status !== 'signedIn') return 'welcome';
+  return null;
 }
 
 /* ------------------------------------------------------------------ pieces */
@@ -143,7 +152,7 @@ const field = 'w-full rounded-2xl bg-card px-4 py-3.5 text-[17px] outline-none p
 
 /* ------------------------------------------------------------------ steps */
 
-function AccountStep({ next }: { next: () => void }) {
+function AccountStep({ onResult }: { onResult: (r: 'signup' | 'login' | 'guest') => void }) {
   const [mode, setMode] = useState<'signup' | 'login'>('signup');
   const [nick, setNick] = useState('');
   const [pass, setPass] = useState('');
@@ -160,7 +169,7 @@ function AccountStep({ next }: { next: () => void }) {
       if (mode === 'signup') useSettings.getState().update({ name: useSettings.getState().name || nick });
       haptic('success');
       requestSync(null);
-      next();
+      onResult(mode);
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -177,7 +186,7 @@ function AccountStep({ next }: { next: () => void }) {
         { label: 'Continue as guest', value: 'guest', style: 'danger' },
       ],
     });
-    if (r === 'guest') next();
+    if (r === 'guest') onResult('guest');
   };
 
   return (
@@ -460,10 +469,13 @@ function DoneStep() {
 
 /* ------------------------------------------------------------------ flow */
 
-export function Onboarding({ onDone }: { onDone: () => void }) {
+const SETUP: Step[] = ['profile', 'body', 'look', 'start', 'done'];
+
+export function Onboarding({ start, onDone }: { start: OnboardingStart; onDone: () => void }) {
   const nav = useNavigate();
-  const signedIn = useAccount((a) => a.status === 'signedIn');
-  const [steps] = useState<Step[]>(() => ['welcome', ...(cloudEnabled && !signedIn ? (['account'] as Step[]) : []), 'profile', 'body', 'look', 'start', 'done']);
+  const [steps] = useState<Step[]>(() =>
+    start === 'setup' ? SETUP : start === 'account' ? ['account', ...SETUP] : ['welcome', ...(cloudEnabled ? (['account'] as Step[]) : []), ...SETUP],
+  );
   const [i, setI] = useState(0);
   const [dir, setDir] = useState(1);
   const [pick, setPick] = useState<number | 'hevy' | null>(null);
@@ -483,6 +495,19 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
     if (pick === 'hevy') nav('/import/hevy');
   };
 
+  /** Logging in goes straight to the app; a new account (or a first-time guest) gets the setup. */
+  const afterAccount = (r: 'signup' | 'login' | 'guest') => {
+    if (r === 'guest') useSettings.getState().update({ guest: true });
+    if (r === 'login' || (r === 'guest' && useSettings.getState().onboarded)) {
+      useSettings.getState().update({ onboarded: true });
+      useOnboardingReplay.setState({ open: false });
+      nav('/', { replace: true });
+      onDone();
+      return;
+    }
+    go(1);
+  };
+
   const isSetup = step !== 'welcome' && step !== 'done';
   const setupSteps: Step[] = steps.filter((s) => s !== 'welcome' && s !== 'done');
   const setupIndex = setupSteps.indexOf(step);
@@ -493,7 +518,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
 
       {isSetup && (
         <div className="relative z-10 flex items-center gap-3 px-5 pt-safe">
-          <button onClick={() => go(-1)} className="press -ml-2 p-2 text-white/70" aria-label="Back">
+          <button onClick={() => go(-1)} className={`press -ml-2 p-2 text-white/70 ${i === 0 ? 'invisible' : ''}`} aria-label="Back">
             <ChevronLeft size={26} />
           </button>
           <div className="flex flex-1 gap-1.5 py-4">
@@ -547,7 +572,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             )}
             {step === 'account' && (
               <div className="pt-2">
-                <AccountStep next={() => go(1)} />
+                <AccountStep onResult={afterAccount} />
               </div>
             )}
             {step === 'profile' && (

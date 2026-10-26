@@ -2,7 +2,7 @@ import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { useSettings } from './state/settings';
 import { Share } from 'lucide-react';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Onboarding, useOnboarding } from './screens/Onboarding';
+import { Onboarding, useOnboarding, type OnboardingStart } from './screens/Onboarding';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { TabPager } from './components/TabPager';
 import { useRegisterSW } from 'virtual:pwa-register/react';
@@ -104,9 +104,10 @@ export default function App() {
   const miniBar = useWorkout((s) => !!s.active && !s.open);
   const reduceMotion = useSettings((s) => !!s.reduceMotion);
   const needsOnboarding = useOnboarding();
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [onboarding, setOnboarding] = useState<OnboardingStart | null>(null);
   useEffect(() => {
-    if (needsOnboarding) setOnboardingOpen(true);
+    // once open, the flow stays until it's finished (signing up mid-way doesn't close it)
+    if (needsOnboarding) setOnboarding((o) => o ?? needsOnboarding);
   }, [needsOnboarding]);
   // Dock / pages stay underneath; the flow covers them until it's finished
   return (
@@ -154,7 +155,7 @@ export default function App() {
       <RestWatcher />
       <RankSync />
       <DecoSync />
-      <AnimatePresence>{onboardingOpen && <Onboarding key="onb" onDone={() => setOnboardingOpen(false)} />}</AnimatePresence>
+      <AnimatePresence>{onboarding && <Onboarding key={onboarding} start={onboarding} onDone={() => setOnboarding(null)} />}</AnimatePresence>
       <CloudSync />
       <DialogHost />
       <ToastHost />

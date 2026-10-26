@@ -6,7 +6,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { RankBadge, TierName } from '../components/RankBadge';
 import { Avatar, WorkoutCard } from '../components/WorkoutFeed';
 import { Button, Header, Page, Sheet } from '../components/ui';
-import { NICK_RE, requestSync, signIn, signOut, signUp, useAccount } from '../cloud/account';
+import { backupNow, NICK_RE, requestSync, signIn, signOut, signUp, useAccount } from '../cloud/account';
 import { cloudEnabled } from '../cloud/config';
 import type { PublicProfile } from '../cloud/social';
 import { haptic } from '../lib/haptics';
@@ -117,7 +117,9 @@ export function AccountSection() {
       </button>
       <button
         onClick={async () => {
-          if (await confirmDialog('Log out?', 'Your data stays on this phone. Log in again any time to keep syncing.', 'Log out')) await signOut();
+          if (!(await confirmDialog('Log out?', 'Everything is backed up to your account and will be removed from this phone. Log back in any time to get it all back.', 'Log out'))) return;
+          if (!(await backupNow()) && !(await confirmDialog('Not backed up', 'Couldn’t reach the cloud, so changes since the last backup would be lost. Log out anyway?', 'Log out anyway', true))) return;
+          await signOut();
         }}
         className="flex w-full items-center gap-3 px-4 py-3 text-left text-danger active:bg-card2"
       >
