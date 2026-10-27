@@ -18,7 +18,7 @@ export const cloudEnabled = !!firebaseConfig.apiKey;
  * Web Push relay (push-worker/, a free Cloudflare Worker) and its public VAPID key.
  * Empty URL = message notifications are only shown while the app is open.
  */
-export const PUSH_URL = '';
+export const PUSH_URL = 'https://gym-log-push.gymlog-surikenz7.workers.dev';
 export const VAPID_PUBLIC = 'BNYo55amq6NxYwVZxwHUTAHYo9_CJdtbkRZkqm28rg-N2oZyEOsbRmO5Jpq1FzxlxLbdzHrxLodMfLXbbK-5T-w';
 
 /** Accounts use a nickname; Firebase needs an email-shaped login, so this domain is appended. */
