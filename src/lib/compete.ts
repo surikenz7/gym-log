@@ -202,20 +202,189 @@ export function daysLeft(period: 'week' | 'month', now = new Date()) {
 
 /* ------------------------------------------------------------------ friend quests */
 
-export type QuestKind = 'sessions' | 'sets' | 'volume';
+export type QuestMuscle = 'legs' | 'back' | 'chest' | 'shoulders' | 'arms' | 'core';
+export const QUEST_MUSCLES: QuestMuscle[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core'];
+const GROUP: Record<string, QuestMuscle> = {
+  Quadriceps: 'legs', Hamstrings: 'legs', Glutes: 'legs', Calves: 'legs', Adductors: 'legs', Abductors: 'legs',
+  Lats: 'back', 'Upper Back': 'back', 'Lower Back': 'back', Traps: 'back',
+  Chest: 'chest', Shoulders: 'shoulders', Biceps: 'arms', Triceps: 'arms', Forearms: 'arms', Abs: 'core',
+};
 
-/** Shared weekly goal for two friends: about what both usually do together, plus a bit. */
-export function questGoal(kind: QuestKind, myWeek: { n: number; s: number; v: number }) {
-  if (kind === 'sessions') return Math.max(5, Math.round(myWeek.n * 2 * 1.1));
-  if (kind === 'sets') return Math.max(60, roundTo(myWeek.s * 2 * 1.1, 10));
-  return Math.max(15000, roundTo(myWeek.v * 2 * 1.1, 5000));
+/**
+ * One person's week in quest terms. Published on the profile (`qw` = this week, `qa` = average of
+ * the last 8) so a quest partner can see it: sessions, working sets, volume, reps, minutes, PR sets,
+ * days trained (bit 0 = Monday) and working sets per muscle group.
+ */
+export interface QuestWeek {
+  id: string;
+  n: number;
+  s: number;
+  v: number;
+  r: number;
+  m: number;
+  pr: number;
+  d: number;
+  g: Partial<Record<QuestMuscle, number>>;
+}
+export type QuestAvg = Omit<QuestWeek, 'id' | 'd'>;
+
+const emptyWeek = (id: string): QuestWeek => ({ id, n: 0, s: 0, v: 0, r: 0, m: 0, pr: 0, d: 0, g: {} });
+const dayBit = (t: number) => 1 << ((new Date(t).getDay() + 6) % 7);
+
+function questMeasure(ws: Workout[], id: string, c: Ctx): QuestWeek {
+  const out = emptyWeek(id);
+  for (const w of ws) {
+    out.n++;
+    out.v += workoutVolume(w, c.typeOf);
+    out.m += (w.end - w.start) / 60000;
+    out.pr += c.prs.get(w.id) ?? 0;
+    out.d |= dayBit(w.start);
+    for (const e of w.exercises) {
+      const sets = e.sets.filter((x) => x.type !== 'warmup');
+      out.s += sets.length;
+      out.r += sets.reduce((n, x) => n + (x.reps ?? 0), 0);
+      const grp = GROUP[c.muscleOf(e.exerciseId)];
+      if (grp) out.g[grp] = (out.g[grp] ?? 0) + sets.length;
+    }
+  }
+  out.v = Math.round(out.v);
+  out.m = Math.round(out.m);
+  return out;
 }
 
-/** Average week over the last 8 (for quest goals). */
-export function averageWeek(all: Workout[], typeOf: (id: string) => ExerciseType, now = new Date()) {
+/** This week and the average week (last 8), as published on the profile. */
+export function questStats(all: Workout[], c: Omit<Ctx, 'prs'>, now = new Date(), prs = prCounts(all, c.typeOf)) {
+  const ctx = { ...c, prs };
   const w0 = weekStart(now);
-  const s = periodStats(all, '', +subWeeks(w0, 8), +w0, 1, typeOf);
-  return { n: s.n / 8, s: s.s / 8, v: s.v / 8 };
+  const qw = questMeasure(between(all, +w0, +addDays(w0, 7)), weekId(w0), ctx);
+  const base = questMeasure(between(all, +subWeeks(w0, 8), +w0), '', ctx);
+  const r1 = (x: number) => Math.round((x / 8) * 10) / 10;
+  const g: QuestAvg['g'] = {};
+  for (const k of QUEST_MUSCLES) if (base.g[k]) g[k] = r1(base.g[k]!);
+  const qa: QuestAvg = { n: r1(base.n), s: r1(base.s), v: Math.round(base.v / 8), r: Math.round(base.r / 8), m: Math.round(base.m / 8), pr: r1(base.pr), g };
+  return { qw, qa };
 }
 
-export const questKindOf = (week: string): QuestKind => (['sessions', 'sets', 'volume'] as const)[Math.floor(seeded('q' + week)() * 3)];
+/** A partner's week for a quest; profiles from older app versions only have sessions / sets / volume. */
+export function questWeekOf(p: { qw?: QuestWeek; wk?: PeriodStats; pw?: PeriodStats; mo?: PeriodStats; pm?: PeriodStats } | null | undefined, week: string): QuestWeek | null {
+  if (!p) return null;
+  if (p.qw?.id === week) return p.qw;
+  if (p.qw) return null; // published, but for an earlier week: nothing yet this week
+  const st = statsOf(p, week);
+  return st ? { ...emptyWeek(week), n: st.n, s: st.s, v: st.v } : null;
+}
+
+/*
+ * Quest kinds:
+ *  - 'sum'  you both add up (sessions, sets, volume, reps, minutes, PRs, sets for a muscle group)
+ *  - 'each' each of you has to get there (both train N times, both train at the weekend)
+ *  - 'days' about the days you trained: on the same day N times, or N different days between you
+ */
+export type QuestKind = 'sessions' | 'sets' | 'volume' | 'reps' | 'minutes' | 'prs' | QuestMuscle | 'both' | 'weekend' | 'sameday' | 'tagteam';
+export type QuestMode = 'sum' | 'each' | 'days';
+export const questMode = (k: QuestKind): QuestMode => (k === 'both' || k === 'weekend' ? 'each' : k === 'sameday' || k === 'tagteam' ? 'days' : 'sum');
+
+export const bitCount = (x: number) => {
+  let n = 0;
+  for (; x; x &= x - 1) n++;
+  return n;
+};
+const WEEKEND = 0b1100000;
+
+/** One partner's own number for a quest. */
+export function questValue(kind: QuestKind, w: QuestWeek | null): number {
+  if (!w) return 0;
+  switch (kind) {
+    case 'sessions':
+    case 'both':
+      return w.n;
+    case 'sets':
+      return w.s;
+    case 'volume':
+      return w.v;
+    case 'reps':
+      return w.r;
+    case 'minutes':
+      return w.m;
+    case 'prs':
+      return w.pr;
+    case 'weekend':
+      return w.d & WEEKEND ? 1 : 0;
+    case 'sameday':
+    case 'tagteam':
+      return bitCount(w.d);
+    default:
+      return w.g?.[kind] ?? 0;
+  }
+}
+
+/** The pair's number compared with the goal. */
+export function questProgress(kind: QuestKind, a: QuestWeek | null, b: QuestWeek | null) {
+  const mode = questMode(kind);
+  if (mode === 'sum') return questValue(kind, a) + questValue(kind, b);
+  if (mode === 'each') return Math.min(questValue(kind, a), questValue(kind, b));
+  return bitCount(kind === 'sameday' ? (a?.d ?? 0) & (b?.d ?? 0) : (a?.d ?? 0) | (b?.d ?? 0));
+}
+
+export interface QuestOption {
+  kind: QuestKind;
+  goal: number;
+}
+
+const DEFAULT_AVG: QuestAvg = { n: 3, s: 45, v: 9000, r: 450, m: 180, pr: 1, g: {} };
+
+/**
+ * Three quest ideas for this pair for the rest of the week. Goals come from what both of you usually
+ * do (the partner's average when their app publishes it), scaled to the days left, and only ideas
+ * that can still be done this week are offered. A different `seed` gives other ideas.
+ */
+export function questOptions(me: { cur: QuestWeek; avg: QuestAvg }, them: { cur: QuestWeek | null; avg?: QuestAvg | null }, now = new Date(), seed = ''): QuestOption[] {
+  const left = daysLeft('week', now);
+  const frac = left / 7;
+  const A = me.avg.n ? me.avg : DEFAULT_AVG;
+  const B = them.avg?.n ? them.avg : A;
+  const a = me.cur;
+  const b = them.cur ?? emptyWeek(a.id);
+  const together: QuestOption[] = [];
+  const team: QuestOption[] = [];
+  const special: QuestOption[] = [];
+
+  const sum = (to: QuestOption[], kind: QuestKind, usual: number, step: number, min: number, max = Infinity) => {
+    const cur = questProgress(kind, a, b);
+    const goal = Math.max(cur + min, roundTo(cur + usual * frac * 1.1, step));
+    if (goal - cur <= max) to.push({ kind, goal });
+  };
+  sum(team, 'sessions', A.n + B.n, 1, 1, left * 2);
+  sum(team, 'sets', A.s + B.s, 5, 10);
+  sum(team, 'volume', A.v + B.v, 1000, 2000);
+  sum(team, 'reps', A.r + B.r, 50, 100);
+  sum(team, 'minutes', A.m + B.m, 30, 60);
+  if (A.pr + B.pr >= 1) sum(special, 'prs', A.pr + B.pr, 1, 1);
+  for (const k of QUEST_MUSCLES) {
+    const usual = (A.g[k] ?? 0) + (B.g[k] ?? 0);
+    if (usual >= 6) sum(special, k, usual, 5, 10);
+  }
+
+  // each of you trains N times: the lighter trainer's usual week, if it still fits in the days left
+  const low = Math.min(a.n, b.n);
+  const both = Math.min(6, Math.max(low + 1, Math.round(Math.min(a.n + A.n * frac, b.n + B.n * frac))));
+  if (both >= 2 && both - low <= left) together.push({ kind: 'both', goal: both });
+  if (questProgress('weekend', a, b) < 1) together.push({ kind: 'weekend', goal: 1 });
+  const today = (now.getDay() + 6) % 7;
+  const rest = 0b1111111 & ~((1 << today) - 1); // today … Sunday
+  const same = questProgress('sameday', a, b);
+  const sameGoal = same + (left >= 5 && Math.min(A.n, B.n) >= 3 ? 2 : 1);
+  if (sameGoal - same <= bitCount(rest & ~(a.d & b.d))) together.push({ kind: 'sameday', goal: sameGoal });
+  const union = bitCount(a.d | b.d);
+  const free = bitCount(rest & ~(a.d | b.d));
+  const tag = Math.min(union + free, Math.max(union + 1, Math.round(union + Math.min(free, (A.n + B.n) * frac * 0.8))));
+  if (free > 0 && tag >= 3) together.push({ kind: 'tagteam', goal: tag });
+
+  const rnd = seeded(`${a.id}|${seed}`);
+  const shuffle = (xs: QuestOption[]) => xs.map((x) => [rnd(), x] as const).sort((p, q) => p[0] - q[0]).map((p) => p[1]);
+  const groups = [shuffle(together), shuffle(team), shuffle(special)];
+  const out: QuestOption[] = [];
+  for (const g of groups) if (g.length) out.push(g.shift()!);
+  for (const x of shuffle(groups.flat())) if (out.length < 3) out.push(x);
+  return out;
+}

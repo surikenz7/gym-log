@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Timer, Trophy, Weight } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAccount } from '../cloud/account';
 import { getExercise, typeOf } from '../lib/exercises';
 import { prCounts, workoutVolume } from '../lib/stats';
 import { fmtDurationLong, fmtVolume } from '../lib/units';
@@ -39,6 +40,12 @@ export function Avatar({ size = 40, ring, deco, src, initial }: { size?: number;
   );
 }
 
+/** "Mon 27 Oct, 18:30 · 2 hours ago" (the "ago" part only for the last week). */
+function when(w: Workout) {
+  const date = format(w.start, isThisYear(w.start) ? 'EEE d MMM, p' : 'EEE d MMM yyyy, p');
+  return Date.now() - w.end < 7 * 864e5 ? `${date} · ${formatDistanceToNowStrict(w.end, { addSuffix: true })}` : date;
+}
+
 /** `friend` = someone else's workout (no link into local history, no rank chips). */
 export interface FeedAuthor {
   uid: string;
@@ -49,6 +56,7 @@ export interface FeedAuthor {
 
 export function WorkoutCard({ w, prs, index = 0, friend, onOpen, author, footer }: { w: Workout; prs: number; index?: number; friend?: boolean; onOpen?: () => void; author?: FeedAuthor; footer?: ReactNode }) {
   const settings = useSettings();
+  const myNick = useAccount((a) => a.nick);
   const nav = useNavigate();
   const shown = w.exercises.slice(0, 4);
   const sets = w.exercises.reduce((n, e) => n + e.sets.filter((s) => s.type !== 'warmup').length, 0);
@@ -61,22 +69,15 @@ export function WorkoutCard({ w, prs, index = 0, friend, onOpen, author, footer 
       style={author ? { backgroundImage: 'linear-gradient(135deg, rgb(56 189 248 / 0.16), transparent 60%)' } : undefined}
     >
     <button onClick={() => (onOpen ? onOpen() : !friend && nav(`/history/${w.id}`))} className="press flex w-full flex-col text-left">
-      {author && (
-        <div className="flex items-center gap-3 px-3 pt-3">
-          <Avatar size={44} src={author.avatar ?? null} initial={author.nick} deco={null} />
-          <div className="min-w-0">
-            <div className="truncate text-base font-bold normal-case">@{author.nick}</div>
-            <div className="text-xs text-muted">{formatDistanceToNowStrict(w.end, { addSuffix: true })}</div>
-          </div>
+      <div className="flex items-center gap-3 px-3 pt-3">
+        {author ? <Avatar size={44} src={author.avatar ?? null} initial={author.nick} deco={author.deco ?? null} /> : <Avatar size={44} />}
+        <div className="min-w-0">
+          <div className="truncate text-base font-bold normal-case">{author ? '@' + author.nick : myNick ? '@' + myNick : settings.name || t('You')}</div>
+          <div className="truncate text-xs text-muted">{when(w)}</div>
         </div>
-      )}
+      </div>
       <div className="flex w-full">
-      {!author && <div className="flex w-[58px] shrink-0 flex-col items-center justify-center gap-0.5 bg-card2 py-3" style={{ boxShadow: 'inset -2px 0 0 rgb(var(--accent))' }}>
-        <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-muted">{format(w.start, 'EEE')}</span>
-        <span className="font-display text-[28px] font-bold leading-none">{format(w.start, 'd')}</span>
-        <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-accent">{format(w.start, isThisYear(w.start) ? 'MMM' : 'MMM yy')}</span>
-      </div>}
-      <div className="min-w-0 flex-1 px-3 py-3">
+      <div className="min-w-0 flex-1 px-3 pb-3 pt-2">
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1 truncate font-display text-xl font-bold uppercase leading-tight">{w.name}</div>
           {prs > 0 && (

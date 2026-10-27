@@ -14,6 +14,7 @@ import { useWorkout } from './state/workout';
 import { ExercisePage, Exercises } from './screens/Exercises';
 import { Home } from './screens/Home';
 import { Profile } from './screens/Profile';
+import { Levels } from './screens/Levels';
 import { Ranks } from './screens/Ranks';
 import { Compete } from './screens/Compete';
 import { RoutineEditor } from './screens/RoutineEditor';
@@ -128,6 +129,7 @@ export default function App() {
             <Routes location={location} key={location.pathname}>
           <Route path="/explore" element={<Explore />} />
           <Route path="/ranks" element={<Ranks />} />
+          <Route path="/levels" element={<Levels />} />
           <Route path="/history/:id" element={<WorkoutDetail />} />
           <Route path="/history/:id/edit" element={<WorkoutEdit />} />
           <Route path="/exercises" element={<Exercises />} />

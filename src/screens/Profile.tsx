@@ -133,16 +133,18 @@ export function Profile() {
             <button onClick={() => nav('/settings')} className="block max-w-full truncate font-display text-3xl font-bold leading-tight">
               {settings.name || t('Set your name')}
             </button>
-            <div className="mt-0.5 flex items-center gap-2">
-              <span className="rounded bg-accent px-1.5 py-0.5 font-display text-xs font-bold tracking-wider">LVL {lvl.level}</span>
-              <span className="font-display text-sm uppercase tracking-wider text-white/70">{t(levelTitle(lvl.level))}</span>
-            </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-              <motion.div className="h-full bg-accent" initial={{ width: 0 }} animate={{ width: `${(lvl.into / lvl.need) * 100}%` }} transition={{ duration: 0.9, ease: 'easeOut' }} />
-            </div>
-            <div className="tabular mt-1 text-[11px] text-muted">
-              {lvl.into.toLocaleString()} / {lvl.need.toLocaleString()} {t('XP to level {n}', { n: lvl.level + 1 })}
-            </div>
+            <button onClick={() => nav('/levels')} className="press block w-full text-left">
+              <div className="mt-0.5 flex items-center gap-2">
+                <span className="rounded bg-accent px-1.5 py-0.5 font-display text-xs font-bold tracking-wider">LVL {lvl.level}</span>
+                <span className="font-display text-sm uppercase tracking-wider text-white/70">{t(levelTitle(lvl.level))}</span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <motion.div className="h-full bg-accent" initial={{ width: 0 }} animate={{ width: `${(lvl.into / lvl.need) * 100}%` }} transition={{ duration: 0.9, ease: 'easeOut' }} />
+              </div>
+              <div className="tabular mt-1 text-[11px] text-muted">
+                {lvl.into.toLocaleString()} / {lvl.need.toLocaleString()} {t('XP to level {n}', { n: lvl.level + 1 })}
+              </div>
+            </button>
           </div>
         </div>
 

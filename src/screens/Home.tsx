@@ -223,8 +223,8 @@ export function Home() {
               {overall != null && <div className="font-display text-xs text-muted">{overall} pts</div>}
             </div>
           </button>
-          <button onClick={() => nav('/profile')} className="press cut bg-card p-3 text-left">
-            <div className="label !text-[9px]">Level {lvl.level}</div>
+          <button onClick={() => nav('/levels')} className="press cut bg-card p-3 text-left">
+            <div className="label !text-[9px]">{t('Level {n}', { n: lvl.level })}</div>
             <div className="truncate font-display text-lg font-bold uppercase leading-tight">{t(levelTitle(lvl.level))}</div>
             <div className="mt-2 h-1.5 overflow-hidden bg-white/10">
               <motion.div className="grad h-full" initial={{ width: 0 }} animate={{ width: `${(lvl.into / lvl.need) * 100}%` }} transition={{ duration: 0.9 }} />

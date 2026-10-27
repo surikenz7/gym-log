@@ -493,7 +493,7 @@ export function FriendProfile() {
             {workouts?.length === 0 && <div className="text-sm text-muted">{t('No workouts shared yet.')}</div>}
             <div className="space-y-2">
               {workouts?.map((w, i) => (
-                <WorkoutCard key={w.id} w={w} prs={0} index={i} friend onOpen={() => nav(`/u/${p.uid}/w/${w.id}`)} />
+                <WorkoutCard key={w.id} w={w} prs={0} index={i} friend author={p} onOpen={() => nav(`/u/${p.uid}/w/${w.id}`)} footer={<ReactionBar owner={p.uid} w={w} author={p} />} />
               ))}
             </div>
           </>

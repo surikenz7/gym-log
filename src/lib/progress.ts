@@ -25,19 +25,29 @@ export function levelFromXp(xp: number) {
   return { level, into: rest, need: xpForLevel(level) };
 }
 
-const TITLES: [number, string][] = [
-  [1, 'Rookie'],
-  [5, 'Lifter'],
-  [10, 'Grinder'],
-  [15, 'Iron Regular'],
-  [20, 'Iron Warrior'],
-  [30, 'Beast'],
-  [40, 'Mass Monster'],
-  [50, 'Golden Era'],
-  [75, 'Legend'],
-  [100, 'Immortal'],
+/** Total XP needed to reach `level`. */
+export const xpToReach = (level: number) => {
+  let xp = 0;
+  for (let l = 1; l < level; l++) xp += xpForLevel(l);
+  return xp;
+};
+
+/** Level titles: [first level, name, badge colours light → dark]. */
+export const LEVEL_TITLES: [number, string, [string, string]][] = [
+  [1, 'Rookie', ['#d1d5db', '#4b5563']],
+  [5, 'Lifter', ['#86efac', '#15803d']],
+  [10, 'Grinder', ['#5eead4', '#0f766e']],
+  [15, 'Iron Regular', ['#93c5fd', '#1d4ed8']],
+  [20, 'Iron Warrior', ['#a5b4fc', '#4338ca']],
+  [30, 'Beast', ['#d8b4fe', '#7e22ce']],
+  [40, 'Mass Monster', ['#fca5a5', '#b91c1c']],
+  [50, 'Golden Era', ['#fde68a', '#b45309']],
+  [75, 'Legend', ['#fdba74', '#c2410c']],
+  [100, 'Immortal', ['#e0f2fe', '#0891b2']],
 ];
-export const levelTitle = (level: number) => TITLES.filter(([l]) => level >= l).pop()![1];
+/** Index into LEVEL_TITLES for a level. */
+export const titleIndex = (level: number) => LEVEL_TITLES.filter(([l]) => level >= l).length - 1;
+export const levelTitle = (level: number) => LEVEL_TITLES[titleIndex(level)][1];
 
 export interface Achievement {
   id: string;

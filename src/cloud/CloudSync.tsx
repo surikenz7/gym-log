@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { db, KV_SETTINGS } from '../db/db';
 import { DECORATIONS } from '../lib/decorations';
-import { fairness, leagueSummary } from '../lib/compete';
-import { typeOf } from '../lib/exercises';
+import { fairness, leagueSummary, questStats } from '../lib/compete';
+import { getExercise, typeOf } from '../lib/exercises';
 import { useAllWorkouts } from '../lib/hooks';
 import { levelFromXp, levelTitle } from '../lib/progress';
 import { useJourney, useLatestBodyweight, useRanks } from '../lib/useProgress';
@@ -70,6 +70,8 @@ export function CloudSync() {
       coef: fairness(bw, settings.sex),
       fair: !!(bw && settings.sex),
       golds: (settings.medals ?? []).filter((m) => m.place === 1).length,
+      // Friends Quests: this week and an average week, so a partner can see progress and fair goals
+      ...questStats(workouts ?? [], { typeOf, muscleOf: (id) => getExercise(id).muscle }),
     };
   }, [journey, ranks?.overall, nick, settings.avatar, settings.deco, settings.theme, settings.decos, settings.privateProfile, workouts, bw, settings.sex, settings.medals]);
 

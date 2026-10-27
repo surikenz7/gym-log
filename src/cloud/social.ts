@@ -1,4 +1,4 @@
-import type { PeriodStats, QuestKind } from '../lib/compete';
+import type { PeriodStats, QuestAvg, QuestKind, QuestWeek } from '../lib/compete';
 import type { Routine, Workout } from '../types';
 import { firebase } from './firebase';
 
@@ -42,6 +42,9 @@ export interface PublicProfile {
   fair?: boolean;
   /** monthly leagues won */
   golds?: number;
+  /** Friends Quest stats: this week, average week */
+  qw?: QuestWeek;
+  qa?: QuestAvg;
 }
 
 export type FollowStatus = 'none' | 'pending' | 'accepted';
