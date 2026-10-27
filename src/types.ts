@@ -152,6 +152,10 @@ export interface Settings {
   onboarded?: boolean;
   /** has shared a routine (unlocks a decoration) */
   shared?: boolean;
+  /** finishing places in monthly friend leagues (0 = didn't place) */
+  medals?: { m: string; place: number; of: number }[];
+  /** Friends Quests completed */
+  duos?: number;
 }
 
 export type StyleId = 'raw' | 'elegant' | 'minimal' | 'playful' | 'cyber' | 'frost' | 'tactical' | 'brutal' | 'terminal';

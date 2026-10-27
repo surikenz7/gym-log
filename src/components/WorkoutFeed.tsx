@@ -1,7 +1,7 @@
 import { format, formatDistanceToNowStrict, isThisYear } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Timer, Trophy, Weight } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getExercise, typeOf } from '../lib/exercises';
 import { prCounts, workoutVolume } from '../lib/stats';
@@ -47,20 +47,20 @@ export interface FeedAuthor {
   deco?: string | null;
 }
 
-export function WorkoutCard({ w, prs, index = 0, friend, onOpen, author }: { w: Workout; prs: number; index?: number; friend?: boolean; onOpen?: () => void; author?: FeedAuthor }) {
+export function WorkoutCard({ w, prs, index = 0, friend, onOpen, author, footer }: { w: Workout; prs: number; index?: number; friend?: boolean; onOpen?: () => void; author?: FeedAuthor; footer?: ReactNode }) {
   const settings = useSettings();
   const nav = useNavigate();
   const shown = w.exercises.slice(0, 4);
   const sets = w.exercises.reduce((n, e) => n + e.sets.filter((s) => s.type !== 'warmup').length, 0);
   return (
-    <motion.button
+    <motion.div
       initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: Math.min(index, 6) * 0.04 }}
-      onClick={() => (onOpen ? onOpen() : !friend && nav(`/history/${w.id}`))}
-      className={`press cut w-full text-left ${author ? 'flex flex-col bg-card ring-1 ring-inset ring-sky-400/40' : 'flex bg-card'}`}
+      className={`cut w-full bg-card ${author ? 'ring-1 ring-inset ring-sky-400/40' : ''}`}
       style={author ? { backgroundImage: 'linear-gradient(135deg, rgb(56 189 248 / 0.16), transparent 60%)' } : undefined}
     >
+    <button onClick={() => (onOpen ? onOpen() : !friend && nav(`/history/${w.id}`))} className="press flex w-full flex-col text-left">
       {author && (
         <div className="flex items-center gap-3 px-3 pt-3">
           <Avatar size={44} src={author.avatar ?? null} initial={author.nick} deco={null} />
@@ -114,7 +114,9 @@ export function WorkoutCard({ w, prs, index = 0, friend, onOpen, author }: { w: 
         )}
       </div>
       </div>
-    </motion.button>
+    </button>
+    {footer && <div className="border-t border-line/60">{footer}</div>}
+    </motion.div>
   );
 }
 

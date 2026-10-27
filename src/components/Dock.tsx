@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { motion } from 'framer-motion';
-import { ClipboardList, Dumbbell, Home as HomeIcon, Play, Plus, Shield, User } from 'lucide-react';
+import { ClipboardList, Dumbbell, Home as HomeIcon, Play, Plus, Swords, User } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { db } from '../db/db';
@@ -16,7 +16,7 @@ import { t } from '../i18n';
 export const DOCK_TABS = [
   { to: '/', label: 'Home', icon: HomeIcon },
   { to: '/workout', label: 'Routines', icon: ClipboardList },
-  { to: '/ranks', label: 'Ranks', icon: Shield },
+  { to: '/compete', label: 'Compete', icon: Swords },
   { to: '/profile', label: 'Profile', icon: User },
 ];
 
@@ -36,7 +36,7 @@ function Tab({ to, label, icon: Icon }: (typeof DOCK_TABS)[number]) {
           {isActive && <motion.div layoutId="dock-active" className="glass-lens absolute inset-y-[5px] inset-x-0 rounded-full" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
           <span className="relative">
             <Icon size={23} className={isActive ? 'text-accent' : 'text-white/75'} strokeWidth={isActive ? 2.4 : 2} />
-            {to === '/profile' && badge > 0 && (
+            {to === '/compete' && badge > 0 && (
               <motion.span className="absolute -right-2 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-[#fff]" initial={{ scale: 0 }} animate={{ scale: 1 }}>
                 {badge}
               </motion.span>

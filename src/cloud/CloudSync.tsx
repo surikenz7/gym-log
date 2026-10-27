@@ -1,8 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { db, KV_SETTINGS } from '../db/db';
 import { DECORATIONS } from '../lib/decorations';
+import { fairness, leagueSummary } from '../lib/compete';
+import { typeOf } from '../lib/exercises';
+import { useAllWorkouts } from '../lib/hooks';
 import { levelFromXp, levelTitle } from '../lib/progress';
-import { useJourney, useRanks } from '../lib/useProgress';
+import { useJourney, useLatestBodyweight, useRanks } from '../lib/useProgress';
 import { useSettings } from '../state/settings';
 import { afterDedupe, initAccount, requestSync, useAccount } from './account';
 import { dedupeLocal, dedupeTotal } from './dedupe';
@@ -31,6 +34,8 @@ export function CloudSync() {
   const journey = useJourney();
   const { data: ranks } = useRanks();
   const settings = useSettings();
+  const workouts = useAllWorkouts();
+  const bw = useLatestBodyweight();
   const profile = useRef<Record<string, unknown> | null>(null);
 
   useEffect(() => {
@@ -60,8 +65,13 @@ export function CloudSync() {
       trophies: journey.unlocked.size,
       volume: Math.round(journey.totals.volume),
       decos: (settings.decos ?? []).filter((d) => DECORATIONS.some((x) => x.id === d)).length,
+      // friend leagues: points are handicapped by bodyweight & sex (the bodyweight itself isn't published)
+      ...leagueSummary(workouts ?? [], fairness(bw, settings.sex), typeOf),
+      coef: fairness(bw, settings.sex),
+      fair: !!(bw && settings.sex),
+      golds: (settings.medals ?? []).filter((m) => m.place === 1).length,
     };
-  }, [journey, ranks?.overall, nick, settings.avatar, settings.deco, settings.theme, settings.decos, settings.privateProfile]);
+  }, [journey, ranks?.overall, nick, settings.avatar, settings.deco, settings.theme, settings.decos, settings.privateProfile, workouts, bw, settings.sex, settings.medals]);
 
   useEffect(() => {
     if (status !== 'signedIn') return;

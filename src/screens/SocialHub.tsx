@@ -10,6 +10,7 @@ import { useBadges, useSocial } from '../cloud/socialStore';
 import { RankBadge, TierName } from '../components/RankBadge';
 import { RatingPill, PhotoStrip, TaggedChips, useFriendProfiles } from '../components/WorkoutExtras';
 import { Avatar, WorkoutCard } from '../components/WorkoutFeed';
+import { ReactionBar } from '../components/Reactions';
 import { Button, Header, Page, Portal, Sheet } from '../components/ui';
 import { t } from '../i18n';
 import { haptic } from '../lib/haptics';
@@ -254,15 +255,35 @@ function ActivityTab() {
     }
   }, [inbox]);
   const text = (i: InboxItem) =>
-    i.kind === 'tag' ? t('tagged you in “{name}”', { name: i.workoutName ?? '' }) : i.kind === 'follow' ? t('started following you') : t('accepted your follow request');
+    i.kind === 'tag'
+      ? t('tagged you in “{name}”', { name: i.workoutName ?? '' })
+      : i.kind === 'like'
+        ? t('liked your workout “{name}”', { name: i.workoutName ?? '' })
+        : i.kind === 'comment'
+          ? t('commented on “{name}”: {text}', { name: i.workoutName ?? '', text: i.text ?? '' })
+          : i.kind === 'quest'
+            ? t('started a Friends Quest with you')
+            : i.kind === 'follow'
+              ? t('started following you')
+              : t('accepted your follow request');
+  const open = (i: InboxItem) =>
+    nav(
+      i.kind === 'tag' && i.workoutId
+        ? `/u/${i.from}/w/${i.workoutId}`
+        : (i.kind === 'like' || i.kind === 'comment') && i.workoutId
+          ? `/history/${i.workoutId}`
+          : i.kind === 'quest'
+            ? '/compete'
+            : `/u/${i.from}`,
+    );
   return (
     <>
-      {inbox.length === 0 && <div className="cut bg-card p-5 text-center text-sm text-muted">{t('Nothing here yet. When friends follow you or tag you in a workout, it shows up here.')}</div>}
+      {inbox.length === 0 && <div className="cut bg-card p-5 text-center text-sm text-muted">{t('Nothing here yet. When friends follow you, like or comment on your workouts, or tag you, it shows up here.')}</div>}
       <div className="space-y-1.5">
         {inbox.map((i, k) => (
           <motion.button
             key={i.id}
-            onClick={() => nav(i.kind === 'tag' && i.workoutId ? `/u/${i.from}/w/${i.workoutId}` : `/u/${i.from}`)}
+            onClick={() => open(i)}
             className={`press cut-sm flex w-full items-center gap-3 p-2.5 text-left ${i.read ? 'bg-card' : 'bg-accent/10'}`}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -275,7 +296,7 @@ function ActivityTab() {
               <b>@{i.nick}</b> {text(i)}
               <div className="text-xs text-muted">{formatDistanceToNowStrict(i.at, { addSuffix: true })}</div>
             </div>
-            <span className="text-xl">{i.kind === 'tag' ? '🏋️' : i.kind === 'follow' ? '👋' : '✅'}</span>
+            <span className="text-xl">{{ tag: '🏋️', follow: '👋', accepted: '✅', like: '❤️', comment: '💬', quest: '🤝' }[i.kind]}</span>
           </motion.button>
         ))}
       </div>
@@ -518,6 +539,9 @@ export function FriendWorkout() {
           <div className="font-display text-3xl font-bold uppercase">{w.name}</div>
           <TaggedChips tagged={w.tagged} />
           <StatGrid w={w} prs={0} />
+          <div className="cut bg-card">
+            <ReactionBar owner={uid!} w={w} author={p ?? undefined} full />
+          </div>
           {w.notes && <div className="cut bg-card p-4 text-sm text-white/85">{w.notes}</div>}
           <PhotoStrip photos={w.photos ?? []} />
           <ExerciseBlocks w={w} prs={[]} />

@@ -15,6 +15,7 @@ import { ExercisePage, Exercises } from './screens/Exercises';
 import { Home } from './screens/Home';
 import { Profile } from './screens/Profile';
 import { Ranks } from './screens/Ranks';
+import { Compete } from './screens/Compete';
 import { RoutineEditor } from './screens/RoutineEditor';
 import { DecoSync } from './screens/Decorations';
 import { CloudSync } from './cloud/CloudSync';
@@ -120,12 +121,13 @@ export default function App() {
     <div className={`relative flex h-full flex-col ${isTabRoot ? 'has-dock' : ''} ${miniBar ? 'has-mini' : ''}`}>
       <main className="relative min-h-0 flex-1">
         {isTabRoot && <div className="top-fade" />}
-        <TabPager index={lastTab.current} pages={[<Home key="home" />, <WorkoutTab key="workout" />, <Ranks key="ranks" />, <Profile key="profile" />]} />
+        <TabPager index={lastTab.current} pages={[<Home key="home" />, <WorkoutTab key="workout" />, <Compete key="compete" />, <Profile key="profile" />]} />
         {!isTabRoot && (
           <div className="absolute inset-0 z-10 bg-bg">
             <Suspense fallback={null}>
             <Routes location={location} key={location.pathname}>
           <Route path="/explore" element={<Explore />} />
+          <Route path="/ranks" element={<Ranks />} />
           <Route path="/history/:id" element={<WorkoutDetail />} />
           <Route path="/history/:id/edit" element={<WorkoutEdit />} />
           <Route path="/exercises" element={<Exercises />} />

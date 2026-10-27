@@ -52,6 +52,10 @@ export const DECORATIONS: Decoration[] = [
   { id: 'pillars', name: 'Temple of Iron', kind: 'achievement', how: 'Finish 500 workouts', pct: 0.8 },
   { id: 'aura', name: 'Titan Aura', kind: 'rank', how: 'Reach an overall Titan rank', pct: 0.4 },
   { id: 'olympus', name: 'Wings of Olympus', kind: 'rank', how: 'Reach an overall Olympian rank', pct: 0.05 },
+  { id: 'quest', name: 'Quest Master', kind: 'achievement', how: 'Complete a monthly challenge', pct: 35 },
+  { id: 'duo', name: 'Dynamic Duo', kind: 'achievement', how: 'Complete a Friends Quest', pct: 20 },
+  { id: 'podium', name: 'Podium Finish', kind: 'achievement', how: 'Finish top 3 in a monthly friends league', pct: 12 },
+  { id: 'champion', name: 'Monthly Champion', kind: 'achievement', how: 'Win a monthly friends league', pct: 5 },
   { id: 'halo', name: 'Halo', kind: 'egg', how: 'Start a workout before 6:00', hint: 'The early bird gets the gains', pct: 18 },
   { id: 'horns', name: 'Devil Horns', kind: 'egg', how: 'Start a workout after 22:00', hint: 'Some lift when others sleep', pct: 22 },
   { id: 'santa', name: 'Santa Hat', kind: 'egg', how: 'Train between 24 and 26 December', hint: 'Ho ho ho…', pct: 9 },
@@ -92,6 +96,10 @@ export interface DecoExtras {
   account?: boolean;
   following?: number;
   shared?: boolean;
+  /** best monthly league place so far (0 = none) */
+  bestPlace?: number;
+  duos?: number;
+  monthBadges?: number;
 }
 
 export function earnedDecorations(j: Journey, workouts: Workout[], overall: number | null, x: DecoExtras = {}): string[] {
@@ -109,6 +117,10 @@ export function earnedDecorations(j: Journey, workouts: Workout[], overall: numb
   add('clouds', !!x.account);
   add('squad', (x.following ?? 0) > 0);
   add('plane', !!x.shared);
+  add('quest', (x.monthBadges ?? 0) > 0);
+  add('duo', (x.duos ?? 0) > 0);
+  add('podium', (x.bestPlace ?? 0) >= 1 && x.bestPlace! <= 3);
+  add('champion', x.bestPlace === 1);
   add('sun', workouts.some((w) => [0, 6].includes(new Date(w.start).getDay())));
   add('sweatband', has('w10'));
   add('cap', has('w25'));

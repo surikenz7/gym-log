@@ -442,6 +442,74 @@ export const DECO_ART: Record<string, Art> = {
       <circle r="53" fill="none" stroke={`url(#${g('gold')})`} strokeWidth="3" />
     </>
   ),
+  quest: (g) => (
+    <>
+      <defs>{GOLD(g)}</defs>
+      <g transform="translate(40 40)">
+        {bob(2, 3)}
+        <path d="M0 -20 L17 -12 L17 4 Q17 16 0 24 Q-17 16 -17 4 L-17 -12 Z" fill="#1e3a8a" stroke={`url(#${g('gold')})`} strokeWidth="3" strokeLinejoin="round" />
+        <path d={star(0, 1, 10)} fill={`url(#${g('gold')})`} />
+      </g>
+      {[200, 230, 260].map((d, i) => {
+        const [x, y] = polar(d, 61);
+        return (
+          <path key={d} d={star(x, y, 4.5)} fill="#fde68a">
+            {pulse(1.4 + i * 0.3, 0.3)}
+          </path>
+        );
+      })}
+    </>
+  ),
+  duo: () => (
+    <g>
+      <circle r="58" fill="none" stroke="#ffffff22" strokeWidth="2" />
+      <g>
+        {spin(5)}
+        <circle cx="58" cy="0" r="7" fill="#38bdf8" />
+        <circle cx="58" cy="0" r="12" fill="#38bdf8" opacity=".25" />
+        <path d="M58 0 A58 58 0 0 1 29 50" fill="none" stroke="#38bdf8" strokeWidth="3" strokeLinecap="round" opacity=".6" />
+        <circle cx="-58" cy="0" r="7" fill="#f97316" />
+        <circle cx="-58" cy="0" r="12" fill="#f97316" opacity=".25" />
+        <path d="M-58 0 A58 58 0 0 1 -29 -50" fill="none" stroke="#f97316" strokeWidth="3" strokeLinecap="round" opacity=".6" />
+      </g>
+    </g>
+  ),
+  podium: (g) => (
+    <>
+      <defs>
+        <linearGradient id={g('podsil')} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset=".5" stopColor="#b8c2cc" />
+          <stop offset="1" stopColor="#6b7785" />
+        </linearGradient>
+      </defs>
+      <g transform="translate(42 38) rotate(12)">
+        <path d="M-9 -26 L-3 -6 L3 -6 L9 -26 Z" fill="#2563eb" />
+        <path d="M-3 -26 L3 -26 L1 -6 L-1 -6 Z" fill="#e5262d" />
+        <circle cy="8" r="15" fill={`url(#${g('podsil')})`} stroke="#4b5563" strokeWidth="1.5" />
+        <circle cy="8" r="10" fill="none" stroke="#ffffff88" strokeWidth="1.2" />
+        <path d={star(0, 8, 6)} fill="#4b5563" />
+      </g>
+    </>
+  ),
+  champion: (g) => (
+    <>
+      <defs>{GOLD(g)}</defs>
+      <Leaves fill={`url(#${g('gold')})`} from={95} to={235} r={60} n={9} />
+      <g transform="translate(0 -60)">
+        {bob(2, 2.6)}
+        <path d="M-24 8 L-27 -14 L-12 -3 L0 -20 L12 -3 L27 -14 L24 8 Z" fill={`url(#${g('gold')})`} stroke="#7a4d00" strokeWidth="1.5" strokeLinejoin="round" />
+        <circle cx="0" cy="0" r="3" fill="#e5262d" />
+      </g>
+      <g transform="translate(0 58)">
+        <path d="M-12 -20 L-5 -2 L5 -2 L12 -20 Z" fill="#e5262d" />
+        <circle r="15" fill={`url(#${g('gold')})`} stroke="#7a4d00" strokeWidth="1.8" />
+        <text y="6" textAnchor="middle" fontSize="17" fontWeight="900" fill="#7a4d00" fontFamily="system-ui, sans-serif">
+          1
+        </text>
+      </g>
+    </>
+  ),
   halo: () => (
     <g>
       {bob(3, 2.6)}

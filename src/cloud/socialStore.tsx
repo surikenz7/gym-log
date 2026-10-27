@@ -3,16 +3,17 @@ import { create } from 'zustand';
 import { useSettings } from '../state/settings';
 import type { Workout } from '../types';
 import { useAccount } from './account';
-import { unread, type Chat, type Follower, type InboxItem } from './social';
+import { unread, type Chat, type Follower, type InboxItem, type Quest } from './social';
 
 interface SocialState {
   chats: Chat[];
   followers: Follower[];
   inbox: InboxItem[];
+  quests: Quest[];
 }
 
 /** Live friends / requests / messages / activity for the signed-in user. */
-export const useSocial = create<SocialState>(() => ({ chats: [], followers: [], inbox: [] }));
+export const useSocial = create<SocialState>(() => ({ chats: [], followers: [], inbox: [], quests: [] }));
 
 export function useBadges() {
   const uid = useAccount((a) => a.uid);
@@ -29,7 +30,7 @@ export function SocialSync() {
   useEffect(() => {
     resetBannerState();
     if (status !== 'signedIn' || !uid) {
-      useSocial.setState({ chats: [], followers: [], inbox: [] });
+      useSocial.setState({ chats: [], followers: [], inbox: [], quests: [] });
       return;
     }
     let stops: (() => void)[] = [];
@@ -45,7 +46,15 @@ export function SocialSync() {
           useSocial.setState({ followers: rows.map(({ id, ...r }) => ({ uid: id, ...r })).sort((a, b) => b.at - a.at) }),
         ),
         s.watchCollection<Omit<InboxItem, 'id'>>(['users', uid, 'inbox'], (rows) => useSocial.setState({ inbox: rows.sort((a, b) => b.at - a.at).slice(0, 60) })),
+        s.watchQuests(uid, (quests) => {
+          useSocial.setState({ quests });
+          // completed Friends Quests count towards the Dynamic Duo decoration
+          const done = quests.filter((q) => q.done).length;
+          const st = useSettings.getState();
+          if (done > (st.duos ?? 0)) st.update({ duos: done });
+        }),
       ];
+      void import('./league').then((l) => l.settleLeague(uid)).catch(() => {});
       void import('./push').then((p) => p.refreshPush(uid));
       // follows made before requests existed
       const me = { uid, nick: useAccount.getState().nick ?? '', avatar: useSettings.getState().avatar };

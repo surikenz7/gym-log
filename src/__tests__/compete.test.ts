@@ -1,0 +1,58 @@
+import { describe, expect, it } from 'vitest';
+import { fairness, leaguePoints, leagueSummary, monthlyBadges, placeOf, statsOf, weekId, weeklyChallenges } from '../lib/compete';
+import type { Workout } from '../types';
+
+const typeOf = () => 'weight_reps' as const;
+const muscleOf = (id: string) => (id === 'squat' ? 'Quadriceps' : 'Chest');
+const w = (id: string, start: Date, ex = 'bench', kg = 100): Workout => ({
+  id,
+  name: id,
+  start: +start,
+  end: +start + 3600e3,
+  exerciseIds: [ex],
+  exercises: [{ id: 'e', exerciseId: ex, sets: [{ id: 's', type: 'normal', weight: kg, reps: 10, done: true }] }],
+});
+
+describe('compete', () => {
+  it('balances by bodyweight and sex', () => {
+    expect(fairness(80, 'male')).toBe(1);
+    expect(fairness(null, 'male')).toBe(1);
+    expect(fairness(60, 'female')).toBeGreaterThan(1.4);
+    expect(fairness(110, 'male')).toBeLessThan(1);
+    expect(leaguePoints(10000, 3, 1)).toBe(160);
+  });
+
+  it('summarises this week and month', () => {
+    const now = new Date(2026, 9, 28, 12); // Wed 28 Oct 2026
+    const ws = [w('a', new Date(2026, 9, 27, 9)), w('b', new Date(2026, 9, 20, 9)), w('c', new Date(2026, 8, 30, 9))];
+    const s = leagueSummary(ws, 1, typeOf, now);
+    expect(s.wk).toMatchObject({ id: weekId(now), n: 1, v: 1000, s: 1, pts: 30 });
+    expect(s.pw.n).toBe(1);
+    expect(s.mo).toMatchObject({ id: '2026-10', n: 2 });
+    expect(s.pm).toMatchObject({ id: '2026-09', n: 1 });
+    expect(statsOf(s, '2026-09')?.n).toBe(1);
+    expect(statsOf(s, '2025-01')).toBeNull();
+  });
+
+  it('places people who scored', () => {
+    expect(placeOf([{ uid: 'me', pts: 50 }], 'me')).toBe(0);
+    expect(placeOf([{ uid: 'me', pts: 50 }, { uid: 'x', pts: 80 }, { uid: 'y', pts: 0 }], 'me')).toBe(2);
+    expect(placeOf([{ uid: 'me', pts: 0 }, { uid: 'x', pts: 80 }, { uid: 'y', pts: 10 }], 'me')).toBe(0);
+  });
+
+  it('builds stable weekly challenges and tracks progress', () => {
+    const now = new Date(2026, 9, 28, 12);
+    const ws = [w('a', new Date(2026, 9, 26, 9), 'squat'), w('b', new Date(2026, 9, 27, 9))];
+    const a = weeklyChallenges(ws, { typeOf, muscleOf }, now);
+    const b = weeklyChallenges(ws, { typeOf, muscleOf }, new Date(2026, 9, 31));
+    expect(a.map((c) => c.kind)).toEqual(b.map((c) => c.kind));
+    expect(a[0]).toMatchObject({ kind: 'sessions', target: 2, value: 2 });
+    expect(new Set(a.map((c) => c.kind)).size).toBe(3);
+  });
+
+  it('awards a monthly badge when the challenge is done', () => {
+    const ws: Workout[] = [];
+    for (let d = 1; d <= 28; d += 2) ws.push(w('m' + d, new Date(2026, 8, d, 9), 'bench', 200));
+    expect(monthlyBadges(ws, { typeOf, muscleOf }, new Date(2026, 9, 5))).toContain('2026-09');
+  });
+});

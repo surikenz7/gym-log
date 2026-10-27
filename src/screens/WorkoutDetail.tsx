@@ -10,6 +10,8 @@ import { SET_TYPE_STYLE } from '../components/SetRow';
 import { WorkoutEditor } from '../components/WorkoutEditor';
 import { RankBadge, RankChip } from '../components/RankBadge';
 import { PhotoStrip, RatingPill, TagEditor } from '../components/WorkoutExtras';
+import { ReactionBar } from '../components/Reactions';
+import { useAccount } from '../cloud/account';
 import { AchievementsUnlocked, Confetti, CountUp, RankChanges, RankUpOverlay, XpCard, type RankChange, type RankUp } from '../components/Rewards';
 import { Button, Header, Page, Sheet, SheetItem } from '../components/ui';
 import { db } from '../db/db';
@@ -101,6 +103,7 @@ export function WorkoutDetail() {
   const w = useLiveQuery(() => db.workouts.get(id!), [id]);
   const prs = usePRs(w);
   const [menu, setMenu] = useState(false);
+  const me = useAccount((a) => (a.status === 'signedIn' ? a.uid : null));
 
   if (!w) return <Page pushed><Header back title={t('Workout')} /></Page>;
 
@@ -138,6 +141,9 @@ export function WorkoutDetail() {
           <TagEditor w={w} />
         </div>
         <StatGrid w={w} prs={prs.length} />
+        <div className="cut bg-card">
+          <ReactionBar owner={me} w={w} full />
+        </div>
         {w.notes && <div className="cut bg-card p-4 text-sm text-white/85">{w.notes}</div>}
         <PhotoStrip photos={w.photos ?? []} onChange={(photos) => void db.workouts.update(w.id, { photos })} />
         <ExerciseBlocks w={w} prs={prs} />

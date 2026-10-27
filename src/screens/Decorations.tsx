@@ -7,7 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '../components/WorkoutFeed';
 import { Header, Page } from '../components/ui';
 import { DECORATIONS, decoById, earnedDecorations, fmtPct, HISTORY_BASED, rarityOf, redeemCode, type Decoration } from '../lib/decorations';
-import { typeOf } from '../lib/exercises';
+import { getExercise, typeOf } from '../lib/exercises';
+import { monthlyBadges } from '../lib/compete';
 import { computeJourney } from '../lib/progress';
 import { haptic } from '../lib/haptics';
 import { useAllWorkouts } from '../lib/hooks';
@@ -50,7 +51,20 @@ export function DecoSync() {
     if (!journey || !workouts || loading || routines === undefined || measures === undefined) return;
     const s = useSettings.getState();
     const have = new Set(s.decos ?? []);
-    const extras = { name: !!s.name.trim(), avatar: !!s.avatar, routines, measures, ranked: !!ctx, account, following, shared: !!s.shared };
+    const places = (s.medals ?? []).map((m) => m.place).filter((p) => p > 0);
+    const extras = {
+      name: !!s.name.trim(),
+      avatar: !!s.avatar,
+      routines,
+      measures,
+      ranked: !!ctx,
+      account,
+      following,
+      shared: !!s.shared,
+      bestPlace: places.length ? Math.min(...places) : 0,
+      duos: s.duos ?? 0,
+      monthBadges: monthlyBadges(workouts, { typeOf, muscleOf: (id) => getExercise(id).muscle }).length,
+    };
     const fresh = earnedDecorations(journey, workouts, data?.overall ?? null, extras).filter((id) => !have.has(id));
     const firstRun = first.current;
     first.current = false;
@@ -66,7 +80,7 @@ export function DecoSync() {
     haptic('success');
     fanfare();
     toast(`🎁 New decoration: ${fresh.map((id) => decoById(id)?.name).join(', ')}`);
-  }, [journey, workouts, data?.overall, loading, ctx, routines, measures, account, following, settings.name, settings.avatar, settings.shared]);
+  }, [journey, workouts, data?.overall, loading, ctx, routines, measures, account, following, settings.name, settings.avatar, settings.shared, settings.medals, settings.duos]);
   return null;
 }
 

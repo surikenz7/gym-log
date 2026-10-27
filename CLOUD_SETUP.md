@@ -75,6 +75,28 @@ service cloud.firestore {
       }
     }
 
+    // likes and comments on a workout: anyone who may see the owner's workouts
+    match /posts/{owner}/w/{wid} {
+      allow read: if canSee(owner);
+      // you can only add / remove your own like; the comment counter may move by one
+      allow create: if canSee(owner) && request.resource.data.get('likes', {}).keys().hasOnly([me()]);
+      allow update: if canSee(owner)
+        && request.resource.data.get('likes', {}).diff(resource.data.get('likes', {})).affectedKeys().hasOnly([me()]);
+      match /comments/{cid} {
+        allow read: if canSee(owner);
+        allow create: if canSee(owner) && request.resource.data.from == me()
+          && request.resource.data.text is string && request.resource.data.text.size() <= 500;
+        allow delete: if signedIn() && (me() == owner || resource.data.from == me());
+      }
+    }
+
+    // weekly Friends Quests between two people
+    match /quests/{qid} {
+      allow read: if signedIn() && (resource == null || me() in resource.data.members);
+      allow create: if signedIn() && me() in request.resource.data.members && request.resource.data.members.size() == 2;
+      allow update, delete: if signedIn() && me() in resource.data.members;
+    }
+
     // where to deliver message notifications (only the push relay can actually send to them)
     match /pushSubs/{uid} {
       allow read: if signedIn();

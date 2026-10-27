@@ -6,6 +6,7 @@ import { Flame, Upload, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { RankBadge, TierName } from '../components/RankBadge';
 import { Avatar, WorkoutCard } from '../components/WorkoutFeed';
+import { ReactionBar } from '../components/Reactions';
 import { refreshFeed, useFeed } from '../cloud/socialStore';
 import { useAccount } from '../cloud/account';
 import { prCounts } from '../lib/stats';
@@ -25,6 +26,7 @@ import { useSettings } from '../state/settings';
 function MixedFeed({ mine }: { mine: Workout[] }) {
   const nav = useNav();
   const following = useAccount((a) => a.following.join());
+  const me = useAccount((a) => (a.status === 'signedIn' ? a.uid : null));
   const friends = useFeed((f) => f.items);
   const [limit, setLimit] = useState(20);
   const prs = useMemo(() => prCounts(mine, typeOf), [mine]);
@@ -45,9 +47,18 @@ function MixedFeed({ mine }: { mine: Workout[] }) {
     <div className="space-y-2">
       {items.slice(0, limit).map(({ w, author }, i) =>
         author ? (
-          <WorkoutCard key={author.uid + w.id} w={w} prs={0} index={i} friend author={author} onOpen={() => nav(`/u/${author.uid}/w/${w.id}`)} />
+          <WorkoutCard
+            key={author.uid + w.id}
+            w={w}
+            prs={0}
+            index={i}
+            friend
+            author={author}
+            onOpen={() => nav(`/u/${author.uid}/w/${w.id}`)}
+            footer={<ReactionBar owner={author.uid} w={w} author={author} />}
+          />
         ) : (
-          <WorkoutCard key={w.id} w={w} prs={prs.get(w.id) ?? 0} index={i} />
+          <WorkoutCard key={w.id} w={w} prs={prs.get(w.id) ?? 0} index={i} footer={me ? <ReactionBar owner={me} w={w} /> : undefined} />
         ),
       )}
       {items.length > limit && (

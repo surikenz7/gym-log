@@ -28,6 +28,7 @@ export function Ranks() {
     <Page pushed>
       <Header
         large
+        back
         title={t('Ranks')}
         right={
           ctx && (
