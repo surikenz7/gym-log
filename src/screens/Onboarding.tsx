@@ -347,6 +347,11 @@ const STYLE_FONT: Record<StyleId, React.CSSProperties> = {
   elegant: { fontFamily: "'Playfair Display', serif", fontWeight: 600 },
   minimal: { fontFamily: '-apple-system, system-ui, sans-serif', fontWeight: 600 },
   playful: { fontFamily: 'Fredoka, ui-rounded, sans-serif', fontWeight: 600 },
+  cyber: { fontFamily: "'Exo 2', sans-serif", fontWeight: 800, fontStyle: 'italic', textTransform: 'uppercase' },
+  frost: { fontFamily: '-apple-system, system-ui, sans-serif', fontWeight: 700 },
+  tactical: { fontFamily: "'Black Ops One', Impact, sans-serif", textTransform: 'uppercase' },
+  brutal: { fontFamily: 'Anton, Impact, sans-serif', textTransform: 'uppercase' },
+  terminal: { fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 },
 };
 
 function LookStep() {

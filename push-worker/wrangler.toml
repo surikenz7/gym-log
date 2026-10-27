@@ -1,0 +1,8 @@
+name = "gym-log-push"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+PROJECT_ID = "gym-log-a23f0"
+APP_URL = "https://surikenz7.github.io/gym-log/"
+VAPID_PUBLIC = "BNYo55amq6NxYwVZxwHUTAHYo9_CJdtbkRZkqm28rg-N2oZyEOsbRmO5Jpq1FzxlxLbdzHrxLodMfLXbbK-5T-w"

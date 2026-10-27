@@ -154,7 +154,7 @@ export interface Settings {
   shared?: boolean;
 }
 
-export type StyleId = 'raw' | 'elegant' | 'minimal' | 'playful';
+export type StyleId = 'raw' | 'elegant' | 'minimal' | 'playful' | 'cyber' | 'frost' | 'tactical' | 'brutal' | 'terminal';
 export type ModeId = 'dark' | 'amoled' | 'dim' | 'light';
 
 export type ThemeId = 'blood' | 'inferno' | 'gold' | 'toxic' | 'steel' | 'cobalt' | 'venom' | 'pump' | 'ocean' | 'mint' | 'royal' | 'sunset' | 'forest' | 'ice' | 'mono' | 'coffee';

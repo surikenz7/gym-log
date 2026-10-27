@@ -1,4 +1,4 @@
-import { format, isThisYear } from 'date-fns';
+import { format, formatDistanceToNowStrict, isThisYear } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Timer, Trophy, Weight } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -40,7 +40,14 @@ export function Avatar({ size = 40, ring, deco, src, initial }: { size?: number;
 }
 
 /** `friend` = someone else's workout (no link into local history, no rank chips). */
-export function WorkoutCard({ w, prs, index = 0, friend, onOpen }: { w: Workout; prs: number; index?: number; friend?: boolean; onOpen?: () => void }) {
+export interface FeedAuthor {
+  uid: string;
+  nick: string;
+  avatar?: string | null;
+  deco?: string | null;
+}
+
+export function WorkoutCard({ w, prs, index = 0, friend, onOpen, author }: { w: Workout; prs: number; index?: number; friend?: boolean; onOpen?: () => void; author?: FeedAuthor }) {
   const settings = useSettings();
   const nav = useNavigate();
   const shown = w.exercises.slice(0, 4);
@@ -59,6 +66,13 @@ export function WorkoutCard({ w, prs, index = 0, friend, onOpen }: { w: Workout;
         <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-accent">{format(w.start, isThisYear(w.start) ? 'MMM' : 'MMM yy')}</span>
       </div>
       <div className="min-w-0 flex-1 px-3 py-3">
+        {author && (
+          <div className="mb-1.5 flex items-center gap-2">
+            <Avatar size={24} src={author.avatar ?? null} initial={author.nick} deco={null} />
+            <span className="truncate text-sm font-semibold normal-case">@{author.nick}</span>
+            <span className="shrink-0 text-xs text-muted">· {formatDistanceToNowStrict(w.end, { addSuffix: true })}</span>
+          </div>
+        )}
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1 truncate font-display text-xl font-bold uppercase leading-tight">{w.name}</div>
           {prs > 0 && (

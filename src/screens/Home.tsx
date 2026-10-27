@@ -1,11 +1,16 @@
 import { addDays, format, isSameDay, isSameWeek, isToday, startOfWeek } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { t } from '../i18n';
 import { Flame, Upload, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { RankBadge, TierName } from '../components/RankBadge';
-import { Avatar, WorkoutList } from '../components/WorkoutFeed';
+import { Avatar, WorkoutCard } from '../components/WorkoutFeed';
+import { refreshFeed, useFeed } from '../cloud/socialStore';
+import { useAccount } from '../cloud/account';
+import { prCounts } from '../lib/stats';
+import { useNavigate as useNav } from 'react-router-dom';
+import type { Workout } from '../types';
 import { Page } from '../components/ui';
 import { typeOf } from '../lib/exercises';
 import { useAllWorkouts } from '../lib/hooks';
@@ -15,6 +20,44 @@ import { workoutVolume } from '../lib/stats';
 import { fmtDurationLong, fmtVolume } from '../lib/units';
 import { useJourney, useRanks } from '../lib/useProgress';
 import { useSettings } from '../state/settings';
+
+/** Your workouts and your friends' in one timeline, newest first (like Hevy's feed). */
+function MixedFeed({ mine }: { mine: Workout[] }) {
+  const nav = useNav();
+  const following = useAccount((a) => a.following.join());
+  const friends = useFeed((f) => f.items);
+  const [limit, setLimit] = useState(20);
+  const prs = useMemo(() => prCounts(mine, typeOf), [mine]);
+  useEffect(() => void refreshFeed(true), [following]);
+  useEffect(() => {
+    const onShow = () => document.visibilityState === 'visible' && void refreshFeed();
+    document.addEventListener('visibilitychange', onShow);
+    return () => document.removeEventListener('visibilitychange', onShow);
+  }, []);
+  const items = useMemo(
+    () =>
+      [...mine.map((w) => ({ w, author: undefined as undefined | (typeof friends)[number]['author'] })), ...friends.map((f) => ({ w: f.w, author: f.author }))].sort(
+        (a, b) => b.w.start - a.w.start,
+      ),
+    [mine, friends],
+  );
+  return (
+    <div className="space-y-2">
+      {items.slice(0, limit).map(({ w, author }, i) =>
+        author ? (
+          <WorkoutCard key={author.uid + w.id} w={w} prs={0} index={i} friend author={author} onOpen={() => nav(`/u/${author.uid}/w/${w.id}`)} />
+        ) : (
+          <WorkoutCard key={w.id} w={w} prs={prs.get(w.id) ?? 0} index={i} />
+        ),
+      )}
+      {items.length > limit && (
+        <button onClick={() => setLimit((l) => l + 20)} className="w-full py-4 font-semibold text-accent">
+          {t('Load more')}
+        </button>
+      )}
+    </div>
+  );
+}
 
 /** Phrases cycle every few seconds; after today's workout they switch to congratulations. */
 const DONE_QUOTES = ['Good job', 'Gains secured', 'Rest up, champ', 'Workout done', 'Earned it', 'Proud of you', 'Recover & grow', 'One step closer'];
@@ -46,7 +89,6 @@ function RotatingGreeting({ done, name }: { done: boolean; name: string }) {
         </AnimatePresence>
       </span>
       <span className="text-grad">
-        {done && '✓ '}
         {name}
       </span>
     </>
@@ -193,7 +235,7 @@ export function Home() {
             <div className="label flex items-center gap-2 pt-3">
               <span className="h-3 w-1 bg-accent" /> {t('Recent sessions')}
             </div>
-            <WorkoutList workouts={list} />
+            <MixedFeed mine={list} />
           </>
         )}
       </div>

@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ChevronLeft, ChevronRight, Timer, UserPlus } from 'lucide-react';
 import { useAccount } from '../cloud/account';
 import { PhotoStrip, TagPicker } from '../components/WorkoutExtras';
+import { RatingSlider } from '../components/Rating';
 import { t } from '../i18n';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -139,6 +140,7 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
   const [photos, setPhotos] = useState<string[]>([]);
   const [tagged, setTagged] = useState<NonNullable<Workout['tagged']>>([]);
   const [tagging, setTagging] = useState(false);
+  const [rating, setRating] = useState<number | null>(null);
   const signedIn = useAccount((a) => a.status === 'signedIn');
   useEffect(() => {
     if (open && active) {
@@ -151,7 +153,7 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
   const save = async () => {
     let saved: Workout;
     try {
-      saved = await finish(name, notes, { photos, tagged });
+      saved = await finish(name, notes, { photos, tagged, rating });
     } catch (e) {
       console.error('save failed', e, (e as { inner?: unknown }).inner);
       toast(t('Couldn’t save the workout — try again'));
@@ -159,6 +161,7 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
     }
     setPhotos([]);
     setTagged([]);
+    setRating(null);
     nav(`/summary/${saved.id}`);
     if (tagged.length) void notifyTagged(saved, tagged);
     await maybeUpdateRoutine(saved);
@@ -195,6 +198,9 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
               placeholder={t('How did your workout go? Leave some notes here...')}
               className="mt-4 w-full resize-none cut-sm bg-card p-3 outline-none placeholder:text-muted"
             />
+            <div className="cut mt-4 bg-card p-4">
+              <RatingSlider value={rating} onChange={setRating} />
+            </div>
             <div className="label mb-2 mt-5">{t('Photos')}</div>
             <PhotoStrip photos={photos} onChange={setPhotos} />
             {signedIn && (

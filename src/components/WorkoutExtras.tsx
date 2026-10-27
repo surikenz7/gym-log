@@ -160,3 +160,35 @@ export function TagPicker({ open, onClose, value, onChange }: { open: boolean; o
     </Sheet>
   );
 }
+
+/** "with @adam" + an edit button — tags can be added or removed any time after the workout. */
+export function TagEditor({ w }: { w: Workout }) {
+  const signedIn = useAccount((a) => a.status === 'signedIn');
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState<NonNullable<Workout['tagged']>>(w.tagged ?? []);
+  useEffect(() => setValue(w.tagged ?? []), [w.id, open]);
+  if (!signedIn) return <TaggedChips tagged={w.tagged} />;
+  const close = async () => {
+    setOpen(false);
+    const before = new Set((w.tagged ?? []).map((f) => f.uid));
+    const { db } = await import('../db/db');
+    await db.workouts.update(w.id, { tagged: value });
+    const added = value.filter((f) => !before.has(f.uid));
+    if (!added.length) return;
+    const a = useAccount.getState();
+    const { notify } = await import('../cloud/social');
+    const { useSettings } = await import('../state/settings');
+    const avatar = useSettings.getState().avatar ?? null;
+    await Promise.all(added.map((f) => notify(f.uid, { kind: 'tag', from: a.uid!, nick: a.nick ?? '', avatar, workoutId: w.id, workoutName: w.name }).catch(() => {})));
+    toast(t('Tagged: {names}', { names: added.map((f) => '@' + f.nick).join(', ') }));
+  };
+  return (
+    <>
+      {w.tagged?.length ? <TaggedChips tagged={w.tagged} /> : null}
+      <button onClick={() => setOpen(true)} className="press flex items-center gap-1.5 rounded-full bg-card2 px-3 py-1 text-sm font-semibold text-accent">
+        <Tag size={14} /> {w.tagged?.length ? t('Edit tags') : t('Tag friends')}
+      </button>
+      <TagPicker open={open} onClose={() => void close()} value={value} onChange={setValue} />
+    </>
+  );
+}

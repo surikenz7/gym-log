@@ -19,6 +19,7 @@ import { RoutineEditor } from './screens/RoutineEditor';
 import { DecoSync } from './screens/Decorations';
 import { CloudSync } from './cloud/CloudSync';
 import { SocialSync } from './cloud/socialStore';
+import { MessageBanner } from './components/MessageBanner';
 import { Summary, WorkoutDetail, WorkoutEdit } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
 import { t } from './i18n';
@@ -167,6 +168,7 @@ export default function App() {
       <AnimatePresence>{onboarding && <Onboarding key={onboarding} start={onboarding} onDone={() => setOnboarding(null)} />}</AnimatePresence>
       <CloudSync />
       <SocialSync />
+      <MessageBanner />
       <DialogHost />
       <ToastHost />
       <UpdatePrompt />

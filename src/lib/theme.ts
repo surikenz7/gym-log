@@ -42,6 +42,11 @@ export const STYLES: Record<StyleId, { name: string; desc: string }> = {
   elegant: { name: 'Elegant', desc: 'Serif headings, soft glow, fine lines' },
   minimal: { name: 'Minimal', desc: 'Clean system type, flat colour, no frills' },
   playful: { name: 'Playful', desc: 'Rounded type, bubbly shapes, bright' },
+  cyber: { name: 'Cyber', desc: 'Neon edges, italic heavy type, grid' },
+  frost: { name: 'Frost', desc: 'Frosted glass cards over soft colour' },
+  tactical: { name: 'Tactical', desc: 'Stencil type, corner brackets, hazard' },
+  brutal: { name: 'Brutalist', desc: 'Poster type, thick lines, hard shadows' },
+  terminal: { name: 'Terminal', desc: 'Monospace, thin outlines, scanlines' },
 };
 
 export const MODES: Record<ModeId, { name: string }> = {

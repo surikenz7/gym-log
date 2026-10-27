@@ -3,3 +3,7 @@ dist
 dev-dist
 scripts/raw-exercises.json
 *.local
+
+# Web Push private key (set as a Worker secret)
+push-worker/.vapid-private.json
+push-worker/.wrangler

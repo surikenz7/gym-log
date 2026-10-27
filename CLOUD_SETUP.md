@@ -74,6 +74,12 @@ service cloud.firestore {
           && me() in get(/databases/$(database)/documents/chats/$(cid)).data.members;
       }
     }
+
+    // where to deliver message notifications (only the push relay can actually send to them)
+    match /pushSubs/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && me() == uid;
+    }
   }
 }
 ```
@@ -91,3 +97,19 @@ service cloud.firestore {
 Push the change; after the update the app shows **Settings → Account → Create account**.
 
 Free plan limits (plenty for a group of friends): 50,000 document reads and 20,000 writes per day, 1 GB stored.
+
+## 6. Message notifications when the app is closed (optional)
+Firebase can't send push notifications on the free plan, so a tiny free **Cloudflare Worker** does it
+(`push-worker/`, 100,000 requests a day for free). It reads the chat with the sender's own login, so it
+can only notify the other member of a chat the sender is in.
+
+1. Create a free account at https://dash.cloudflare.com/sign-up.
+2. In a terminal in this folder: `npx wrangler login` (opens the browser, click **Allow**).
+3. Deploy and set the private key (kept only in `push-worker/.vapid-private.json`, never committed):
+   ```
+   cd push-worker
+   npx wrangler deploy
+   npx wrangler secret put VAPID_PRIVATE < .vapid-private.json
+   ```
+4. Put the printed `https://gym-log-push.<you>.workers.dev` address into `PUSH_URL` in `src/cloud/config.ts`.
+5. On the iPhone (app added to the Home Screen, iOS 16.4+): **Settings → Notifications → Message notifications**.

@@ -18,6 +18,12 @@ import '@fontsource/playfair-display/600.css';
 import '@fontsource/playfair-display/700.css';
 import '@fontsource/fredoka/500.css';
 import '@fontsource/fredoka/600.css';
+import '@fontsource/exo-2/700.css';
+import '@fontsource/exo-2/800-italic.css';
+import '@fontsource/black-ops-one/400.css';
+import '@fontsource/anton/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+import '@fontsource/jetbrains-mono/700.css';
 import './index.css';
 
 document.addEventListener('pointerdown', unlockAudio, { capture: true });
@@ -46,6 +52,10 @@ Promise.all([loadSettings(), loadActiveWorkout(), useLibrary.getState().reload()
     history.replaceState(null, '', location.pathname + location.hash);
   }
   setLang(useSettings.getState().lang as LangId | 'auto' | undefined);
+  // a tapped message notification while the app is in the background: jump to that chat
+  navigator.serviceWorker?.addEventListener('message', (e) => {
+    if (e.data?.type === 'open' && typeof e.data.hash === 'string') location.hash = e.data.hash;
+  });
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <HashRouter>

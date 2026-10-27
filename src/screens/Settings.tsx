@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Check, ChevronRight, Languages, Copy, Smartphone, Sparkles, Download, ImageDown, Shield, Trash2, Upload } from 'lucide-react';
+import { Bell, Check, ChevronRight, Languages, Copy, Smartphone, Sparkles, Download, ImageDown, Shield, Trash2, Upload } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { REST_OPTIONS } from '../components/ExerciseCard';
@@ -16,6 +16,8 @@ import type { ModeId, StyleId, ThemeId } from '../types';
 import { AvatarPicker } from './Profile';
 import { AccountSection } from './Social';
 import { useOnboardingReplay } from './Onboarding';
+import { useAccount } from '../cloud/account';
+import { disablePush, enablePush, pushConfigured, pushState, type PushState } from '../cloud/push';
 import { unlockDecoration } from './Decorations';
 import { DECORATIONS } from '../lib/decorations';
 import { haptic } from '../lib/haptics';
@@ -94,7 +96,58 @@ const STYLE_PREVIEW: Record<StyleId, { font: React.CSSProperties; shape: React.C
   elegant: { font: { fontFamily: "'Playfair Display', serif", fontWeight: 600 }, shape: { borderRadius: 6, opacity: 0.85 } },
   minimal: { font: { fontFamily: '-apple-system, system-ui, sans-serif', fontWeight: 600 }, shape: { borderRadius: 4 } },
   playful: { font: { fontFamily: 'Fredoka, ui-rounded, sans-serif', fontWeight: 600 }, shape: { borderRadius: 999 } },
+  cyber: {
+    font: { fontFamily: "'Exo 2', sans-serif", fontWeight: 800, fontStyle: 'italic', textTransform: 'uppercase' },
+    shape: { borderRadius: 5, boxShadow: '0 0 12px rgb(var(--accent))' },
+  },
+  frost: { font: { fontFamily: '-apple-system, system-ui, sans-serif', fontWeight: 700 }, shape: { borderRadius: 9, opacity: 0.55, boxShadow: 'inset 0 1px 1px rgb(255 255 255 / .6)' } },
+  tactical: {
+    font: { fontFamily: "'Black Ops One', Impact, sans-serif", textTransform: 'uppercase' },
+    shape: { clipPath: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)' },
+  },
+  brutal: { font: { fontFamily: 'Anton, Impact, sans-serif', textTransform: 'uppercase' }, shape: { borderRadius: 3, boxShadow: '3px 3px 0 rgb(var(--fg))' } },
+  terminal: { font: { fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }, shape: { borderRadius: 3, background: 'transparent', boxShadow: 'inset 0 0 0 2px rgb(var(--accent))' } },
 };
+
+/** Message notifications: in-app banner always, real push when the relay is set up and the app is installed. */
+function NotificationsSection() {
+  const a = useAccount();
+  const [state, setState] = useState<PushState | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => void pushState().then(setState), []);
+  if (a.status !== 'signedIn' || !a.uid) return null;
+  const foot =
+    state === 'needs-install'
+      ? t('On iPhone, notifications work in the app added to the Home Screen (Share → Add to Home Screen, iOS 16.4+).')
+      : state === 'denied'
+        ? t('Notifications are blocked — allow them in iPhone Settings → Notifications → Gym Log.')
+        : !pushConfigured
+          ? t('New messages pop up as a banner while the app is open.')
+          : t('Get a notification for every new message, even when the app is closed.');
+  const toggle = async (on: boolean) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      if (on) setState(await enablePush(a.uid!));
+      else {
+        await disablePush(a.uid!);
+        setState('off');
+      }
+      haptic('success');
+    } catch {
+      toast(t('Couldn’t turn on notifications — try again'));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Section title={t('Notifications')} foot={foot}>
+      <Row label={t('Message notifications')} icon={<Bell size={20} />}>
+        {pushConfigured && (state === 'on' || state === 'off') ? <Toggle on={state === 'on'} onChange={(v) => void toggle(v)} /> : <span className="text-sm text-muted">{t('In app')}</span>}
+      </Row>
+    </Section>
+  );
+}
 
 /** Tiny screen-size readout — helps when fixing layout issues on a specific iPhone. */
 function ScreenInfo() {
@@ -177,6 +230,8 @@ export function Settings() {
             <ChevronRight size={18} className="text-muted" />
           </Row>
         </Section>
+
+        <NotificationsSection />
 
         <Section title={t('Language')}>
           <Row label={t('Language')} icon={<Languages size={20} />} onClick={() => setLangSheet(true)}>

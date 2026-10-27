@@ -59,6 +59,10 @@ export interface Chat {
   avatars?: Record<string, string | null>;
   last?: { text: string; from: string; at: number; kind: string };
   readAt?: Record<string, number>;
+  /** chat theme id (shared by both people) */
+  theme?: string;
+  /** custom background photo (data URL) when theme is 'photo' */
+  bgPhoto?: string | null;
 }
 
 export interface Message {
@@ -224,6 +228,7 @@ export async function sendMessage(chat: string, me: string, msg: { kind: 'text';
     last: { text: msg.kind === 'text' ? msg.text.slice(0, 120) : '📸 Snap', from: me, at, kind: msg.kind },
     [`readAt.${me}`]: at,
   });
+  void import('./push').then((p) => p.pingChat(chat));
 }
 
 /** A snap disappears after it's been opened once. */
@@ -245,6 +250,24 @@ export function watchChat(chat: string, cb: (m: Message[]) => void) {
     stop = fs.onSnapshot(fs.query(fs.collection(db, 'chats', chat, 'messages'), fs.orderBy('at', 'asc'), fs.limitToLast(150)), (s) =>
       cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Message, 'id'>) }))),
     );
+  });
+  return () => {
+    dead = true;
+    stop();
+  };
+}
+
+export async function setChatTheme(chat: string, theme: string, bgPhoto: string | null = null) {
+  const { db, fs } = await firebase();
+  await fs.updateDoc(fs.doc(db, 'chats', chat), { theme, bgPhoto });
+}
+
+export function watchChatDoc(chat: string, cb: (c: Chat | null) => void) {
+  let stop = () => {};
+  let dead = false;
+  void firebase().then(({ db, fs }) => {
+    if (dead) return;
+    stop = fs.onSnapshot(fs.doc(db, 'chats', chat), (d) => cb(d.exists() ? ({ id: d.id, ...d.data() } as Chat) : null), () => cb(null));
   });
   return () => {
     dead = true;

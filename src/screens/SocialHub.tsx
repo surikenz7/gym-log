@@ -1,15 +1,16 @@
 import { format, formatDistanceToNowStrict, isToday } from 'date-fns';
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from 'framer-motion';
-import { Bell, Camera, ChevronRight, Download, Flame, Lock, MessageCircle, Search, Send, Trophy, UserCheck, UserPlus, Users } from 'lucide-react';
+import { Bell, Camera, ChevronRight, Download, Flame, ImagePlus, Lock, MessageCircle, Palette, Search, Send, Trophy, UserCheck, UserPlus, Users } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAccount } from '../cloud/account';
-import type { FollowStatus, InboxItem, Message, PublicProfile } from '../cloud/social';
+import type { Chat as ChatT, FollowStatus, InboxItem, Message, PublicProfile } from '../cloud/social';
+import { CHAT_THEMES, chatThemeOf, photoBg } from '../components/ChatThemes';
 import { useBadges, useSocial } from '../cloud/socialStore';
 import { RankBadge, TierName } from '../components/RankBadge';
 import { RatingPill, PhotoStrip, TaggedChips, useFriendProfiles } from '../components/WorkoutExtras';
 import { Avatar, WorkoutCard } from '../components/WorkoutFeed';
-import { Button, Header, Page, Portal } from '../components/ui';
+import { Button, Header, Page, Portal, Sheet } from '../components/ui';
 import { t } from '../i18n';
 import { haptic } from '../lib/haptics';
 import { fileToJpeg } from '../lib/photo';
@@ -563,6 +564,9 @@ export function Chat() {
   const [text, setText] = useState('');
   const [viewing, setViewing] = useState<Message | null>(null);
   const [sending, setSending] = useState(false);
+  const [chatDoc, setChatDoc] = useState<ChatT | null>(null);
+  const [themeSheet, setThemeSheet] = useState(false);
+  const bgInput = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
   const cam = useRef<HTMLInputElement>(null);
 
@@ -575,7 +579,9 @@ export function Chat() {
       if (!p) return;
       const id = await s.openChat(meRef(), p);
       setChat(id);
-      stop = s.watchChat(id, setMsgs);
+      const s1 = s.watchChat(id, setMsgs);
+      const s2 = s.watchChatDoc(id, setChatDoc);
+      stop = () => (s1(), s2());
     });
     return () => stop();
   }, [other, a.uid]);
@@ -611,6 +617,15 @@ export function Chat() {
     }
   };
 
+  const theme = chatThemeOf(chatDoc?.theme);
+  const bg = chatDoc?.theme === 'photo' && chatDoc.bgPhoto ? photoBg(chatDoc.bgPhoto) : theme.bg;
+  const pickTheme = async (id: string, photo: string | null = null) => {
+    setThemeSheet(false);
+    if (!chat) return;
+    haptic('success');
+    await (await social()).setChatTheme(chat, id, photo);
+  };
+
   if (a.status !== 'signedIn')
     return (
       <Page pushed>
@@ -632,8 +647,13 @@ export function Chat() {
             '…'
           )
         }
+        right={
+          <button onClick={() => setThemeSheet(true)} className="press text-accent" aria-label={t('Chat theme')}>
+            <Palette size={22} />
+          </button>
+        }
       />
-      <div ref={list} className="scroll-area flex-1 space-y-1.5 px-3 pb-3 pt-2">
+      <div ref={list} className="scroll-area flex-1 space-y-1.5 px-3 pb-3 pt-2" style={{ ...bg, backgroundAttachment: 'local' }}>
         {msgs.length === 0 && <div className="py-16 text-center text-sm text-muted">{t('Say hi 👋 — or send a snap of your pump.')}</div>}
         {msgs.map((m, i) => {
           const mine = m.from === a.uid;
@@ -650,12 +670,15 @@ export function Chat() {
                       setViewing(m);
                     }}
                     className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold ${mine ? 'bg-card2' : m.viewed ? 'bg-card' : 'grad'}`}
+                    style={!mine && !m.viewed ? theme.mine : undefined}
                   >
                     <Camera size={17} />
                     {mine ? (m.viewed ? t('Snap · opened') : t('Snap · delivered')) : m.viewed ? t('Snap · opened') : t('Tap to view snap')}
                   </button>
                 ) : (
-                  <div className={`max-w-[78%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${mine ? 'grad rounded-br-md' : 'rounded-bl-md bg-card2'}`}>{m.text}</div>
+                  <div className={`max-w-[78%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px] ${mine ? 'grad rounded-br-md' : 'rounded-bl-md bg-card2'}`} style={mine ? theme.mine : theme.theirs}>
+                    {m.text}
+                  </div>
                 )}
               </motion.div>
               {i === msgs.length - 1 && <div className={`mt-0.5 text-[10px] text-muted ${mine ? 'text-right' : ''}`}>{format(m.at, 'HH:mm')}</div>}
@@ -689,6 +712,48 @@ export function Chat() {
           )}
         </AnimatePresence>
       </div>
+      <Sheet open={themeSheet} onClose={() => setThemeSheet(false)} title={t('Chat theme')}>
+        <div className="grid grid-cols-3 gap-2.5 px-4 pt-2">
+          {CHAT_THEMES.map((th) => (
+            <button key={th.id} onClick={() => void pickTheme(th.id)} className="press flex flex-col items-center gap-1.5">
+              <span
+                className="relative flex h-24 w-full flex-col justify-end gap-1 overflow-hidden rounded-2xl p-2"
+                style={{ ...(th.id === 'default' ? { background: 'rgb(var(--bg))' } : th.bg), boxShadow: (chatDoc?.theme ?? 'default') === th.id ? 'inset 0 0 0 2.5px rgb(var(--accent))' : 'inset 0 0 0 1px rgb(var(--line))' }}
+              >
+                <span className="h-3 w-3/4 self-start rounded-full bg-card2" style={th.theirs} />
+                <span className="h-3 w-2/3 self-end rounded-full" style={th.id === 'default' ? { background: th.swatch } : th.mine} />
+              </span>
+              <span className="text-[11px] font-semibold">{t(th.name)}</span>
+            </button>
+          ))}
+          <button onClick={() => bgInput.current?.click()} className="press flex flex-col items-center gap-1.5">
+            <span
+              className="flex h-24 w-full items-center justify-center rounded-2xl border-2 border-dashed border-line text-muted"
+              style={chatDoc?.theme === 'photo' && chatDoc.bgPhoto ? { ...photoBg(chatDoc.bgPhoto), borderStyle: 'solid', borderColor: 'rgb(var(--accent))' } : undefined}
+            >
+              <ImagePlus size={24} />
+            </span>
+            <span className="text-[11px] font-semibold">{t('Your photo')}</span>
+          </button>
+        </div>
+        <input
+          ref={bgInput}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={async (e) => {
+            const f = e.target.files?.[0];
+            e.target.value = '';
+            if (!f) return;
+            try {
+              await pickTheme('photo', await fileToJpeg(f, 900, 180_000));
+            } catch {
+              toast(t('Couldn’t read that image'));
+            }
+          }}
+        />
+        <div className="px-4 pt-3 text-center text-xs text-muted">{t('Both of you see the theme you pick.')}</div>
+      </Sheet>
       <SnapViewer
         msg={viewing}
         onDone={() => {

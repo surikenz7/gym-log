@@ -134,6 +134,9 @@ export async function signIn(nick: string, password: string) {
 }
 
 export async function signOut() {
+  // this phone shouldn't get the old account's messages any more
+  const uid = useAccount.getState().uid;
+  if (uid) await import('./push').then((p) => p.disablePush(uid)).catch(() => {});
   try {
     const { auth, authApi } = await firebase();
     await authApi.signOut(auth);

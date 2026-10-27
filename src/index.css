@@ -389,3 +389,203 @@ input::-webkit-inner-spin-button {
   border-radius: 22px;
 }
 
+/* ---------- extra styles: Cyber, Frost, Tactical, Brutal, Terminal ---------- */
+:root[data-style='cyber'] {
+  --font-display: 'Exo 2', system-ui, sans-serif;
+  --display-case: uppercase;
+  --display-track: 0.04em;
+  --label-font: 'Exo 2', system-ui, sans-serif;
+  --label-case: uppercase;
+  --label-track: 0.18em;
+  --label-weight: 700;
+  --r-card: 10px;
+  --r-small: 6px;
+}
+:root[data-style='frost'] {
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  --display-case: none;
+  --display-track: -0.015em;
+  --label-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --label-case: none;
+  --label-track: 0;
+  --label-weight: 600;
+  --r-card: 24px;
+  --r-small: 14px;
+}
+:root[data-style='tactical'] {
+  --font-display: 'Black Ops One', Impact, sans-serif;
+  --display-case: uppercase;
+  --display-track: 0.03em;
+  --label-font: Oswald, Impact, sans-serif;
+  --label-case: uppercase;
+  --label-track: 0.22em;
+  --label-weight: 600;
+  --r-card: 2px;
+  --r-small: 2px;
+}
+:root[data-style='brutal'] {
+  --font-display: Anton, Impact, 'Arial Narrow', sans-serif;
+  --display-case: uppercase;
+  --display-track: 0.01em;
+  --label-font: Anton, Impact, sans-serif;
+  --label-case: uppercase;
+  --label-track: 0.08em;
+  --label-weight: 400;
+  --r-card: 4px;
+  --r-small: 4px;
+}
+:root[data-style='terminal'] {
+  --font-display: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --display-case: none;
+  --display-track: -0.02em;
+  --label-font: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --label-case: uppercase;
+  --label-track: 0.06em;
+  --label-weight: 500;
+  --r-card: 6px;
+  --r-small: 4px;
+}
+
+/* Cyber: neon edges, italic heavy type, glowing accents over a fading grid */
+:root[data-style='cyber'] .cut,
+:root[data-style='cyber'] .cut-sm {
+  box-shadow: inset 0 0 0 1px rgb(var(--accent) / 0.32), 0 0 22px -8px rgb(var(--accent) / 0.55);
+}
+:root[data-style='cyber'] .font-display {
+  font-weight: 800;
+  font-style: italic;
+}
+:root[data-style='cyber'] .grad {
+  box-shadow: 0 0 18px rgb(var(--accent) / 0.5);
+}
+:root[data-style='cyber'] .text-grad {
+  filter: drop-shadow(0 0 8px rgb(var(--accent) / 0.55));
+}
+:root[data-style='cyber'] body::before {
+  height: 100%;
+  background-image: linear-gradient(rgb(var(--accent) / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--accent) / 0.07) 1px, transparent 1px),
+    radial-gradient(90% 50% at 50% 0%, rgb(var(--accent) / 0.2), transparent 70%);
+  background-size: 28px 28px, 28px 28px, auto;
+  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 75%);
+  mask-image: linear-gradient(to bottom, #000, transparent 75%);
+}
+
+/* Frost: frosted-glass cards floating over soft colour blobs */
+:root[data-style='frost'] body::before {
+  height: 100%;
+  background: radial-gradient(55% 35% at 10% 8%, rgb(var(--accent) / 0.38), transparent 70%),
+    radial-gradient(50% 30% at 95% 30%, rgb(var(--accent2) / 0.28), transparent 70%),
+    radial-gradient(60% 35% at 20% 80%, rgb(var(--accent) / 0.22), transparent 70%);
+}
+:root[data-style='frost'] .cut.bg-card,
+:root[data-style='frost'] .cut-sm.bg-card {
+  background-color: rgb(var(--card) / 0.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.7);
+  backdrop-filter: blur(16px) saturate(1.7);
+  box-shadow: inset 0 1px 0.5px rgb(255 255 255 / 0.16), inset 0 0 0 0.5px rgb(255 255 255 / 0.12);
+}
+:root[data-mode='light'][data-style='frost'] .cut.bg-card,
+:root[data-mode='light'][data-style='frost'] .cut-sm.bg-card {
+  background-color: rgb(255 255 255 / 0.6);
+  box-shadow: inset 0 1px 0.5px rgb(255 255 255 / 0.9), inset 0 0 0 0.5px rgb(0 0 0 / 0.06);
+}
+:root[data-style='frost'] .grad,
+:root[data-style='frost'] .stripes {
+  background-image: linear-gradient(160deg, rgb(var(--accent)), rgb(var(--accent2)));
+}
+:root[data-style='frost'] .font-display {
+  font-weight: 700;
+}
+:root[data-style='frost'] .hex {
+  clip-path: none;
+  border-radius: 999px;
+}
+
+/* Tactical: stencil type, corner brackets, hazard stripes, octagon button */
+:root[data-style='tactical'] .cut:not(.grad) {
+  --b: rgb(var(--accent) / 0.85);
+  background-image: linear-gradient(var(--b), var(--b)), linear-gradient(var(--b), var(--b)), linear-gradient(var(--b), var(--b)),
+    linear-gradient(var(--b), var(--b)), linear-gradient(var(--b), var(--b)), linear-gradient(var(--b), var(--b)),
+    linear-gradient(var(--b), var(--b)), linear-gradient(var(--b), var(--b));
+  background-repeat: no-repeat;
+  background-size: 14px 2px, 2px 14px, 14px 2px, 2px 14px, 14px 2px, 2px 14px, 14px 2px, 2px 14px;
+  background-position: 0 0, 0 0, 100% 0, 100% 0, 0 100%, 0 100%, 100% 100%, 100% 100%;
+  box-shadow: inset 0 0 0 1px rgb(var(--line));
+}
+:root[data-style='tactical'] .font-display {
+  font-weight: 400;
+}
+:root[data-style='tactical'] .stripes {
+  background-image: repeating-linear-gradient(-45deg, rgb(0 0 0 / 0.2) 0 9px, transparent 9px 18px);
+}
+:root[data-style='tactical'] .grad.stripes {
+  background-image: repeating-linear-gradient(-45deg, rgb(0 0 0 / 0.2) 0 9px, transparent 9px 18px), linear-gradient(120deg, rgb(var(--accent)), rgb(var(--accent)));
+}
+:root[data-style='tactical'] .hex {
+  clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+}
+:root[data-style='tactical'] body::before {
+  background: radial-gradient(100% 80% at 50% -20%, rgb(var(--accent) / 0.1), transparent 70%);
+}
+
+/* Brutal: poster type, thick outlines, hard offset shadows */
+:root[data-style='brutal'] .cut,
+:root[data-style='brutal'] .cut-sm {
+  box-shadow: inset 0 0 0 2px rgb(var(--fg) / 0.6), 5px 5px 0 rgb(var(--accent));
+}
+:root[data-mode='light'][data-style='brutal'] .cut,
+:root[data-mode='light'][data-style='brutal'] .cut-sm {
+  box-shadow: inset 0 0 0 2px rgb(var(--fg)), 5px 5px 0 rgb(var(--fg));
+}
+:root[data-style='brutal'] .font-display {
+  font-weight: 400;
+}
+:root[data-style='brutal'] .grad,
+:root[data-style='brutal'] .stripes,
+:root[data-style='brutal'] .grad.stripes {
+  background-image: none;
+}
+:root[data-style='brutal'] .text-grad {
+  background: none;
+  color: rgb(var(--accent));
+}
+:root[data-style='brutal'] .hex {
+  clip-path: none;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2.5px rgb(var(--fg) / 0.8), 4px 4px 0 rgb(var(--fg) / 0.8) !important;
+}
+:root[data-style='brutal'] body::before {
+  display: none;
+}
+
+/* Terminal: monospace, thin accent outlines, flat colour, faint scanlines */
+:root[data-style='terminal'] .cut,
+:root[data-style='terminal'] .cut-sm {
+  box-shadow: inset 0 0 0 1px rgb(var(--accent) / 0.3);
+}
+:root[data-style='terminal'] .grad,
+:root[data-style='terminal'] .stripes,
+:root[data-style='terminal'] .grad.stripes {
+  background-image: none;
+}
+:root[data-style='terminal'] .text-grad {
+  background: none;
+  color: rgb(var(--accent));
+  text-shadow: 0 0 10px rgb(var(--accent) / 0.55);
+}
+:root[data-style='terminal'] .font-display {
+  font-weight: 700;
+}
+:root[data-style='terminal'] .hex {
+  clip-path: none;
+  border-radius: 8px;
+}
+:root[data-style='terminal'] body::before {
+  background: radial-gradient(100% 70% at 50% 0%, rgb(var(--accent) / 0.08), transparent 70%);
+}
+:root[data-style='terminal']:not([data-grain='off']) body::after {
+  display: block;
+  opacity: 0.35;
+  background-image: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.35) 0 1px, transparent 1px 3px);
+}

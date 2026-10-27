@@ -62,3 +62,11 @@ export function fanfare(big = false) {
   const end = t + notes.length * 0.09;
   for (const f of big ? [523.25, 659.25, 783.99, 1046.5] : [783.99, 1046.5]) chord(f, end, big ? 1.1 : 0.6, 'sawtooth', 0.06);
 }
+
+/** Short two-note "ding" for an incoming message. */
+export function beepMessage() {
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  chord(880, t, 0.18, 'sine', 0.22);
+  chord(1318.5, t + 0.09, 0.28, 'sine', 0.18);
+}
