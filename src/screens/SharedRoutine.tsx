@@ -68,7 +68,7 @@ export function SharedRoutine() {
             <Button
               className="w-full"
               onClick={async () => {
-                await navigator.clipboard.writeText(routineLink(code!));
+                await navigator.clipboard.writeText(routineLink(code!, p.n));
                 toast('Copied — now open Gym Log → Routines → Paste link');
               }}
             >

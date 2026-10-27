@@ -18,6 +18,7 @@ import { fmtDurationLong, kgTo } from '../lib/units';
 import { useJourney, useRanks } from '../lib/useProgress';
 import { toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
+import { SocialCard } from './SocialHub';
 
 /** Tap-to-change profile picture: choose from Photos / camera, or remove. */
 export function AvatarPicker({ size, ring }: { size: number; ring?: string }) {
@@ -109,7 +110,7 @@ export function Profile() {
     { label: 'Calendar', icon: CalendarDays, to: '/calendar' },
     { label: 'Ranks', icon: Shield, to: '/ranks' },
     { label: 'Trophies', icon: Medal, to: '/trophies' },
-    { label: 'Friends', icon: Users, to: '/friends' },
+    { label: 'Friends', icon: Users, to: '/social' },
     { label: 'Decorations', icon: Sparkles, to: '/decorations' },
   ];
   const trophies = journey ? journey.unlocked.size : 0;
@@ -194,6 +195,8 @@ export function Profile() {
           </div>
           <ChevronRight size={18} className="relative text-muted" />
         </motion.button>
+
+        <SocialCard />
 
         <div className="mt-3 cut bg-card p-4">
           <div className="font-display text-lg font-semibold">{headline}</div>

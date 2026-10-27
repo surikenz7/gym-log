@@ -70,6 +70,12 @@ export interface Workout {
   /** derived, for indexing */
   exerciseIds: string[];
   source?: 'hevy';
+  /** small JPEG data URLs */
+  photos?: string[];
+  /** friends tagged in this workout */
+  tagged?: { uid: string; nick: string }[];
+  /** how satisfied the lifter was, 1–10 */
+  rating?: number | null;
 }
 
 export const MEASURE_FIELDS = ['weight', 'bodyFat', 'waist', 'chest', 'hips', 'shoulders', 'arms', 'thighs', 'calves', 'neck'] as const;
@@ -136,6 +142,10 @@ export interface Settings {
   celebrations?: boolean;
   /** calmer UI: fewer and shorter animations */
   reduceMotion?: boolean;
+  /** profile needs approval to follow */
+  privateProfile?: boolean;
+  /** UI language ('auto' = phone language) */
+  lang?: string;
   /** chose to use the app without an account */
   guest?: boolean;
   /** finished the welcome / setup flow */

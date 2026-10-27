@@ -4,7 +4,7 @@ import { firebaseConfig } from './config';
 let loading: Promise<Firebase> | null = null;
 
 async function load() {
-  const [{ initializeApp }, auth, fs] = await Promise.all([import('firebase/app'), import('firebase/auth'), import('firebase/firestore/lite')]);
+  const [{ initializeApp }, auth, fs] = await Promise.all([import('firebase/app'), import('firebase/auth'), import('firebase/firestore')]);
   const app = initializeApp(firebaseConfig);
   // stays signed in on this device until "Log out"
   const a = auth.initializeAuth(app, { persistence: [auth.indexedDBLocalPersistence, auth.browserLocalPersistence] });

@@ -18,6 +18,7 @@ import { Ranks } from './screens/Ranks';
 import { RoutineEditor } from './screens/RoutineEditor';
 import { DecoSync } from './screens/Decorations';
 import { CloudSync } from './cloud/CloudSync';
+import { SocialSync } from './cloud/socialStore';
 import { Summary, WorkoutDetail, WorkoutEdit } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
 // screens you open now and then are loaded the first time they're needed
@@ -28,8 +29,10 @@ const Measures = lazy(() => import('./screens/Measures').then((m) => ({ default:
 const Statistics = lazy(() => import('./screens/Statistics').then((m) => ({ default: m.Statistics })));
 const Trophies = lazy(() => import('./screens/Trophies').then((m) => ({ default: m.Trophies })));
 const Decorations = lazy(() => import('./screens/Decorations').then((m) => ({ default: m.Decorations })));
-const Friends = lazy(() => import('./screens/Social').then((m) => ({ default: m.Friends })));
-const FriendProfile = lazy(() => import('./screens/Social').then((m) => ({ default: m.FriendProfile })));
+const Social = lazy(() => import('./screens/SocialHub').then((m) => ({ default: m.Social })));
+const FriendProfile = lazy(() => import('./screens/SocialHub').then((m) => ({ default: m.FriendProfile })));
+const FriendWorkout = lazy(() => import('./screens/SocialHub').then((m) => ({ default: m.FriendWorkout })));
+const Chat = lazy(() => import('./screens/SocialHub').then((m) => ({ default: m.Chat })));
 const SharedRoutine = lazy(() => import('./screens/SharedRoutine').then((m) => ({ default: m.SharedRoutine })));
 const Settings = lazy(() => import('./screens/Settings').then((m) => ({ default: m.Settings })));
 
@@ -114,6 +117,7 @@ export default function App() {
     <MotionConfig reducedMotion={reduceMotion ? 'always' : 'never'}>
     <div className={`relative flex h-full flex-col ${isTabRoot ? 'has-dock' : ''} ${miniBar ? 'has-mini' : ''}`}>
       <main className="relative min-h-0 flex-1">
+        {isTabRoot && <div className="top-fade" />}
         <TabPager index={lastTab.current} pages={[<Home key="home" />, <WorkoutTab key="workout" />, <Ranks key="ranks" />, <Profile key="profile" />]} />
         {!isTabRoot && (
           <div className="absolute inset-0 z-10 bg-bg">
@@ -129,9 +133,13 @@ export default function App() {
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/trophies" element={<Trophies />} />
           <Route path="/decorations" element={<Decorations />} />
-          <Route path="/friends" element={<Friends />} />
+          <Route path="/friends" element={<Navigate to="/social" replace />} />
+          <Route path="/social" element={<Social />} />
           <Route path="/u/:uid" element={<FriendProfile />} />
+          <Route path="/u/:uid/w/:wid" element={<FriendWorkout />} />
+          <Route path="/chat/:uid" element={<Chat />} />
           <Route path="/r/:code" element={<SharedRoutine />} />
+          <Route path="/r/:slug/:code" element={<SharedRoutine />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/import/hevy" element={<HevyImport />} />
           <Route path="/routine/new" element={<RoutineEditor />} />
@@ -157,6 +165,7 @@ export default function App() {
       <DecoSync />
       <AnimatePresence>{onboarding && <Onboarding key={onboarding} start={onboarding} onDone={() => setOnboarding(null)} />}</AnimatePresence>
       <CloudSync />
+      <SocialSync />
       <DialogHost />
       <ToastHost />
       <UpdatePrompt />

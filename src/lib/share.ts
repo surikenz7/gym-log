@@ -67,11 +67,23 @@ export async function decodeRoutine(code: string): Promise<Packed | null> {
   }
 }
 
-export const routineLink = (code: string) => `${location.origin}${import.meta.env.BASE_URL}#/r/${code}`;
+/** "Push Day 💪" → "Push-Day" (readable part of the link) */
+export function slugify(name: string) {
+  return (
+    name
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^A-Za-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40) || 'routine'
+  );
+}
 
-/** Pulls the code out of a pasted link (or a bare code). */
+export const routineLink = (code: string, name?: string) => `${location.origin}${import.meta.env.BASE_URL}#/r/${name ? `${slugify(name)}/` : ''}${code}`;
+
+/** Pulls the code out of a pasted link (with or without the name part) or a bare code. */
 export function codeFromText(text: string): string | null {
-  const m = text.trim().match(/#\/r\/([A-Za-z0-9_-]+)/) ?? text.trim().match(/^([zj][A-Za-z0-9_-]{8,})$/);
+  const m = text.trim().match(/#\/r\/(?:[A-Za-z0-9-]+\/)?([zj][A-Za-z0-9_-]+)/) ?? text.trim().match(/^([zj][A-Za-z0-9_-]{8,})$/);
   return m ? m[1] : null;
 }
 
@@ -101,7 +113,7 @@ export async function saveSharedRoutine(p: Packed, folderId: string | null = nul
 
 /** Share sheet (iOS) with the link, or copy it as a fallback. Returns what happened. */
 export async function shareRoutine(r: Pick<Routine, 'name' | 'notes' | 'exercises'>): Promise<'shared' | 'copied' | 'cancelled'> {
-  const url = routineLink(await encodeRoutine(r));
+  const url = routineLink(await encodeRoutine(r), r.name);
   const text = `💪 ${r.name} — my Gym Log routine`;
   const { useSettings } = await import('../state/settings');
   useSettings.getState().update({ shared: true });

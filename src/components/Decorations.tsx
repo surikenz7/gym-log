@@ -176,7 +176,7 @@ export const DECO_ART: Record<string, Art> = {
     <g>
       {spin(7, true)}
       <circle r="60" fill="none" stroke="#fff" strokeOpacity=".25" strokeWidth="1" strokeDasharray="2 5" />
-      <path d="M0 -70 L10 -54 L0 -58 L-10 -54 Z" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1" transform="rotate(90 0 -60)" />
+      <path d="M0 -70 L10 -54 L0 -58 L-10 -54 Z" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1" transform="rotate(-90 0 -60)" />
     </g>
   ),
   iron_ring: (g) => (

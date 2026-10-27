@@ -137,7 +137,7 @@ export function applyLook(id: ThemeId, style: StyleId, mode: ModeId, extras: Loo
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', p.bg);
   // index.html reads this before the app starts, to pick the status-bar style (iOS reads it at launch)
   try {
-    localStorage.setItem('gymlog-look', JSON.stringify({ light: p.light, bg: p.bg }));
+    localStorage.setItem('gymlog-look', JSON.stringify({ light: p.light, bg: p.bg, accent: p.accent, accent2: p.accent2, theme: id }));
   } catch {
     /* private mode */
   }

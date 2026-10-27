@@ -42,6 +42,7 @@ export function Header({
   const nav = useNavigate();
   return (
     <div className="sticky top-0 z-20 bg-bg/85 backdrop-blur-xl pt-safe">
+      <div className="pointer-events-none absolute inset-x-0 top-full h-8 bg-gradient-to-b from-bg/85 to-transparent" />
       <div className="flex h-12 items-center gap-2 px-3">
         <div className="flex min-w-[64px] items-center">
           {back ? (

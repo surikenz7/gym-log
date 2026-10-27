@@ -8,6 +8,7 @@ import { prCounts, workoutVolume } from '../lib/stats';
 import { fmtDurationLong, fmtVolume } from '../lib/units';
 import { useSettings } from '../state/settings';
 import { DecorationArt } from './Decorations';
+import { RatingPill } from './WorkoutExtras';
 import { RankChip } from './RankBadge';
 import type { Workout } from '../types';
 
@@ -38,7 +39,7 @@ export function Avatar({ size = 40, ring, deco, src, initial }: { size?: number;
 }
 
 /** `friend` = someone else's workout (no link into local history, no rank chips). */
-export function WorkoutCard({ w, prs, index = 0, friend }: { w: Workout; prs: number; index?: number; friend?: boolean }) {
+export function WorkoutCard({ w, prs, index = 0, friend, onOpen }: { w: Workout; prs: number; index?: number; friend?: boolean; onOpen?: () => void }) {
   const settings = useSettings();
   const nav = useNavigate();
   const shown = w.exercises.slice(0, 4);
@@ -48,7 +49,7 @@ export function WorkoutCard({ w, prs, index = 0, friend }: { w: Workout; prs: nu
       initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: Math.min(index, 6) * 0.04 }}
-      onClick={() => !friend && nav(`/history/${w.id}`)}
+      onClick={() => (onOpen ? onOpen() : !friend && nav(`/history/${w.id}`))}
       className="press cut flex w-full bg-card text-left"
     >
       <div className="flex w-[58px] shrink-0 flex-col items-center justify-center gap-0.5 bg-card2 py-3" style={{ boxShadow: 'inset -2px 0 0 rgb(var(--accent))' }}>
@@ -84,6 +85,14 @@ export function WorkoutCard({ w, prs, index = 0, friend }: { w: Workout; prs: nu
           ))}
           {w.exercises.length > shown.length && <div className="pl-8 text-xs text-muted">+{w.exercises.length - shown.length} more</div>}
         </div>
+        {(w.rating || w.tagged?.length || w.photos?.length) && (
+          <div className="mt-2 flex items-center gap-2">
+            {w.photos?.[0] && <img src={w.photos[0]} alt="" className="h-10 w-10 rounded-lg object-cover" />}
+            {w.photos && w.photos.length > 1 && <span className="text-xs text-muted">+{w.photos.length - 1}</span>}
+            <RatingPill rating={w.rating} />
+            {w.tagged?.length ? <span className="truncate text-xs text-muted">👥 {w.tagged.map((f) => '@' + f.nick).join(', ')}</span> : null}
+          </div>
+        )}
       </div>
     </motion.button>
   );

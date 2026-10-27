@@ -9,6 +9,8 @@ import { formatMetric } from '../components/ExerciseInfo';
 import { SET_TYPE_STYLE } from '../components/SetRow';
 import { WorkoutEditor } from '../components/WorkoutEditor';
 import { RankBadge, RankChip } from '../components/RankBadge';
+import { RatingSlider } from '../components/Rating';
+import { PhotoStrip, TaggedChips } from '../components/WorkoutExtras';
 import { AchievementsUnlocked, Confetti, CountUp, RankChanges, RankUpOverlay, XpCard, type RankChange, type RankUp } from '../components/Rewards';
 import { Button, Header, Page, Sheet, SheetItem } from '../components/ui';
 import { db } from '../db/db';
@@ -32,7 +34,7 @@ function usePRs(w: Workout | undefined): PR[] {
   return useMemo(() => (w && earlier ? findPRs(w, earlier, typeOf) : []), [w, earlier]);
 }
 
-function StatGrid({ w, prs }: { w: Workout; prs: number }) {
+export function StatGrid({ w, prs }: { w: Workout; prs: number }) {
   const settings = useSettings();
   const items = [
     ['Duration', fmtDurationLong((w.end - w.start) / 1000)],
@@ -52,7 +54,7 @@ function StatGrid({ w, prs }: { w: Workout; prs: number }) {
   );
 }
 
-function ExerciseBlocks({ w, prs }: { w: Workout; prs: PR[] }) {
+export function ExerciseBlocks({ w, prs }: { w: Workout; prs: PR[] }) {
   const settings = useSettings();
   const nav = useNavigate();
   return (
@@ -131,8 +133,13 @@ export function WorkoutDetail() {
           <div className="font-display text-3xl font-bold uppercase">{w.name}</div>
           <div className="text-sm text-muted">{format(w.start, 'EEEE, d MMMM yyyy · HH:mm')}</div>
         </div>
+        <TaggedChips tagged={w.tagged} />
         <StatGrid w={w} prs={prs.length} />
         {w.notes && <div className="cut bg-card p-4 text-sm text-white/85">{w.notes}</div>}
+        <PhotoStrip photos={w.photos ?? []} onChange={(photos) => void db.workouts.update(w.id, { photos })} />
+        <div className="cut bg-card p-4">
+          <RatingSlider value={w.rating} onChange={(rating) => void db.workouts.update(w.id, { rating })} />
+        </div>
         <ExerciseBlocks w={w} prs={prs} />
       </div>
       <Sheet open={menu} onClose={() => setMenu(false)} title={w.name}>
@@ -352,6 +359,9 @@ export function Summary() {
         )}
 
         <motion.div className="mt-3 space-y-3" initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }}>
+          <div className="cut bg-card p-4">
+            <RatingSlider value={w.rating} onChange={(rating) => void db.workouts.update(w.id, { rating })} />
+          </div>
           {reward && <XpCard reward={reward} />}
           {reward && <AchievementsUnlocked list={reward.achievements} />}
           {ranks && <RankChanges changes={ranks.changes} />}

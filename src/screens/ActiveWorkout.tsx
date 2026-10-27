@@ -1,5 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown, ChevronLeft, Timer } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Timer, UserPlus } from 'lucide-react';
+import { useAccount } from '../cloud/account';
+import { PhotoStrip, TagPicker } from '../components/WorkoutExtras';
+import { t } from '../i18n';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WorkoutEditor } from '../components/WorkoutEditor';
@@ -13,7 +16,7 @@ import { setKeepAwake } from '../lib/wakelock';
 import { ask, confirmDialog, toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
 import { newSet, useWorkout } from '../state/workout';
-import type { WExercise, Workout } from '../types';
+import type { ActiveWorkout as ActiveWorkoutT, WExercise, Workout } from '../types';
 
 function structure(exs: WExercise[]) {
   return exs.map((e) => `${e.exerciseId}:${e.sets.length}:${e.supersetId ? 'S' : ''}`).join('|');
@@ -117,6 +120,15 @@ function RestBar() {
   );
 }
 
+/** Lets tagged friends know (shows up in their Activity). */
+async function notifyTagged(w: Workout, tagged: NonNullable<Workout['tagged']>) {
+  const a = useAccount.getState();
+  if (!a.uid || !a.nick) return;
+  const { notify } = await import('../cloud/social');
+  const avatar = useSettings.getState().avatar ?? null;
+  await Promise.all(tagged.map((f) => notify(f.uid, { kind: 'tag', from: a.uid!, nick: a.nick!, avatar, workoutId: w.id, workoutName: w.name }).catch(() => {})));
+}
+
 function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
   const active = useWorkout((s) => s.active);
   const finish = useWorkout((s) => s.finish);
@@ -124,6 +136,10 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
   const nav = useNavigate();
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [tagged, setTagged] = useState<NonNullable<Workout['tagged']>>([]);
+  const [tagging, setTagging] = useState(false);
+  const signedIn = useAccount((a) => a.status === 'signedIn');
   useEffect(() => {
     if (open && active) {
       setName(active.workout.name);
@@ -133,8 +149,11 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
   if (!active) return null;
   const w = active.workout;
   const save = async () => {
-    const saved = await finish(name, notes);
+    const saved = await finish(name, notes, { photos, tagged });
+    setPhotos([]);
+    setTagged([]);
     nav(`/summary/${saved.id}`);
+    if (tagged.length) void notifyTagged(saved, tagged);
     await maybeUpdateRoutine(saved);
   };
   return (
@@ -166,13 +185,47 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
-              placeholder="How did your workout go? Leave some notes here..."
+              placeholder={t('How did your workout go? Leave some notes here...')}
               className="mt-4 w-full resize-none cut-sm bg-card p-3 outline-none placeholder:text-muted"
             />
+            <div className="label mb-2 mt-5">{t('Photos')}</div>
+            <PhotoStrip photos={photos} onChange={setPhotos} />
+            {signedIn && (
+              <>
+                <div className="label mb-2 mt-5">{t('Trained with')}</div>
+                <button onClick={() => setTagging(true)} className="press cut-sm flex w-full items-center gap-3 bg-card px-4 py-3 text-left">
+                  <UserPlus size={20} className="text-accent" />
+                  <span className="flex-1">{tagged.length ? tagged.map((f) => '@' + f.nick).join(', ') : t('Tag friends')}</span>
+                  <ChevronRight size={18} className="text-muted" />
+                </button>
+                <TagPicker open={tagging} onClose={() => setTagging(false)} value={tagged} onChange={setTagged} />
+              </>
+            )}
+            <div className="h-10" />
           </div>
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+/** Thin bar showing how many of the planned sets are ticked off. */
+function WorkoutProgress({ w }: { w: ActiveWorkoutT['workout'] }) {
+  const total = w.exercises.reduce((n, e) => n + e.sets.length, 0);
+  const done = workoutSetCount(w);
+  if (!total) return null;
+  const p = done / total;
+  return (
+    <div className="relative h-[3px] w-full bg-white/10">
+      <motion.div
+        className="grad absolute inset-y-0 left-0"
+        initial={false}
+        animate={{ width: `${p * 100}%` }}
+        transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+        style={{ boxShadow: p > 0 ? '0 0 10px rgb(var(--accent) / 0.8)' : undefined }}
+      />
+      {p === 1 && <motion.div className="absolute inset-0 bg-done" initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 0.85] }} transition={{ duration: 0.6 }} />}
+    </div>
   );
 }
 
@@ -251,6 +304,7 @@ export function ActiveWorkout() {
                 <Stat label="Volume" value={fmtVolume(workoutVolume(w, typeOf), settings)} />
                 <Stat label="Sets" value={String(workoutSetCount(w))} />
               </div>
+              <WorkoutProgress w={w} />
             </div>
             <div className="scroll-area flex-1 pb-40 pt-2">
               {w.exercises.length === 0 && (

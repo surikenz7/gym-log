@@ -28,11 +28,35 @@
         var look = JSON.parse(localStorage.getItem('gymlog-look') || '{}');
         if (look.light) document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').setAttribute('content', 'default');
         if (look.bg) document.documentElement.style.background = look.bg;
+        if (look.accent) document.documentElement.style.setProperty('--boot', look.accent);
+        // launch screen in the chosen colour
+        if (look.theme)
+          document.querySelectorAll('link[rel="apple-touch-startup-image"]').forEach(function (l) {
+            l.href = l.href.replace(/splash\/(?:[a-z]+\/)?/, 'splash/' + look.theme + '/');
+          });
       } catch (e) {}
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- shown until the app has loaded; uses the colour picked in Settings -->
+      <div id="boot" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center">
+        <svg width="132" height="132" viewBox="0 0 512 512" style="color:var(--boot,#e5262d);animation:bootpulse 1.4s ease-in-out infinite">
+          <g fill="currentColor">
+            <rect x="52" y="242" width="408" height="28" rx="14" />
+            <rect x="84" y="174" width="40" height="164" rx="14" />
+            <rect x="128" y="134" width="54" height="244" rx="14" />
+            <rect x="186" y="214" width="18" height="84" rx="9" />
+            <rect x="308" y="214" width="18" height="84" rx="9" />
+            <rect x="330" y="134" width="54" height="244" rx="14" />
+            <rect x="388" y="174" width="40" height="164" rx="14" />
+          </g>
+        </svg>
+        <style>
+          @keyframes bootpulse { 0%, 100% { transform: scale(1); opacity: 1 } 50% { transform: scale(0.92); opacity: 0.75 } }
+        </style>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

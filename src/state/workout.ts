@@ -13,7 +13,7 @@ interface WorkoutState {
   adjustRest: (delta: number) => void;
   skipRest: () => void;
   discard: () => void;
-  finish: (name: string, notes: string) => Promise<Workout>;
+  finish: (name: string, notes: string, extra?: Pick<Workout, 'photos' | 'tagged'>) => Promise<Workout>;
 }
 
 export function newSet(type: WSet['type'] = 'normal', from?: Partial<WSet>): WSet {
@@ -89,7 +89,7 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
     if (a) set({ active: { ...a, rest: null } });
   },
   discard: () => set({ active: null, open: false }),
-  finish: async (name, notes) => {
+  finish: async (name, notes, extra) => {
     const a = get().active!;
     const exercises: WExercise[] = a.workout.exercises
       .map((e) => ({
@@ -101,6 +101,8 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
       ...a.workout,
       name: name.trim() || a.workout.name,
       notes,
+      ...(extra?.photos?.length ? { photos: extra.photos } : {}),
+      ...(extra?.tagged?.length ? { tagged: extra.tagged } : {}),
       end: Date.now(),
       exercises,
       exerciseIds: [...new Set(exercises.map((e) => e.exerciseId))],

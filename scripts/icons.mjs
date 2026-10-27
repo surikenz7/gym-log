@@ -71,16 +71,21 @@ export const SPLASH = [
   [440, 956, 3], [430, 932, 3], [428, 926, 3], [420, 912, 3], [414, 896, 3], [414, 896, 2],
   [402, 874, 3], [393, 852, 3], [390, 844, 3], [375, 812, 3], [375, 667, 2],
 ];
-const logo = Buffer.from(iconSvg(THEMES.blood, { rounded: true }));
 fs.mkdirSync('public/splash', { recursive: true });
-for (const [w, h, r] of SPLASH) {
+const BG = '#0b0707';
+for (const [name, colors] of Object.entries({ '': THEMES.blood, ...THEMES })) {
+  const dir = name ? `public/splash/${name}` : 'public/splash';
+  fs.mkdirSync(dir, { recursive: true });
+  const logo = Buffer.from(iconSvg(colors, { rounded: true, ink: INK[name] }));
+  for (const [w, h, r] of SPLASH) {
   const W = w * r;
   const H = h * r;
   const icon = Math.round(W * 0.3);
   const png = await sharp(logo, { density: 600 }).resize(icon, icon).png().toBuffer();
-  await sharp({ create: { width: W, height: H, channels: 3, background: '#0b0707' } })
+  await sharp({ create: { width: W, height: H, channels: 3, background: BG } })
     .composite([{ input: png, left: Math.round((W - icon) / 2), top: Math.round((H - icon) / 2 - H * 0.04) }])
     .png({ compressionLevel: 9 })
-    .toFile(`public/splash/${W}x${H}.png`);
+    .toFile(`${dir}/${W}x${H}.png`);
+  }
 }
 console.log('icons for', Object.keys(THEMES).join(', '));

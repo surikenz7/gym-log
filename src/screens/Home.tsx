@@ -1,5 +1,7 @@
-import { addDays, format, isSameDay, isSameWeek, startOfWeek } from 'date-fns';
-import { motion } from 'framer-motion';
+import { addDays, format, isSameDay, isSameWeek, isToday, startOfWeek } from 'date-fns';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { t } from '../i18n';
 import { Flame, Upload, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { RankBadge, TierName } from '../components/RankBadge';
@@ -13,6 +15,43 @@ import { workoutVolume } from '../lib/stats';
 import { fmtDurationLong, fmtVolume } from '../lib/units';
 import { useJourney, useRanks } from '../lib/useProgress';
 import { useSettings } from '../state/settings';
+
+/** Phrases cycle every few seconds; after today's workout they switch to congratulations. */
+const DONE_QUOTES = ['Good job', 'Gains secured', 'Rest up, champ', 'Workout done', 'Earned it', 'Proud of you', 'Recover & grow', 'One step closer'];
+const GO_QUOTES = ['Time to grind', 'Let’s get it', 'No excuses', 'Show up today', 'Build the legend', 'Iron awaits'];
+
+function RotatingGreeting({ done, name }: { done: boolean; name: string }) {
+  const quotes = done ? DONE_QUOTES : [greeting(), ...GO_QUOTES];
+  const [i, setI] = useState(() => (done ? Math.floor(Math.random() * DONE_QUOTES.length) : 0));
+  useEffect(() => {
+    setI(done ? Math.floor(Math.random() * DONE_QUOTES.length) : 0);
+    const timer = setInterval(() => setI((x) => (x + 1) % quotes.length), 4500);
+    return () => clearInterval(timer);
+  }, [done]);
+  return (
+    <>
+      <span className="relative block h-[1.9em] overflow-hidden">
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={`${done}${i}`}
+            className="absolute inset-x-0 bottom-0"
+            initial={{ y: '100%', opacity: 0, filter: 'blur(4px)' }}
+            animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+            exit={{ y: '-100%', opacity: 0, filter: 'blur(4px)' }}
+            transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+          >
+            {t(quotes[i % quotes.length])}
+            {done ? '!' : ','}
+          </motion.span>
+        </AnimatePresence>
+      </span>
+      <span className="text-grad">
+        {done && '✓ '}
+        {name}
+      </span>
+    </>
+  );
+}
 
 function greeting() {
   const h = new Date().getHours();
@@ -64,6 +103,7 @@ export function Home() {
   const streak = journey?.totals.streak ?? 0;
   const lvl = levelFromXp(journey?.xp ?? 0);
   const overall = ranks?.overall ?? null;
+  const trainedToday = list.some((w) => isToday(w.start));
 
   return (
     <Page>
@@ -81,11 +121,7 @@ export function Home() {
                   <span className="text-grad">{format(new Date(), 'd MMMM')}</span>
                 </>
               ) : (
-                <>
-                  {greeting()},
-                  <br />
-                  <span className="text-grad">{settings.name.trim() || 'Lifter'}</span>
-                </>
+                <RotatingGreeting done={trainedToday} name={settings.name.trim() || t('Lifter')} />
               )}
             </h1>
           </div>

@@ -9,6 +9,7 @@ import { haptic } from '../lib/haptics';
 import { startWorkout } from '../screens/WorkoutTab';
 import { useWorkout } from '../state/workout';
 import { useSettings } from '../state/settings';
+import { useBadges } from '../cloud/socialStore';
 import { Sheet } from './ui';
 
 export const DOCK_TABS = [
@@ -20,6 +21,7 @@ export const DOCK_TABS = [
 
 function Tab({ to, label, icon: Icon }: (typeof DOCK_TABS)[number]) {
   const labels = useSettings((s) => s.tabLabels !== false);
+  const badge = useBadges().total;
   return (
     <NavLink
       to={to}
@@ -31,7 +33,14 @@ function Tab({ to, label, icon: Icon }: (typeof DOCK_TABS)[number]) {
       {({ isActive }) => (
         <>
           {isActive && <motion.div layoutId="dock-active" className="glass-lens absolute inset-y-[5px] inset-x-0 rounded-full" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
-          <Icon size={23} className={`relative ${isActive ? 'text-accent' : 'text-white/75'}`} strokeWidth={isActive ? 2.4 : 2} />
+          <span className="relative">
+            <Icon size={23} className={isActive ? 'text-accent' : 'text-white/75'} strokeWidth={isActive ? 2.4 : 2} />
+            {to === '/profile' && badge > 0 && (
+              <motion.span className="absolute -right-2 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-[#fff]" initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                {badge}
+              </motion.span>
+            )}
+          </span>
           {labels && <span className={`relative text-[10px] font-semibold leading-none tracking-[0.01em] ${isActive ? 'text-accent' : 'text-white/75'}`}>{label}</span>}
         </>
       )}

@@ -51,6 +51,7 @@ export function CloudSync() {
       avatar: settings.avatar ?? null,
       deco: settings.deco ?? null,
       theme: settings.theme,
+      private: !!settings.privateProfile,
       level: lvl,
       title: levelTitle(lvl),
       overall: ranks?.overall ?? null,
@@ -60,7 +61,7 @@ export function CloudSync() {
       volume: Math.round(journey.totals.volume),
       decos: (settings.decos ?? []).filter((d) => DECORATIONS.some((x) => x.id === d)).length,
     };
-  }, [journey, ranks?.overall, nick, settings.avatar, settings.deco, settings.theme, settings.decos]);
+  }, [journey, ranks?.overall, nick, settings.avatar, settings.deco, settings.theme, settings.decos, settings.privateProfile]);
 
   useEffect(() => {
     if (status !== 'signedIn') return;
