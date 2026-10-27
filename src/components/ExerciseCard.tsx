@@ -18,6 +18,7 @@ import { LoadSetupCard, LoadSetupNag } from './LoadSetup';
 import { RankChip } from './RankBadge';
 import { gridCols, SET_TYPE_STYLE, SetRow, type EditorMode, type SetRowHandle } from './SetRow';
 import { Sheet, SheetItem } from './ui';
+import { t } from '../i18n';
 
 export const REST_OPTIONS = [0, 15, 30, 45, 60, 75, 90, 105, 120, 150, 180, 210, 240, 300];
 
@@ -99,7 +100,7 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
             <div className="truncate font-display text-lg font-bold uppercase leading-tight text-accent">{ex.name}</div>
             {supersetColor && (
               <div className="flex items-center gap-1 text-xs font-medium" style={{ color: supersetColor }}>
-                <Link2 size={12} /> Superset
+                <Link2 size={12} /> {t('Superset')}
               </div>
             )}
           </div>
@@ -119,14 +120,14 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
       <textarea
         rows={1}
         value={wex.notes ?? ''}
-        placeholder="Add notes here..."
+        placeholder={t('Add notes here...')}
         onChange={(e) => onChange((w) => void (w.notes = e.target.value))}
         className="mt-2 w-full resize-none bg-transparent px-4 text-sm text-white/80 outline-none placeholder:text-muted/70"
       />
 
       {mode !== 'edit' && (
         <button onClick={() => setRestSheet(true)} className="flex items-center gap-1.5 px-4 pb-2 pt-1 text-sm font-medium text-accent">
-          <Timer size={16} /> Rest Timer: {rest ? fmtDurationLong(rest) : 'OFF'}
+          <Timer size={16} /> {t('Rest timer')}: {rest ? fmtDurationLong(rest) : t('Off')}
         </button>
       )}
 
@@ -134,14 +135,14 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
         className="grid items-center gap-1 px-3 pb-1 pt-1 font-display text-[11px] font-semibold tracking-[0.12em] text-muted"
         style={{ gridTemplateColumns: gridCols(ex.type, mode, settings.showRpe) }}
       >
-        <div className="text-center">SET</div>
-        <div className="text-center">PREVIOUS</div>
+        <div className="text-center">{t('SET')}</div>
+        <div className="text-center">{t('PREVIOUS')}</div>
         {fields.map((f) => (
           <div key={f} className="text-center">
             {fieldHeader(f, ex.type, settings)}
           </div>
         ))}
-        {settings.showRpe && mode !== 'routine' && <div className="text-center">RPE</div>}
+        {settings.showRpe && mode !== 'routine' && <div className="text-center">{t('RPE')}</div>}
         {mode === 'active' && <div className="text-center">✓</div>}
       </div>
 
@@ -185,11 +186,11 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
           }
           className="press cut-sm flex w-full items-center justify-center gap-1.5 bg-card2 py-2 font-display text-sm font-semibold uppercase tracking-wider"
         >
-          <Plus size={16} /> Add Set
+          <Plus size={16} /> {t('Add Set')}
         </button>
       </div>
 
-      <Sheet open={!!typeSheet} onClose={() => setTypeSheet(null)} title="Set Type">
+      <Sheet open={!!typeSheet} onClose={() => setTypeSheet(null)} title={t('Set Type')}>
         {(Object.keys(SET_TYPE_STYLE) as WSet['type'][]).map((t) => (
           <SheetItem
             key={t}
@@ -207,7 +208,7 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
         ))}
         <SheetItem
           danger
-          label="Remove Set"
+          label={t('Remove Set')}
           onClick={() => {
             const id = typeSheet;
             setTypeSheet(null);
@@ -220,12 +221,12 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
         <div className="px-4 pt-2">
           <LoadSetupCard exerciseId={wex.exerciseId} bare />
           <button onClick={() => setLoadSheet(false)} className="press mt-4 w-full bg-accent py-3 font-display text-lg font-bold uppercase tracking-wider">
-            Done
+            {t('Done')}
           </button>
         </div>
       </Sheet>
 
-      <Sheet open={restSheet} onClose={() => setRestSheet(false)} title={`Rest Timer · ${ex.name}`}>
+      <Sheet open={restSheet} onClose={() => setRestSheet(false)} title={`${t('Rest timer')} · ${ex.name}`}>
         <div className="grid grid-cols-3 gap-2 px-4 pt-2">
           {REST_OPTIONS.map((sec) => (
             <button

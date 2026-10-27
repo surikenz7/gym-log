@@ -15,6 +15,7 @@ import { fanfare } from '../lib/sound';
 import { useJourney, useRanks } from '../lib/useProgress';
 import { toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
+import { t } from '../i18n';
 
 /** Removes history-based decorations that the (cleaned-up) history no longer earns. */
 export async function revokeHistoryDecorations() {
@@ -95,7 +96,7 @@ function Card({ d, unlocked, equipped, onTap, i }: { d: Decoration; unlocked: bo
         </span>
       )}
       <div className="mt-4 text-[13px] font-semibold leading-tight">{secret ? '???' : d.name}</div>
-      <div className="mt-0.5 text-[10px] leading-tight text-muted">{secret ? d.hint : d.how}</div>
+      <div className="mt-0.5 text-[10px] leading-tight text-muted">{t((secret ? d.hint : d.how) ?? '')}</div>
       <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold" style={{ color: r.color }}>
         {r.label} · {fmtPct(d.pct)}
       </div>
@@ -113,7 +114,7 @@ export function Decorations() {
     const id = await redeemCode(code);
     if (!id) {
       haptic();
-      return toast('That code doesn’t work');
+      return toast(t('That code doesn’t work'));
     }
     setCode('');
     if (!unlockDecoration(id)) return toast(`You already have ${decoById(id)!.name}`);
@@ -124,7 +125,7 @@ export function Decorations() {
   };
 
   const tap = (d: Decoration) => {
-    if (!unlocked.has(d.id)) return toast(d.kind === 'code' ? 'Unlock it with a secret code' : d.kind === 'egg' ? `Hint: ${d.hint}` : `Locked — ${d.how}`);
+    if (!unlocked.has(d.id)) return toast(d.kind === 'code' ? t('Unlock it with a secret code') : d.kind === 'egg' ? `${t('Hint')}: ${t(d.hint ?? '')}` : `${t('Locked')} — ${t(d.how)}`);
     haptic();
     s.update({ deco: s.deco === d.id ? null : d.id });
   };
@@ -132,7 +133,7 @@ export function Decorations() {
   const current = s.deco ? decoById(s.deco) : null;
   return (
     <Page pushed>
-      <Header back title="Decorations" />
+      <Header back title={t('Decorations')} />
       <div className="px-4 pb-12">
         <div className="flex flex-col items-center pb-2 pt-10">
           <motion.div key={s.deco ?? 'none'} initial={{ scale: 0.85, opacity: 0.6 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 18 }}>
@@ -155,7 +156,7 @@ export function Decorations() {
             value={code}
             onChange={(e) => setCode(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && void redeem()}
-            placeholder="Secret code"
+            placeholder={t('Secret code')}
             autoCapitalize="characters"
             autoCorrect="off"
             spellCheck={false}

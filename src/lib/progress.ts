@@ -1,6 +1,7 @@
 import { differenceInCalendarWeeks } from 'date-fns';
 import type { ExerciseType, Workout } from '../types';
 import { prCounts, setVolume } from './stats';
+import { lang, t } from '../i18n';
 
 /**
  * XP, levels, weekly streaks and achievements — all derived from workout history,
@@ -8,6 +9,8 @@ import { prCounts, setVolume } from './stats';
  */
 
 export interface XpPart {
+  /** English text with an optional {n}, translated when shown */
+  n?: number;
   label: string;
   xp: number;
 }
@@ -161,10 +164,10 @@ export function computeJourney(workouts: Workout[], typeOf: (id: string) => Exer
     if (hour >= 22) t.nightOwl = 1;
 
     const parts: XpPart[] = [{ label: 'Workout complete', xp: 100 }];
-    if (sets) parts.push({ label: `${sets} working set${sets === 1 ? '' : 's'}`, xp: Math.min(sets, 40) * 10 });
-    if (pr) parts.push({ label: `${pr} personal record${pr === 1 ? '' : 's'}`, xp: pr * 25 });
+    if (sets) parts.push({ label: 'Working sets: {n}', n: sets, xp: Math.min(sets, 40) * 10 });
+    if (pr) parts.push({ label: 'Personal records: {n}', n: pr, xp: pr * 25 });
     if (firstThisWeek) parts.push({ label: 'First workout this week', xp: 50 });
-    if (t.streak > 1) parts.push({ label: `${t.streak}-week streak`, xp: Math.min(t.streak, 10) * 10 });
+    if (t.streak > 1) parts.push({ label: '{n} wk streak', n: t.streak, xp: Math.min(t.streak, 10) * 10 });
 
     const fresh: Achievement[] = [];
     for (const a of ACHIEVEMENTS) {
@@ -173,7 +176,7 @@ export function computeJourney(workouts: Workout[], typeOf: (id: string) => Exer
         fresh.push(a);
       }
     }
-    if (fresh.length) parts.push({ label: `${fresh.length} achievement${fresh.length === 1 ? '' : 's'}`, xp: fresh.length * 75 });
+    if (fresh.length) parts.push({ label: 'Trophies: {n}', n: fresh.length, xp: fresh.length * 75 });
 
     const gained = parts.reduce((s, p) => s + p.xp, 0);
     byWorkout.set(w.id, { xp: gained, parts, xpBefore: xp, streak: t.streak, number: t.workouts, achievements: fresh });
@@ -203,5 +206,8 @@ export function volumeComparison(kg: number): string | null {
   for (const t of THINGS) if (kg >= t[0]) pick = t;
   if (!pick) return null;
   const n = kg / pick[0];
-  return n < 1.15 ? pick[1] : `${n < 10 ? n.toFixed(1) : Math.round(n)} ${pick[2]}`;
+  const num = n < 10 ? n.toFixed(1) : String(Math.round(n));
+  if (lang() === 'en') return n < 1.15 ? pick[1] : `${num} ${pick[2]}`;
+  const noun = t(pick[1].replace(/^(a|an) /, ''));
+  return n < 1.15 ? noun : `${num}× ${noun}`;
 }

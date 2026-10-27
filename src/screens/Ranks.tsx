@@ -11,6 +11,7 @@ import { GROUPS, LEVEL_NAMES, STANDARDS, TIERS, tierIndex } from '../lib/ranks';
 import { useAllWorkouts } from '../lib/hooks';
 import { useRanks } from '../lib/useProgress';
 import { AlertTriangle, ChevronRight } from 'lucide-react';
+import { t } from '../i18n';
 
 export function Ranks() {
   const nav = useNavigate();
@@ -27,7 +28,7 @@ export function Ranks() {
     <Page pushed>
       <Header
         large
-        title="Ranks"
+        title={t('Ranks')}
         right={
           ctx && (
             <button onClick={() => setEdit(true)} className="press text-accent">
@@ -46,7 +47,7 @@ export function Ranks() {
               <motion.div initial={{ scale: 0.3, opacity: 0, rotate: -20 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 13 }}>
                 <RankBadge score={overall} size={150} />
               </motion.div>
-              <div className="label mt-3">Overall rank</div>
+              <div className="label mt-3">{t('Overall rank')}</div>
               <TierName score={overall} className="text-5xl leading-tight" />
               {overall != null ? (
                 <>
@@ -56,16 +57,16 @@ export function Ranks() {
                   <TierBar score={overall} className="mt-2 w-56" />
                   {next && (
                     <div className="mt-1.5 text-xs text-muted">
-                      {next.min - overall} points to <span className="tier-text" style={{ color: next.c[1] }}>{next.name}</span>
+                      {t('{n} points to', { n: next.min - overall })} <span className="tier-text" style={{ color: next.c[1] }}>{next.name}</span>
                     </div>
                   )}
                 </>
               ) : (
-                <div className="mt-1 max-w-[260px] text-center text-sm text-muted">Get ranked in at least 3 muscle groups to unlock your overall rank.</div>
+                <div className="mt-1 max-w-[260px] text-center text-sm text-muted">{t('Get ranked in at least 3 muscle groups to unlock your overall rank.')}</div>
               )}
             </div>
 
-            <div className="label mb-2 mt-6">Muscle groups</div>
+            <div className="label mb-2 mt-6">{t('Muscle groups')}</div>
             <div className="grid grid-cols-2 gap-2">
               {data.groups.map((g, i) => {
                 const label = GROUPS.find((x) => x.id === g.group)!.label;
@@ -80,7 +81,7 @@ export function Ranks() {
                   >
                     <RankBadge score={g.score || null} size={44} />
                     <div className="min-w-0 flex-1">
-                      <div className="font-display text-sm font-semibold tracking-wide text-white/90">{label}</div>
+                      <div className="font-display text-sm font-semibold tracking-wide text-white/90">{t(label)}</div>
                       <TierName score={g.score || null} className="text-base leading-tight" />
                       <div className="truncate text-[11px] text-muted">{g.exerciseId ? `${g.score} · ${getExercise(g.exerciseId).name}` : 'Not ranked yet'}</div>
                     </div>
@@ -92,7 +93,7 @@ export function Ranks() {
             {needsSetup.length > 0 && (
               <>
                 <div className="label mb-2 mt-6 flex items-center gap-1.5 !text-warn">
-                  <AlertTriangle size={14} /> Not ranked until set up
+                  <AlertTriangle size={14} /> {t('Not ranked until set up')}
                 </div>
                 <div className="space-y-1.5">
                   {needsSetup.map((id) => {
@@ -112,8 +113,8 @@ export function Ranks() {
               </>
             )}
 
-            <div className="label mb-2 mt-6">Your lifts</div>
-            {ranked.length === 0 && <div className="cut-sm bg-card p-5 text-center text-sm text-muted">Log a ranked exercise (bench, squat, deadlift, rows, curls…) to get your first rank.</div>}
+            <div className="label mb-2 mt-6">{t('Your lifts')}</div>
+            {ranked.length === 0 && <div className="cut-sm bg-card p-5 text-center text-sm text-muted">{t('Log a ranked exercise (bench, squat, deadlift, rows, curls…) to get your first rank.')}</div>}
             <div className="space-y-1.5">
               {ranked.map((r, i) => {
                 const ex = getExercise(r.exerciseId);
@@ -142,7 +143,7 @@ export function Ranks() {
               })}
             </div>
 
-            <div className="label mb-2 mt-8">How ranks work</div>
+            <div className="label mb-2 mt-8">{t('How ranks work')}</div>
             <div className="cut-sm bg-card p-4 text-sm text-white/80">
               <p>
                 Every working set gets a score from 0 to 1000 based on your estimated one-rep max (Epley) compared with your bodyweight and sex. Each exercise is ranked by its best
@@ -166,7 +167,7 @@ export function Ranks() {
           </>
         )}
       </div>
-      <Sheet open={edit} onClose={() => setEdit(false)} title="Sex & bodyweight">
+      <Sheet open={edit} onClose={() => setEdit(false)} title={t('Sex & bodyweight')}>
         <div className="px-4 pt-2">
           <RankSetup compact onDone={() => setEdit(false)} />
         </div>

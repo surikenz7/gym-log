@@ -6,6 +6,7 @@ import { TYPE_LABELS } from '../lib/units';
 import { toast } from '../state/dialog';
 import type { Exercise, ExerciseType } from '../types';
 import { Button, Sheet } from './ui';
+import { t } from '../i18n';
 
 const selectCls = 'w-full appearance-none rounded-xl bg-card2 px-3 py-3 outline-none';
 
@@ -38,7 +39,7 @@ export function CustomExerciseSheet({
   }, [open, editing, initialName]);
 
   const save = async () => {
-    if (!name.trim()) return toast('Enter a name');
+    if (!name.trim()) return toast(t('Enter a name'));
     const ex: Exercise = builtin
       ? ({ id: editing.id, type } as Exercise)
       : { id: editing?.id ?? 'c_' + uid(), name: name.trim(), type, muscle, equipment, secondary: [], custom: true };
@@ -53,7 +54,7 @@ export function CustomExerciseSheet({
     <Sheet open={open} onClose={onClose} title={editing ? 'Edit Exercise' : 'Create Exercise'}>
       <div className="space-y-4 px-4 pt-3">
         <label className="block">
-          <div className="mb-1 text-sm text-muted">Name</div>
+          <div className="mb-1 text-sm text-muted">{t('Name')}</div>
           <input
             disabled={builtin}
             value={name}
@@ -63,7 +64,7 @@ export function CustomExerciseSheet({
           />
         </label>
         <label className="block">
-          <div className="mb-1 text-sm text-muted">Exercise Type</div>
+          <div className="mb-1 text-sm text-muted">{t('Exercise Type')}</div>
           <select value={type} onChange={(e) => setType(e.target.value as ExerciseType)} className={selectCls}>
             {Object.entries(TYPE_LABELS).map(([k, v]) => (
               <option key={k} value={k}>
@@ -75,7 +76,7 @@ export function CustomExerciseSheet({
         {!builtin && (
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <div className="mb-1 text-sm text-muted">Primary Muscle</div>
+              <div className="mb-1 text-sm text-muted">{t('Primary Muscle')}</div>
               <select value={muscle} onChange={(e) => setMuscle(e.target.value)} className={selectCls}>
                 {MUSCLES.map((m) => (
                   <option key={m}>{m}</option>
@@ -83,7 +84,7 @@ export function CustomExerciseSheet({
               </select>
             </label>
             <label className="block">
-              <div className="mb-1 text-sm text-muted">Equipment</div>
+              <div className="mb-1 text-sm text-muted">{t('Equipment')}</div>
               <select value={equipment} onChange={(e) => setEquipment(e.target.value)} className={selectCls}>
                 {EQUIPMENT.map((m) => (
                   <option key={m}>{m}</option>
@@ -93,7 +94,7 @@ export function CustomExerciseSheet({
           </div>
         )}
         <Button className="w-full" onClick={save}>
-          Save
+          {t('Save')}
         </Button>
       </div>
     </Sheet>

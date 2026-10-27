@@ -21,6 +21,7 @@ import { CloudSync } from './cloud/CloudSync';
 import { SocialSync } from './cloud/socialStore';
 import { Summary, WorkoutDetail, WorkoutEdit } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
+import { t } from './i18n';
 // screens you open now and then are loaded the first time they're needed
 const CalendarPage = lazy(() => import('./screens/CalendarPage').then((m) => ({ default: m.CalendarPage })));
 const Explore = lazy(() => import('./screens/Explore').then((m) => ({ default: m.Explore })));
@@ -55,7 +56,7 @@ function UpdatePrompt() {
             exit={{ y: -80, opacity: 0 }}
             transition={spring}
           >
-            New version available · tap to update
+            {t('New version available · tap to update')}
           </motion.button>
         )}
       </AnimatePresence>
@@ -87,7 +88,7 @@ function InstallHint() {
       <div className="flex items-start gap-3">
         <Share size={20} className="mt-0.5 shrink-0 text-accent" />
         <div className="flex-1">
-          Install the app: tap <b>Share</b> then <b>Add to Home Screen</b>. It runs full screen and works offline.
+          Install the app: tap <b>{t('Share')}</b> then <b>{t('Add to Home Screen')}</b>. It runs full screen and works offline.
         </div>
         <button onClick={close} className="text-muted">
           ✕

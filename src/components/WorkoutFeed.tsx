@@ -11,6 +11,7 @@ import { DecorationArt } from './Decorations';
 import { RatingPill } from './WorkoutExtras';
 import { RankChip } from './RankBadge';
 import type { Workout } from '../types';
+import { t } from '../i18n';
 
 /** Profile picture (or initial). `ring` draws a coloured border, e.g. the overall rank's metal. */
 /**
@@ -62,7 +63,7 @@ export function WorkoutCard({ w, prs, index = 0, friend, onOpen }: { w: Workout;
           <div className="min-w-0 flex-1 truncate font-display text-xl font-bold uppercase leading-tight">{w.name}</div>
           {prs > 0 && (
             <span className="cut-sm flex shrink-0 items-center gap-1 bg-warn px-1.5 py-0.5 font-display text-xs font-bold text-black">
-              <Trophy size={12} strokeWidth={2.5} /> {prs} PR{prs === 1 ? '' : 's'}
+              <Trophy size={12} strokeWidth={2.5} /> {prs} {t('PR')}
             </span>
           )}
         </div>
@@ -73,7 +74,7 @@ export function WorkoutCard({ w, prs, index = 0, friend, onOpen }: { w: Workout;
           <span className="flex items-center gap-1">
             <Weight size={12} /> {fmtVolume(workoutVolume(w, typeOf), settings)}
           </span>
-          <span>{sets} set{sets === 1 ? "" : "s"}</span>
+          <span>{sets} {t('sets')}</span>
         </div>
         <div className="mt-2 space-y-0.5">
           {shown.map((e) => (
@@ -83,7 +84,7 @@ export function WorkoutCard({ w, prs, index = 0, friend, onOpen }: { w: Workout;
               {!friend && <RankChip exerciseId={e.exerciseId} size={22} inline />}
             </div>
           ))}
-          {w.exercises.length > shown.length && <div className="pl-8 text-xs text-muted">+{w.exercises.length - shown.length} more</div>}
+          {w.exercises.length > shown.length && <div className="pl-8 text-xs text-muted">{t('+{n} more', { n: w.exercises.length - shown.length })}</div>}
         </div>
         {(w.rating || w.tagged?.length || w.photos?.length) && (
           <div className="mt-2 flex items-center gap-2">
@@ -109,7 +110,7 @@ export function WorkoutList({ workouts }: { workouts: Workout[] }) {
       ))}
       {workouts.length > limit && (
         <button onClick={() => setLimit((l) => l + 20)} className="w-full py-4 font-semibold text-accent">
-          Load more
+          {t('Load more')}
         </button>
       )}
     </div>

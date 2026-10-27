@@ -6,6 +6,7 @@ import { db } from '../db/db';
 import { uid } from '../lib/id';
 import { confirmDialog, toast } from '../state/dialog';
 import type { Routine, WExercise } from '../types';
+import { t } from '../i18n';
 
 export function RoutineEditor() {
   const { id } = useParams();
@@ -30,8 +31,8 @@ export function RoutineEditor() {
   }, [id]);
 
   const save = async () => {
-    if (!name.trim()) return toast('Give your routine a name');
-    if (!exercises.length) return toast('Add at least one exercise');
+    if (!name.trim()) return toast(t('Give your routine a name'));
+    if (!exercises.length) return toast(t('Add at least one exercise'));
     const now = Date.now();
     const r: Routine = {
       id: orig?.id ?? uid(),
@@ -49,7 +50,7 @@ export function RoutineEditor() {
   };
 
   const cancel = async () => {
-    if (dirty && !(await confirmDialog('Discard changes?', 'Your changes to this routine will be lost.', 'Discard', true))) return;
+    if (dirty && !(await confirmDialog(t('Discard changes?'), t('Your changes to this routine will be lost.'), t('Discard'), true))) return;
     nav(-1);
   };
 
@@ -58,11 +59,11 @@ export function RoutineEditor() {
       <div className="sticky top-0 z-20 bg-bg/90 pt-safe backdrop-blur-xl">
         <div className="flex h-12 items-center px-4">
           <button onClick={cancel} className="w-16 text-left text-accent">
-            Cancel
+            {t('Cancel')}
           </button>
           <div className="flex-1 text-center font-semibold">{isNew ? 'Create Routine' : 'Edit Routine'}</div>
           <button onClick={save} className="press w-16 rounded-lg bg-accent py-1.5 text-sm font-semibold">
-            Save
+            {t('Save')}
           </button>
         </div>
       </div>
@@ -70,14 +71,14 @@ export function RoutineEditor() {
         <input
           value={name}
           onChange={(e) => (setName(e.target.value), setDirty(true))}
-          placeholder="Routine title"
+          placeholder={t('Routine title')}
           className="w-full bg-transparent py-3 text-2xl font-bold outline-none placeholder:text-muted/60"
         />
         <textarea
           value={notes}
           onChange={(e) => (setNotes(e.target.value), setDirty(true))}
           rows={1}
-          placeholder="Notes (optional)"
+          placeholder={t('Notes (optional)')}
           className="w-full resize-none bg-transparent text-sm outline-none placeholder:text-muted"
         />
       </div>

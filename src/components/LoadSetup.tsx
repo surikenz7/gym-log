@@ -4,6 +4,7 @@ import { useExercise, useLibrary } from '../lib/exercises';
 import { haptic } from '../lib/haptics';
 import { loadMissing, loadQuestions, STANDARDS } from '../lib/ranks';
 import type { Exercise, LoadSetup } from '../types';
+import { t } from '../i18n';
 
 /** Saves the load setup as an override row (built-in exercises keep their other fields). */
 export async function saveLoad(id: string, patch: LoadSetup) {
@@ -48,7 +49,7 @@ export function LoadSetupCard({ exerciseId, bare }: { exerciseId: string; bare?:
     <div className={bare ? '' : 'cut bg-card p-4'}>
       {!bare && (
         <div className="mb-3">
-          <div className="label">How you log the weight</div>
+          <div className="label">{t('How you log the weight')}</div>
           <div className="mt-0.5 text-xs text-muted">
             {STANDARDS[exerciseId] ? 'Needed for a fair rank — the same number means different things on different setups.' : 'Saved with the exercise so your numbers stay comparable.'}
           </div>
@@ -58,14 +59,14 @@ export function LoadSetupCard({ exerciseId, bare }: { exerciseId: string; bare?:
         <>
           <div className="mb-1.5 font-display text-sm font-semibold uppercase tracking-wider">{cable ? 'Handles' : 'Dumbbells'}</div>
           <div className="space-y-1.5">
-            <Choice on={ex.load?.side === 'one'} title="One side" sub={cable ? 'The weight of one handle / one arm' : 'The weight of one dumbbell'} onClick={() => set({ side: 'one' })} />
-            <Choice on={ex.load?.side === 'both'} title="Both sides together" sub={cable ? 'Left + right handles added up' : 'Both dumbbells added up'} onClick={() => set({ side: 'both' })} />
+            <Choice on={ex.load?.side === 'one'} title={t('One side')} sub={cable ? 'The weight of one handle / one arm' : 'The weight of one dumbbell'} onClick={() => set({ side: 'one' })} />
+            <Choice on={ex.load?.side === 'both'} title={t('Both sides together')} sub={cable ? 'Left + right handles added up' : 'Both dumbbells added up'} onClick={() => set({ side: 'both' })} />
           </div>
         </>
       )}
       {q.pulley && (
         <>
-          <div className={`mb-1.5 font-display text-sm font-semibold uppercase tracking-wider ${q.side ? 'mt-4' : ''}`}>Pulleys on the cable</div>
+          <div className={`mb-1.5 font-display text-sm font-semibold uppercase tracking-wider ${q.side ? 'mt-4' : ''}`}>{t('Pulleys on the cable')}</div>
           <div className="space-y-1.5">
             {PULLEYS.map(([n, title, sub]) => (
               <Choice key={n} on={ex.load?.pulley === n} title={title} sub={sub} onClick={() => set({ pulley: n })} />

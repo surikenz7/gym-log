@@ -6,6 +6,7 @@ import { ExerciseDetailBody } from '../components/ExerciseInfo';
 import { ExerciseList, FilterBar } from '../components/ExercisePicker';
 import { Header, Page } from '../components/ui';
 import { useExercise } from '../lib/exercises';
+import { t } from '../i18n';
 
 // Filters survive navigating into an exercise and back.
 let saved = { query: '', muscle: null as string | null, equipment: null as string | null };
@@ -22,7 +23,7 @@ export function Exercises() {
   return (
     <Page pushed>
       <Header
-        title="Exercises"
+        title={t('Exercises')}
         back
         right={
           <button onClick={() => setCreating(true)} className="press text-accent">

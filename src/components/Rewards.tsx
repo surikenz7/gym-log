@@ -9,6 +9,7 @@ import { paletteOf } from '../lib/theme';
 import { useSettings } from '../state/settings';
 import { RankBadge, Rays, TierName } from './RankBadge';
 import { Portal } from './ui';
+import { t } from '../i18n';
 
 /** Number that counts up from `from` to `value`. */
 export function CountUp({ value, from = 0, fmt = (v) => Math.round(v).toLocaleString('en-US'), delay = 0, duration = 1.1 }: { value: number; from?: number; fmt?: (v: number) => string; delay?: number; duration?: number }) {
@@ -93,7 +94,7 @@ export function RankUpOverlay({ items, onDone }: { items: RankUp[]; onDone: () =
       >
         <div className="absolute inset-0" style={{ background: `radial-gradient(circle at 50% 42%, ${tier.c[1]}40, transparent 60%)` }} />
         <motion.div className="label !text-sm !tracking-[0.4em] !text-white" initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
-          Rank up
+          {t('Rank up')}
         </motion.div>
         <div className="relative my-6 flex items-center justify-center">
           <Rays color={tier.c[1]} size={420} />
@@ -144,13 +145,13 @@ export function XpCard({ reward }: { reward: WorkoutReward }) {
     <div className="relative overflow-hidden cut bg-card p-4">
       <div className="flex items-end justify-between">
         <div>
-          <div className="label">Experience</div>
+          <div className="label">{t('Experience')}</div>
           <div className="font-display text-4xl font-bold text-accent">
-            +<CountUp value={reward.xp} delay={0.4} /> XP
+            +<CountUp value={reward.xp} delay={0.4} /> {t('XP')}
           </div>
         </div>
         <div className="text-right">
-          <div className="font-display text-sm uppercase tracking-wider text-white/70">{levelTitle(after.level)}</div>
+          <div className="font-display text-sm uppercase tracking-wider text-white/70">{t(levelTitle(after.level))}</div>
           <div className="font-display text-2xl font-bold">LVL {after.level}</div>
         </div>
       </div>
@@ -168,7 +169,7 @@ export function XpCard({ reward }: { reward: WorkoutReward }) {
       <div className="mt-2 space-y-1">
         {reward.parts.map((p, i) => (
           <motion.div key={p.label} className="flex justify-between text-sm" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.12 }}>
-            <span className="text-white/75">{p.label}</span>
+            <span className="text-white/75">{t(p.label, { n: p.n ?? '' })}</span>
             <span className="font-display font-semibold">+{p.xp}</span>
           </motion.div>
         ))}
@@ -199,7 +200,7 @@ export function RankChanges({ changes }: { changes: RankChange[] }) {
   if (!changes.length) return null;
   return (
     <div className="cut bg-card p-4">
-      <div className="label mb-2">Ranks</div>
+      <div className="label mb-2">{t('Ranks')}</div>
       <div className="space-y-2.5">
         {changes.map((c, i) => {
           const up = c.from == null || tierIndex(c.to) > tierIndex(c.from);
@@ -234,7 +235,7 @@ export function AchievementsUnlocked({ list }: { list: Achievement[] }) {
   if (!list.length) return null;
   return (
     <div className="cut border border-warn/40 bg-gradient-to-b from-warn/10 to-card p-4">
-      <div className="label mb-3 !text-warn">Trophy unlocked</div>
+      <div className="label mb-3 !text-warn">{t('Trophy unlocked')}</div>
       <div className="grid grid-cols-2 gap-2">
         {list.map((a, i) => (
           <motion.div
@@ -247,7 +248,7 @@ export function AchievementsUnlocked({ list }: { list: Achievement[] }) {
             <span className="text-3xl">{a.icon}</span>
             <div className="min-w-0">
               <div className="font-display text-sm font-bold uppercase leading-tight">{a.name}</div>
-              <div className="text-[11px] leading-tight text-muted">{a.desc}</div>
+              <div className="text-[11px] leading-tight text-muted">{t(a.desc)}</div>
             </div>
           </motion.div>
         ))}

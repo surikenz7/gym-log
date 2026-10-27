@@ -9,6 +9,7 @@ import { uid } from '../lib/id';
 import { toast } from '../state/dialog';
 import { newSet } from '../state/workout';
 import type { Routine } from '../types';
+import { t } from '../i18n';
 
 /** [exerciseId, sets, reps] — reps 0 = time-based. */
 type Item = [string, number, number];
@@ -102,7 +103,7 @@ export function Explore() {
   const [added, setAdded] = useState<string[]>([]);
   return (
     <Page pushed>
-      <Header back title="Explore Routines" />
+      <Header back title={t('Explore Routines')} />
       <div className="space-y-4 px-4 pb-12">
         {PROGRAMS.map((p, i) => (
           <motion.div key={p.name} className="cut bg-card p-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
@@ -144,7 +145,7 @@ export function Explore() {
             >
               {added.includes(p.name) ? (
                 <>
-                  <Check size={18} /> Added to My Routines
+                  <Check size={18} /> {t('Added to My Routines')}
                 </>
               ) : (
                 <>

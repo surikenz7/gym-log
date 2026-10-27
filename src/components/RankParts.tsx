@@ -12,6 +12,7 @@ import { useSettings } from '../state/settings';
 import type { Settings } from '../types';
 import { NumInput } from './inputs';
 import { RankBadge, TierBar, TierName } from './RankBadge';
+import { t } from '../i18n';
 
 /** Asks for the two things ranks depend on: sex and bodyweight (saved as a Measures entry). */
 export function RankSetup({ onDone, compact }: { onDone?: () => void; compact?: boolean }) {
@@ -24,7 +25,7 @@ export function RankSetup({ onDone, compact }: { onDone?: () => void; compact?: 
   }, [latest, s.weightUnit]);
 
   const save = async () => {
-    if (!sex || !bw) return toast('Pick your sex and enter your bodyweight');
+    if (!sex || !bw) return toast(t('Pick your sex and enter your bodyweight'));
     s.update({ sex });
     const kg = toKg(bw, s.weightUnit);
     if (!latest || Math.abs(latest - kg) > 0.05) await db.measures.add({ id: uid(), date: Date.now(), weight: kg });
@@ -37,25 +38,25 @@ export function RankSetup({ onDone, compact }: { onDone?: () => void; compact?: 
         <div className="mb-3 flex items-center gap-3">
           <Lock size={18} className="text-accent" />
           <div>
-            <div className="font-display text-lg font-bold">Unlock your ranks</div>
-            <div className="text-sm text-muted">Ranks compare your lifts to strength standards for your sex and bodyweight.</div>
+            <div className="font-display text-lg font-bold">{t('Unlock your ranks')}</div>
+            <div className="text-sm text-muted">{t('Ranks compare your lifts to strength standards for your sex and bodyweight.')}</div>
           </div>
         </div>
       )}
       <div className="grid grid-cols-2 gap-2">
         {(['male', 'female'] as Sex[]).map((x) => (
           <button key={x} onClick={() => setSex(x)} className={`press cut-sm py-2.5 font-semibold capitalize ${sex === x ? 'bg-accent' : 'bg-card2 text-white/80'}`}>
-            {x}
+            {t(x === 'male' ? 'Male' : 'Female')}
           </button>
         ))}
       </div>
       <label className="mt-2 flex items-center gap-3 cut-sm bg-card2 px-4 py-1.5">
-        <span className="flex-1 text-sm text-muted">Bodyweight</span>
+        <span className="flex-1 text-sm text-muted">{t('Bodyweight')}</span>
         <NumInput value={bw} onChange={setBw} placeholder="0" className="!w-24 !text-right text-lg" />
         <span className="text-sm text-muted">{s.weightUnit}</span>
       </label>
       <button onClick={save} className="press cut-sm grad mt-3 w-full py-3 font-display text-lg font-bold tracking-wider">
-        Save
+        {t('Save')}
       </button>
     </div>
   );
@@ -84,7 +85,7 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
   if (ctx === null)
     return (
       <div className="mt-5">
-        <div className="label mb-2">Rank</div>
+        <div className="label mb-2">{t('Rank')}</div>
         <RankSetup />
       </div>
     );
@@ -94,10 +95,10 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
   if (factor == null)
     return (
       <div className="mt-5">
-        <div className="label mb-2">Rank</div>
+        <div className="label mb-2">{t('Rank')}</div>
         <div className="cut flex items-center gap-4 bg-card p-4">
           <RankBadge score={null} size={56} />
-          <div className="text-sm text-white/80">Answer “How you log the weight” above to get this exercise ranked.</div>
+          <div className="text-sm text-white/80">{t('Answer “How you log the weight” above to get this exercise ranked.')}</div>
         </div>
       </div>
     );
@@ -123,7 +124,7 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
 
   return (
     <div className="mt-5">
-      <div className="label mb-2">Rank</div>
+      <div className="label mb-2">{t('Rank')}</div>
       <div className="overflow-hidden cut bg-card">
         <button onClick={() => nav('/ranks')} className="flex w-full items-center gap-4 p-4 text-left">
           <motion.div initial={{ scale: 0.6, rotate: -10, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 14 }}>
@@ -131,7 +132,7 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
           </motion.div>
           <div className="min-w-0 flex-1">
             <TierName score={score} className="text-3xl leading-none" />
-            <div className="mt-1 text-sm text-muted">{score != null ? <>Score <b className="text-white">{score}</b> / 1000</> : 'Log a working set to get ranked'}</div>
+            <div className="mt-1 text-sm text-muted">{score != null ? <>{t('Score')} <b className="text-white">{score}</b> / 1000</> : 'Log a working set to get ranked'}</div>
             {score != null && <TierBar score={score} className="mt-2" />}
           </div>
           <ChevronRight size={18} className="text-muted" />
@@ -160,7 +161,7 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
         {table && (
           <div className="border-t border-line">
             <div className={`grid ${isWeight ? 'grid-cols-[1fr_auto_auto_auto]' : 'grid-cols-[1fr_auto]'} gap-x-4 px-4 py-2 text-[11px] font-semibold tracking-wide text-muted`}>
-              <span>RANK</span>
+              <span>{t('RANK')}</span>
               {isWeight ? (
                 <>
                   <span className="text-right">1 REP</span>

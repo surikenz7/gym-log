@@ -28,6 +28,7 @@ import { confirmDialog, toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
 import { newSet } from '../state/workout';
 import type { Workout } from '../types';
+import { t } from '../i18n';
 
 function usePRs(w: Workout | undefined): PR[] {
   const earlier = useLiveQuery(() => (w ? db.workouts.where('start').below(w.start).toArray() : []), [w?.id, w?.start]);
@@ -81,7 +82,7 @@ export function ExerciseBlocks({ w, prs }: { w: Workout; prs: PR[] }) {
                     <span className="flex-1">{fmtSet(s, ex.type, settings)}</span>
                     {pr.length > 0 && (
                       <span className="flex items-center gap-1 rounded-full bg-warn/15 px-2 py-0.5 text-xs font-semibold text-warn">
-                        <Trophy size={12} /> {pr.length > 1 ? `${pr.length} PRs` : PR_LABELS[pr[0].kind]}
+                        <Trophy size={12} /> {pr.length > 1 ? `${pr.length} ${t('PR')}` : t(PR_LABELS[pr[0].kind])}
                       </span>
                     )}
                   </div>
@@ -102,7 +103,7 @@ export function WorkoutDetail() {
   const prs = usePRs(w);
   const [menu, setMenu] = useState(false);
 
-  if (!w) return <Page pushed><Header back title="Workout" /></Page>;
+  if (!w) return <Page pushed><Header back title={t('Workout')} /></Page>;
 
   const saveAsRoutine = async () => {
     setMenu(false);
@@ -114,7 +115,7 @@ export function WorkoutDetail() {
       updatedAt: Date.now(),
       exercises: w.exercises.map((e) => ({ ...e, id: uid(), sets: e.sets.map((s) => newSet(s.type, s)) })),
     });
-    toast('Saved as routine');
+    toast(t('Saved as routine'));
   };
 
   return (
@@ -143,15 +144,15 @@ export function WorkoutDetail() {
         <ExerciseBlocks w={w} prs={prs} />
       </div>
       <Sheet open={menu} onClose={() => setMenu(false)} title={w.name}>
-        <SheetItem icon={<Pencil size={20} />} label="Edit Workout" onClick={() => (setMenu(false), nav(`/history/${w.id}/edit`))} />
-        <SheetItem icon={<ClipboardList size={20} />} label="Save as Routine" onClick={saveAsRoutine} />
+        <SheetItem icon={<Pencil size={20} />} label={t('Edit Workout')} onClick={() => (setMenu(false), nav(`/history/${w.id}/edit`))} />
+        <SheetItem icon={<ClipboardList size={20} />} label={t('Save as Routine')} onClick={saveAsRoutine} />
         <SheetItem
           danger
           icon={<Trash2 size={20} />}
-          label="Delete Workout"
+          label={t('Delete Workout')}
           onClick={async () => {
             setMenu(false);
-            if (!(await confirmDialog('Delete workout?', 'This can’t be undone.', 'Delete', true))) return;
+            if (!(await confirmDialog(t('Delete workout?'), t('This can’t be undone.'), t('Delete'), true))) return;
             await db.workouts.delete(w.id);
             nav(-1);
           }}
@@ -176,7 +177,7 @@ export function WorkoutEdit() {
       .map((e) => ({ ...e, sets: e.sets.filter((s) => s.weight != null || s.reps != null || s.duration != null || s.distance != null).map((s) => ({ ...s, done: true })) }))
       .filter((e) => e.sets.length);
     await db.workouts.put({ ...w, exercises, exerciseIds: [...new Set(exercises.map((e) => e.exerciseId))] });
-    toast('Workout saved');
+    toast(t('Workout saved'));
     nav(-1);
   };
 
@@ -185,11 +186,11 @@ export function WorkoutEdit() {
       <div className="sticky top-0 z-20 bg-bg/90 pt-safe backdrop-blur-xl">
         <div className="flex h-12 items-center px-4">
           <button onClick={() => nav(-1)} className="w-16 text-left text-accent">
-            Cancel
+            {t('Cancel')}
           </button>
-          <div className="flex-1 text-center font-semibold">Edit Workout</div>
+          <div className="flex-1 text-center font-semibold">{t('Edit Workout')}</div>
           <button onClick={save} className="press w-16 rounded-lg bg-accent py-1.5 text-sm font-semibold">
-            Save
+            {t('Save')}
           </button>
         </div>
       </div>
@@ -197,7 +198,7 @@ export function WorkoutEdit() {
         <input value={w.name} onChange={(e) => setW({ ...w, name: e.target.value })} className="w-full bg-transparent py-2 text-2xl font-bold outline-none" />
         <div className="grid grid-cols-2 gap-2">
           <label className="cut-sm bg-card p-3">
-            <div className="text-xs text-muted">Start</div>
+            <div className="text-xs text-muted">{t('Start')}</div>
             <input
               type="datetime-local"
               value={toLocalInput(w.start)}
@@ -209,7 +210,7 @@ export function WorkoutEdit() {
             />
           </label>
           <label className="cut-sm bg-card p-3">
-            <div className="text-xs text-muted">Duration (min)</div>
+            <div className="text-xs text-muted">{t('Duration (min)')}</div>
             <input
               inputMode="numeric"
               value={minutes}
@@ -222,7 +223,7 @@ export function WorkoutEdit() {
           value={w.notes ?? ''}
           onChange={(e) => setW({ ...w, notes: e.target.value })}
           rows={2}
-          placeholder="Notes"
+          placeholder={t('Notes')}
           className="w-full resize-none cut-sm bg-card p-3 text-sm outline-none placeholder:text-muted"
         />
       </div>
@@ -312,7 +313,7 @@ export function Summary() {
       <div className="px-4 pt-safe">
         <div className="relative pt-8 text-center">
           <motion.div className="label !tracking-[0.35em]" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-            Workout #{reward?.number ?? ''} complete
+            {t('Workout #{n} complete', { n: reward?.number ?? '' })}
           </motion.div>
           <motion.div
             className="mt-1 font-display text-[52px] font-bold uppercase italic leading-none tracking-tight"
@@ -320,7 +321,7 @@ export function Summary() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.1 }}
           >
-            {hype}
+            {t(hype)}
             <span className="text-accent">.</span>
           </motion.div>
           <motion.div className="mx-auto mt-3 h-1 w-24 bg-accent" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.35, duration: 0.4 }} />
@@ -331,7 +332,7 @@ export function Summary() {
               animate={{ scale: 1 }}
               transition={{ delay: 0.5, type: 'spring', stiffness: 400, damping: 15 }}
             >
-              <Flame size={16} /> {reward.streak}-week streak
+              <Flame size={16} /> {t('{n} wk streak', { n: reward.streak })}
             </motion.div>
           )}
         </div>
@@ -345,7 +346,7 @@ export function Summary() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 + i * 0.07 }}
             >
-              <div className="label">{label}</div>
+              <div className="label">{t(label)}</div>
               <div className={`font-display text-2xl font-bold ${label === 'Records' && prs.length ? 'text-warn' : ''}`}>
                 <CountUp value={value} fmt={fmt} delay={0.35 + i * 0.07} />
               </div>
@@ -354,7 +355,7 @@ export function Summary() {
         </div>
         {comparison && (
           <motion.div className="mt-2 cut bg-card px-4 py-3 text-sm text-white/80" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
-            💪 You moved <b className="text-white">{fmtVolume(vol, settings)}</b> — that’s like lifting <b className="text-white">{comparison}</b>.
+            💪 {t('You moved')} <b className="text-white">{fmtVolume(vol, settings)}</b> — {t('that’s like lifting')} <b className="text-white">{comparison}</b>.
           </motion.div>
         )}
 
@@ -369,15 +370,15 @@ export function Summary() {
             <button onClick={() => nav('/ranks')} className="press flex w-full items-center gap-3 cut bg-card p-4 text-left">
               <RankBadge score={null} size={40} />
               <div className="flex-1 text-sm">
-                <div className="font-display font-semibold uppercase">Unlock your ranks</div>
-                <div className="text-muted">Add your bodyweight to see how strong these lifts rank.</div>
+                <div className="font-display font-semibold uppercase">{t('Unlock your ranks')}</div>
+                <div className="text-muted">{t('Add your bodyweight to see how strong these lifts rank.')}</div>
               </div>
             </button>
           )}
           {prs.length > 0 && (
             <div className="cut bg-card p-4">
               <div className="mb-2 flex items-center gap-2">
-                <Trophy size={18} className="text-warn" /> <span className="label !text-white">New Personal Records</span>
+                <Trophy size={18} className="text-warn" /> <span className="label !text-white">{t('New Personal Records')}</span>
               </div>
               {prs.map((p, i) => {
                 const ex = getExercise(p.exerciseId);
@@ -400,7 +401,7 @@ export function Summary() {
           )}
           <ExerciseBlocks w={w} prs={prs} />
           <Button className="w-full" onClick={() => nav('/', { replace: true })}>
-            Done
+            {t('Done')}
           </Button>
         </motion.div>
       </div>

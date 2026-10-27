@@ -22,6 +22,7 @@ import { confirmDialog, toast } from '../state/dialog';
 import { ExerciseDemo } from './ExerciseImage';
 import { SET_TYPE_STYLE } from './SetRow';
 import { Sheet } from './ui';
+import { t } from '../i18n';
 
 type Metric = { key: keyof SessionPoint; label: string; kind: 'weight' | 'reps' | 'duration' | 'distance' };
 
@@ -151,7 +152,7 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
               </div>
               <div className="flex shrink-0 gap-2">
                 {workouts.length > 0 && (
-                  <button onClick={() => setMoving(true)} className="press rounded-full bg-card2 p-2 text-muted" aria-label="Move history to another exercise">
+                  <button onClick={() => setMoving(true)} className="press rounded-full bg-card2 p-2 text-muted" aria-label={t('Move history to another exercise')}>
                     <ArrowRightLeft size={16} />
                   </button>
                 )}
@@ -189,12 +190,12 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
                   ))}
                 </div>
 
-                <div className="label mt-6">Personal Records</div>
+                <div className="label mt-6">{t('Personal Records')}</div>
                 <div className="mt-2 divide-y divide-line cut bg-card">
                   {recordRows.map(([label, value], i) => (
                     <motion.div key={label} className="flex items-center gap-3 px-4 py-3" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}>
                       <Trophy size={18} className="text-warn" />
-                      <div className="flex-1">{label}</div>
+                      <div className="flex-1">{t(label)}</div>
                       <div className="font-semibold tabular-nums">{value}</div>
                     </motion.div>
                   ))}
@@ -202,13 +203,13 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
 
                 {reps.length > 0 && (
                   <>
-                    <div className="label mt-6">Set Records</div>
-                    <div className="mt-1 text-xs text-muted">Heaviest weight you’ve lifted for each number of reps</div>
+                    <div className="label mt-6">{t('Set Records')}</div>
+                    <div className="mt-1 text-xs text-muted">{t('Heaviest weight you’ve lifted for each number of reps')}</div>
                     <div className="mt-2 overflow-hidden cut bg-card">
                       <div className="grid grid-cols-[4rem_1fr_auto] gap-2 border-b border-line px-4 py-2 text-[11px] font-semibold tracking-wide text-muted">
-                        <span>REPS</span>
-                        <span>BEST WEIGHT</span>
-                        <span>DATE</span>
+                        <span>{t('REPS')}</span>
+                        <span>{t('BEST WEIGHT')}</span>
+                        <span>{t('DATE')}</span>
                       </div>
                       {reps.map((r) => (
                         <button
@@ -226,7 +227,7 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
                 )}
               </>
             )}
-            {sessions.length === 0 && <div className="mt-6 cut bg-card p-5 text-center text-sm text-muted">Log this exercise to see your progress chart and records.</div>}
+            {sessions.length === 0 && <div className="mt-6 cut bg-card p-5 text-center text-sm text-muted">{t('Log this exercise to see your progress chart and records.')}</div>}
           </>
         )}
 
@@ -236,12 +237,12 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
               <button onClick={() => setMoving(true)} className="press cut flex w-full items-center gap-3 bg-card p-4 text-left">
                 <ArrowRightLeft size={20} className="shrink-0 text-accent" />
                 <div className="flex-1">
-                  <div className="font-semibold">Wrong exercise?</div>
+                  <div className="font-semibold">{t('Wrong exercise?')}</div>
                   <div className="text-sm text-muted">Move all {history.length} workouts to a different exercise (e.g. a Hevy import that picked the wrong one).</div>
                 </div>
               </button>
             )}
-            {history.length === 0 && <div className="py-10 text-center text-muted">No history yet</div>}
+            {history.length === 0 && <div className="py-10 text-center text-muted">{t('No history yet')}</div>}
             {history.map((w) => (
               <button
                 key={w.id}
@@ -274,13 +275,13 @@ export function ExerciseDetailBody({ exerciseId, inSheet }: { exerciseId: string
                   <span className="text-white/85">{s}</span>
                 </li>
               ))}
-              {steps.length === 0 && <div className="py-6 text-center text-muted">No instructions for this exercise.</div>}
+              {steps.length === 0 && <div className="py-6 text-center text-muted">{t('No instructions for this exercise.')}</div>}
             </ol>
           </>
         )}
       </motion.div>
       <CustomExerciseSheet open={editing} onClose={() => setEditing(false)} editing={ex} />
-      <ExercisePicker open={moving} onClose={() => setMoving(false)} single title="Move history to…" onPick={(ids) => ids[0] && void moveTo(ids[0])} />
+      <ExercisePicker open={moving} onClose={() => setMoving(false)} single title={t('Move history to…')} onPick={(ids) => ids[0] && void moveTo(ids[0])} />
     </div>
   );
 }

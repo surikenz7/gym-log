@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { setLang } from '../i18n';
+
+setLang('en');
 import { ACHIEVEMENTS, computeJourney, levelFromXp, volumeComparison, xpForLevel } from '../lib/progress';
 import { anchors, bodyweightTimeline, loadFactor, loadQuestions, exerciseRanks, groupRanks, overallScore, scoreFor, setScore, STANDARDS, tierOf, valueForScore, weightForScore } from '../lib/ranks';
 import type { WSet, Workout } from '../types';
@@ -136,7 +139,7 @@ describe('progress', () => {
     const r2 = j.byWorkout.get('w2')!;
     expect(r2.streak).toBe(2);
     expect(r2.achievements.map((a) => a.id)).toContain('b100');
-    expect(r2.parts.find((p) => p.label.includes('personal record'))).toBeTruthy();
+    expect(r2.parts.find((p) => p.label.includes('Personal records'))).toBeTruthy();
     expect(r2.xpBefore).toBe(r1.xp);
     // second workout in the same week: no weekly bonus, streak unchanged
     const r3 = j.byWorkout.get('w3')!;

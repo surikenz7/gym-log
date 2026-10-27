@@ -43,9 +43,12 @@ export default defineConfig({
             urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/gh\/yuhonas\/free-exercise-db/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'exercise-images',
+              // CORS responses only: opaque (no-cors) ones are counted as ~7 MB each by browsers
+              // and quickly fill the storage quota, which then breaks saving workouts
+              cacheName: 'exercise-images-v2',
               expiration: { maxEntries: 2000 },
-              cacheableResponse: { statuses: [0, 200] },
+              cacheableResponse: { statuses: [200] },
+              fetchOptions: { mode: 'cors' },
             },
           },
         ],

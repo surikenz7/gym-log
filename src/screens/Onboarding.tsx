@@ -19,6 +19,7 @@ import { ask } from '../state/dialog';
 import { useSettings } from '../state/settings';
 import type { ModeId, StyleId, ThemeId } from '../types';
 import { addProgram, PROGRAM_COLORS, PROGRAMS } from './Explore';
+import { lang, LANGS, t } from '../i18n';
 
 type Step = 'welcome' | 'account' | 'profile' | 'body' | 'look' | 'start' | 'done';
 
@@ -179,11 +180,11 @@ function AccountStep({ onResult }: { onResult: (r: 'signup' | 'login' | 'guest')
 
   const guest = async () => {
     const r = await ask({
-      title: 'Continue without an account?',
-      message: 'Your progress will only be saved on this phone — not in the cloud. If you delete the app, lose the phone or switch devices, it’s gone. You can create an account later in Settings.',
+      title: t('Continue without an account?'),
+      message: t('Your progress will only be saved on this phone — not in the cloud. If you delete the app, lose the phone or switch devices, it’s gone. You can create an account later in Settings.'),
       actions: [
-        { label: 'Create an account', value: 'back', style: 'primary' },
-        { label: 'Continue as guest', value: 'guest', style: 'danger' },
+        { label: t('Create an account'), value: 'back', style: 'primary' },
+        { label: t('Continue as guest'), value: 'guest', style: 'danger' },
       ],
     });
     if (r === 'guest') onResult('guest');
@@ -191,37 +192,37 @@ function AccountStep({ onResult }: { onResult: (r: 'signup' | 'login' | 'guest')
 
   return (
     <>
-      <Title icon={<Cloud size={28} />} kicker="Step 1 · Account" title={mode === 'signup' ? 'Create your account' : 'Welcome back'} sub="Your workouts back up to the cloud, follow you to any phone and let friends see your progress." />
+      <Title icon={<Cloud size={28} />} kicker={t('Step 1 · Account')} title={mode === 'signup' ? 'Create your account' : 'Welcome back'} sub={t('Your workouts back up to the cloud, follow you to any phone and let friends see your progress.')} />
       <Stagger>
         {[
           <div key="t" className="relative mb-3 grid grid-cols-2 rounded-2xl bg-card p-1">
             {(['signup', 'login'] as const).map((m) => (
               <button key={m} onClick={() => (setMode(m), setErr(null))} className={`relative z-10 py-2.5 text-sm font-semibold ${mode === m ? 'text-ink' : 'text-white/70'}`}>
                 {mode === m && <motion.span layoutId="acct-tab" className="absolute inset-0 -z-10 rounded-xl bg-accent" />}
-                {m === 'signup' ? 'New account' : 'I have one'}
+                {m === 'signup' ? t('New account') : t('I have one')}
               </button>
             ))}
           </div>,
-          <input key="n" value={nick} onChange={(e) => setNick(e.target.value.replace(/\s/g, ''))} placeholder="Nickname" autoCapitalize="none" autoCorrect="off" autoComplete="username" className={field} />,
+          <input key="n" value={nick} onChange={(e) => setNick(e.target.value.replace(/\s/g, ''))} placeholder={t('Nickname')} autoCapitalize="none" autoCorrect="off" autoComplete="username" className={field} />,
           <input
             key="p"
             value={pass}
             onChange={(e) => setPass(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && void submit()}
-            placeholder="Password"
+            placeholder={t('Password')}
             type="password"
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
             className={`${field} mt-2.5`}
           />,
           <div key="e">{err && <div className="mt-2 text-sm text-danger">{err}</div>}</div>,
           <button key="b" onClick={() => void submit()} disabled={busy} className="press grad mt-4 w-full rounded-2xl py-4 font-display text-lg font-bold uppercase tracking-wider disabled:opacity-60">
-            {busy ? 'One moment…' : mode === 'signup' ? 'Create account' : 'Log in'}
+            {busy ? t('One moment…') : mode === 'signup' ? t('Create account') : t('Log in')}
           </button>,
           <p key="h" className="mt-2 text-center text-xs text-muted">
             {mode === 'signup' ? 'No email needed — just remember your password, it can’t be reset.' : 'Your workouts, routines and settings will download to this phone.'}
           </p>,
           <button key="g" onClick={() => void guest()} className="mt-5 w-full py-2 text-center text-sm font-semibold text-white/60">
-            Continue as guest
+            {t('Continue as guest')}
           </button>,
         ]}
       </Stagger>
@@ -234,7 +235,7 @@ function ProfileStep() {
   const input = useRef<HTMLInputElement>(null);
   return (
     <>
-      <Title icon={<UserRound size={28} />} kicker="Step 2 · Profile" title="Who’s lifting?" sub="Your name and photo show on your profile and to your friends." />
+      <Title icon={<UserRound size={28} />} kicker={t('Step 2 · Profile')} title={t('Who’s lifting?')} sub={t('Your name and photo show on your profile and to your friends.')} />
       <Stagger>
         {[
           <div key="a" className="flex justify-center py-2">
@@ -257,9 +258,9 @@ function ProfileStep() {
             />
           </div>,
           <div key="t" className="mb-4 text-center text-xs text-muted">
-            Tap to add a photo
+            {t('Tap to add a photo')}
           </div>,
-          <input key="n" value={s.name} onChange={(e) => s.update({ name: e.target.value.slice(0, 30) })} placeholder="Your name" className={`${field} text-center text-xl font-semibold`} />,
+          <input key="n" value={s.name} onChange={(e) => s.update({ name: e.target.value.slice(0, 30) })} placeholder={t('Your name')} className={`${field} text-center text-xl font-semibold`} />,
         ]}
       </Stagger>
     </>
@@ -304,20 +305,20 @@ function BodyStep() {
 
   return (
     <>
-      <Title icon={<Ruler size={28} />} kicker="Step 3 · Body" title="Your measurements" sub="Used for strength ranks and to track your progress. Only you can see them." />
+      <Title icon={<Ruler size={28} />} kicker={t('Step 3 · Body')} title={t('Your measurements')} sub={t('Used for strength ranks and to track your progress. Only you can see them.')} />
       <Stagger>
         {[
           <div key="sx" className="grid grid-cols-2 gap-2">
             {(['male', 'female'] as const).map((x) => (
               <Choice key={x} on={s.sex === x} onClick={() => s.update({ sex: x })} className="py-4 text-center font-semibold capitalize">
-                {x === 'male' ? '♂ Male' : '♀ Female'}
+                {x === 'male' ? `♂ ${t('Male')}` : `♀ ${t('Female')}`}
               </Choice>
             ))}
           </div>,
           <div key="u" className="mt-3 grid grid-cols-2 gap-2">
             {(['kg', 'lbs'] as const).map((u) => (
               <Choice key={u} on={s.weightUnit === u} onClick={() => s.update({ weightUnit: u })} className="py-3 text-center font-semibold">
-                {u === 'kg' ? 'Kilograms (kg)' : 'Pounds (lbs)'}
+                {u === 'kg' ? t('Kilograms (kg)') : t('Pounds (lbs)')}
               </Choice>
             ))}
           </div>,
@@ -332,7 +333,7 @@ function BodyStep() {
             </div>
           ) : (
             <button key="m" onClick={() => setMore(true)} className="mt-3 w-full py-2 text-sm font-semibold text-accent">
-              + Add body fat, waist & arms
+              + {t('Add body fat, waist & arms')}
             </button>
           ),
         ]}
@@ -352,7 +353,7 @@ function LookStep() {
   const s = useSettings();
   return (
     <>
-      <Title icon={<Sparkles size={28} />} kicker="Step 4 · Look" title="Make it yours" sub="Everything changes live — you can tweak it any time in Settings." />
+      <Title icon={<Sparkles size={28} />} kicker={t('Step 4 · Look')} title={t('Make it yours')} sub={t('Everything changes live — you can tweak it any time in Settings.')} />
       <Stagger>
         {[
           <div key="st" className="grid grid-cols-2 gap-2">
@@ -362,9 +363,9 @@ function LookStep() {
                   Aa
                 </div>
                 <div className="mt-1.5 text-sm font-semibold" style={STYLE_FONT[id]}>
-                  {STYLES[id].name}
+                  {t(STYLES[id].name)}
                 </div>
-                <div className="text-[11px] leading-tight text-muted">{STYLES[id].desc}</div>
+                <div className="text-[11px] leading-tight text-muted">{t(STYLES[id].desc)}</div>
               </Choice>
             ))}
           </div>,
@@ -374,7 +375,7 @@ function LookStep() {
               return (
                 <button key={id} onClick={() => (haptic(), s.update({ mode: id }))} className="press flex flex-col items-center gap-1">
                   <span className="h-11 w-full rounded-xl" style={{ background: `linear-gradient(160deg, ${p.card}, ${p.bg})`, boxShadow: s.mode === id ? `inset 0 0 0 2px ${p.accent}` : `inset 0 0 0 1px ${p.line}` }} />
-                  <span className={`text-[11px] font-semibold ${s.mode === id ? 'text-white' : 'text-muted'}`}>{MODES[id].name}</span>
+                  <span className={`text-[11px] font-semibold ${s.mode === id ? 'text-white' : 'text-muted'}`}>{t(MODES[id].name)}</span>
                 </button>
               );
             })}
@@ -402,7 +403,7 @@ function LookStep() {
 function StartStep({ pick, setPick }: { pick: number | 'hevy' | null; setPick: (p: number | 'hevy' | null) => void }) {
   return (
     <>
-      <Title icon={<ClipboardList size={28} />} kicker="Step 5 · Training" title="How do you start?" sub="Grab a proven program, bring your Hevy history, or build your own routines later." />
+      <Title icon={<ClipboardList size={28} />} kicker={t('Step 5 · Training')} title={t('How do you start?')} sub={t('Grab a proven program, bring your Hevy history, or build your own routines later.')} />
       <Stagger>
         {[
           ...PROGRAMS.map((p, i) => {
@@ -424,8 +425,8 @@ function StartStep({ pick, setPick }: { pick: number | 'hevy' | null; setPick: (
               <Upload size={20} />
             </span>
             <span className="pr-6">
-              <span className="block font-semibold">Import from Hevy</span>
-              <span className="block text-xs text-muted">Bring your whole workout history</span>
+              <span className="block font-semibold">{t('Import from Hevy')}</span>
+              <span className="block text-xs text-muted">{t('Bring your whole workout history')}</span>
             </span>
           </Choice>,
         ]}
@@ -448,7 +449,7 @@ function DoneStep() {
         <Avatar size={150} ring="rgb(var(--accent))" />
       </motion.div>
       <motion.div className="mt-8 font-display text-[44px] font-bold uppercase leading-none" initial={{ scale: 1.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 16, delay: 0.45 }}>
-        You’re all set{s.name ? ',' : '!'}
+        {t('You’re all set')}{s.name ? ',' : '!'}
         {s.name && (
           <>
             <br />
@@ -458,10 +459,10 @@ function DoneStep() {
       </motion.div>
       <motion.div className="mt-3 flex items-center gap-2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
         <span className="grad rounded-full px-3 py-1 font-display text-sm font-bold">LVL 1</span>
-        <span className="font-display text-sm uppercase tracking-wider text-white/70">Rookie</span>
+        <span className="font-display text-sm uppercase tracking-wider text-white/70">{t('Rookie')}</span>
       </motion.div>
       <motion.p className="mt-4 max-w-[290px] text-[15px] text-white/70" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}>
-        {nick ? `Signed in as @${nick} — everything you log is backed up.` : 'Guest mode — your data stays on this phone.'} Tap the big button in the middle of the tab bar to start your first workout.
+        {nick ? t('Signed in as @{nick} — everything you log is backed up.', { nick }) : t('Guest mode — your data stays on this phone.')} {t('Tap the big button in the middle of the tab bar to start your first workout.')}
       </motion.p>
     </div>
   );
@@ -518,7 +519,7 @@ export function Onboarding({ start, onDone }: { start: OnboardingStart; onDone: 
 
       {isSetup && (
         <div className="relative z-10 flex items-center gap-3 px-5 pt-safe">
-          <button onClick={() => go(-1)} className={`press -ml-2 p-2 text-white/70 ${i === 0 ? 'invisible' : ''}`} aria-label="Back">
+          <button onClick={() => go(-1)} className={`press -ml-2 p-2 text-white/70 ${i === 0 ? 'invisible' : ''}`} aria-label={t('Back')}>
             <ChevronLeft size={26} />
           </button>
           <div className="flex flex-1 gap-1.5 py-4">
@@ -530,7 +531,7 @@ export function Onboarding({ start, onDone }: { start: OnboardingStart; onDone: 
           </div>
           {step !== 'account' && (
             <button onClick={() => void finish()} className="text-sm font-semibold text-white/50">
-              Skip
+              {t('Skip')}
             </button>
           )}
         </div>
@@ -554,17 +555,29 @@ export function Onboarding({ start, onDone }: { start: OnboardingStart; onDone: 
           >
             {step === 'welcome' && (
               <div className="flex h-full flex-col items-center justify-center text-center pt-safe">
+                <motion.div className="no-scrollbar -mx-6 mb-10 flex max-w-[100vw] gap-1.5 overflow-x-auto px-6" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.6 }}>
+                  {LANGS.map((l) => (
+                    <button
+                      key={l.id}
+                      onClick={() => useSettings.getState().update({ lang: l.id })}
+                      className={`press shrink-0 rounded-full px-2.5 py-1 text-lg ${lang() === l.id ? 'bg-accent/25 ring-1 ring-accent' : 'bg-card'}`}
+                      aria-label={l.name}
+                    >
+                      {l.flag}
+                    </button>
+                  ))}
+                </motion.div>
                 <AnimatedBarbell />
                 <motion.div className="mt-8 font-display text-[56px] font-bold uppercase leading-none tracking-tight" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9, type: 'spring', stiffness: 200, damping: 18 }}>
                   Gym<span className="text-grad">Log</span>
                 </motion.div>
                 <motion.p className="mt-3 max-w-[280px] text-[16px] text-white/70" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}>
-                  Log every rep. Climb the ranks. Train with friends.
+                  {t('Log every rep. Climb the ranks. Train with friends.')}
                 </motion.p>
                 <motion.div className="mt-8 flex flex-wrap justify-center gap-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}>
-                  {['Unlimited routines', 'Strength ranks', 'Cloud backup', 'Free forever'].map((t, k) => (
-                    <motion.span key={t} className="rounded-full bg-card px-3 py-1.5 text-xs font-semibold ring-1 ring-inset ring-line" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.45 + k * 0.08, type: 'spring', stiffness: 400, damping: 15 }}>
-                      {t}
+                  {['Unlimited routines', 'Strength ranks', 'Cloud backup', 'Free forever'].map((label, k) => (
+                    <motion.span key={label} className="rounded-full bg-card px-3 py-1.5 text-xs font-semibold ring-1 ring-inset ring-line" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.45 + k * 0.08, type: 'spring', stiffness: 400, damping: 15 }}>
+                      {t(label)}
                     </motion.span>
                   ))}
                 </motion.div>
@@ -606,7 +619,7 @@ export function Onboarding({ start, onDone }: { start: OnboardingStart; onDone: 
             onClick={() => (step === 'done' ? void finish() : go(1))}
             className="press grad w-full rounded-2xl py-4 font-display text-lg font-bold uppercase tracking-wider shadow-[0_10px_30px_rgb(var(--accent)/0.35)]"
           >
-            {step === 'welcome' ? 'Get started' : step === 'done' ? 'Let’s lift' : step === 'start' && pick === null ? 'Skip for now' : 'Continue'}
+            {step === 'welcome' ? t('Get started') : step === 'done' ? t('Let’s lift') : step === 'start' && pick === null ? t('Skip for now') : t('Continue')}
           </button>
         </motion.div>
       )}

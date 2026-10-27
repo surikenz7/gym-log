@@ -19,6 +19,7 @@ import { useJourney, useRanks } from '../lib/useProgress';
 import { toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
 import { SocialCard } from './SocialHub';
+import { t } from '../i18n';
 
 /** Tap-to-change profile picture: choose from Photos / camera, or remove. */
 export function AvatarPicker({ size, ring }: { size: number; ring?: string }) {
@@ -31,9 +32,9 @@ export function AvatarPicker({ size, ring }: { size: number; ring?: string }) {
     if (!f) return;
     try {
       update({ avatar: await fileToAvatar(f) });
-      toast('Profile picture updated');
+      toast(t('Profile picture updated'));
     } catch {
-      toast('Couldn’t read that image');
+      toast(t('Couldn’t read that image'));
     }
   };
   return (
@@ -54,10 +55,10 @@ export function AvatarPicker({ size, ring }: { size: number; ring?: string }) {
           e.target.value = '';
         }}
       />
-      <Sheet open={menu} onClose={() => setMenu(false)} title="Profile picture">
-        <SheetItem icon={<Camera size={20} />} label={photo ? 'Choose new photo' : 'Choose photo'} onClick={() => (setMenu(false), input.current?.click())} />
-        <SheetItem icon={<Sparkles size={20} />} label="Decoration" onClick={() => (setMenu(false), nav('/decorations'))} />
-        {photo && <SheetItem danger icon={<Trash2 size={20} />} label="Remove photo" onClick={() => (setMenu(false), update({ avatar: null }))} />}
+      <Sheet open={menu} onClose={() => setMenu(false)} title={t('Profile picture')}>
+        <SheetItem icon={<Camera size={20} />} label={photo ? t('Choose new photo') : t('Choose photo')} onClick={() => (setMenu(false), input.current?.click())} />
+        <SheetItem icon={<Sparkles size={20} />} label={t('Decoration')} onClick={() => (setMenu(false), nav('/decorations'))} />
+        {photo && <SheetItem danger icon={<Trash2 size={20} />} label={t('Remove photo')} onClick={() => (setMenu(false), update({ avatar: null }))} />}
       </Sheet>
     </>
   );
@@ -96,10 +97,10 @@ export function Profile() {
   const thisWeek = weeks[weeks.length - 1]?.value ?? 0;
   const headline =
     metric === 'duration'
-      ? `${fmtDurationLong(thisWeek * 60)} this week`
+      ? `${fmtDurationLong(thisWeek * 60)} · ${t('This week')}`
       : metric === 'volume'
-        ? `${compact(thisWeek)} ${settings.weightUnit} this week`
-        : `${thisWeek} reps this week`;
+        ? `${compact(thisWeek)} ${settings.weightUnit} · ${t('This week')}`
+        : `${thisWeek} ${t('reps')} · ${t('This week')}`;
   // duration is bucketed in minutes
   const fmtMetric = (v: number) => (metric === 'duration' ? fmtDurationLong(v * 60) : metric === 'volume' ? `${compact(v)} ${settings.weightUnit}` : `${v} reps`);
 
@@ -118,7 +119,7 @@ export function Profile() {
   return (
     <Page>
       <Header
-        title={settings.name || 'Profile'}
+        title={settings.name || t('Profile')}
         right={
           <button onClick={() => nav('/settings')} className="press text-white">
             <SettingsIcon size={22} />
@@ -130,17 +131,17 @@ export function Profile() {
           <AvatarPicker size={88} ring={overall != null ? tierOf(overall).c[1] : undefined} />
           <div className="min-w-0 flex-1">
             <button onClick={() => nav('/settings')} className="block max-w-full truncate font-display text-3xl font-bold leading-tight">
-              {settings.name || 'Set your name'}
+              {settings.name || t('Set your name')}
             </button>
             <div className="mt-0.5 flex items-center gap-2">
               <span className="rounded bg-accent px-1.5 py-0.5 font-display text-xs font-bold tracking-wider">LVL {lvl.level}</span>
-              <span className="font-display text-sm uppercase tracking-wider text-white/70">{levelTitle(lvl.level)}</span>
+              <span className="font-display text-sm uppercase tracking-wider text-white/70">{t(levelTitle(lvl.level))}</span>
             </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
               <motion.div className="h-full bg-accent" initial={{ width: 0 }} animate={{ width: `${(lvl.into / lvl.need) * 100}%` }} transition={{ duration: 0.9, ease: 'easeOut' }} />
             </div>
             <div className="tabular mt-1 text-[11px] text-muted">
-              {lvl.into.toLocaleString('en-US')} / {lvl.need.toLocaleString('en-US')} XP to level {lvl.level + 1}
+              {lvl.into.toLocaleString()} / {lvl.need.toLocaleString()} {t('XP to level {n}', { n: lvl.level + 1 })}
             </div>
           </div>
         </div>
@@ -148,21 +149,21 @@ export function Profile() {
         <div className="mt-4 grid grid-cols-3 divide-x divide-line cut bg-card py-3 text-center">
           <div>
             <div className="font-display text-2xl font-bold">{workouts.length}</div>
-            <div className="label !text-[10px]">Workouts</div>
+            <div className="label !text-[10px]">{t('Workouts')}</div>
           </div>
           <div>
             <div className="flex items-center justify-center gap-1 font-display text-2xl font-bold">
               <Flame size={20} className={journey?.totals.streak ? 'text-orange-500' : 'text-muted'} />
               {journey?.totals.streak ?? 0}
             </div>
-            <div className="label !text-[10px]">Week streak</div>
+            <div className="label !text-[10px]">{t('Week streak')}</div>
           </div>
           <button onClick={() => nav('/trophies')}>
             <div className="font-display text-2xl font-bold">
               {trophies}
               <span className="text-sm text-muted">/{ACHIEVEMENTS.length}</span>
             </div>
-            <div className="label !text-[10px]">Trophies</div>
+            <div className="label !text-[10px]">{t('Trophies')}</div>
           </button>
         </div>
 
@@ -175,9 +176,9 @@ export function Profile() {
           {overall != null && <div className="absolute inset-0 opacity-20" style={{ background: `radial-gradient(circle at 15% 50%, ${tierOf(overall).c[1]}, transparent 60%)` }} />}
           <RankBadge score={ctx === null ? null : overall} size={68} />
           <div className="relative min-w-0 flex-1">
-            <div className="label">Overall rank</div>
+            <div className="label">{t('Overall rank')}</div>
             {ctx === null ? (
-              <div className="text-sm text-white/80">Set your bodyweight to unlock strength ranks</div>
+              <div className="text-sm text-white/80">{t('Set your bodyweight to unlock strength ranks')}</div>
             ) : (
               <>
                 <TierName score={overall} className="text-3xl leading-none" />
@@ -186,7 +187,7 @@ export function Profile() {
                   {ranks?.groups.map((g) => (
                     <div key={g.group} className="flex flex-col items-center">
                       <RankBadge score={g.score || null} size={24} shine={false} />
-                      <span className="text-[8px] uppercase text-muted">{GROUPS.find((x) => x.id === g.group)!.label.slice(0, 5)}</span>
+                      <span className="text-[8px] uppercase text-muted">{t(GROUPS.find((x) => x.id === g.group)!.label).slice(0, 6)}</span>
                     </div>
                   ))}
                 </div>
@@ -200,7 +201,7 @@ export function Profile() {
 
         <div className="mt-3 cut bg-card p-4">
           <div className="font-display text-lg font-semibold">{headline}</div>
-          <div className="mb-3 text-xs text-muted">Last 12 weeks</div>
+          <div className="mb-3 text-xs text-muted">{t('Last 12 weeks')}</div>
           <BarsChart key={metric} data={weeks} fmt={fmtMetric} height={170} />
           <div className="mt-3 grid grid-cols-3 gap-1.5">
             {(['duration', 'volume', 'reps'] as WeekMetric[]).map((m) => (
@@ -209,13 +210,13 @@ export function Profile() {
                 onClick={() => setMetric(m)}
                 className={`press rounded-full py-1.5 text-sm font-semibold capitalize ${metric === m ? 'bg-accent' : 'bg-card2 text-white/80'}`}
               >
-                {m}
+                {t(m[0].toUpperCase() + m.slice(1))}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="label mt-6">Dashboard</div>
+        <div className="label mt-6">{t('Dashboard')}</div>
         <div className="mt-2 grid grid-cols-2 gap-2">
           {dashboard.map(({ label, icon: Icon, to }, i) => (
             <motion.button
@@ -226,14 +227,14 @@ export function Profile() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.04 }}
             >
-              <Icon size={20} className="text-accent" /> {label}
+              <Icon size={20} className="text-accent" /> {t(label)}
             </motion.button>
           ))}
         </div>
 
-        <div className="label mb-2 mt-6">Workouts</div>
+        <div className="label mb-2 mt-6">{t('Workouts')}</div>
         {workouts.length === 0 ? (
-          <div className="cut bg-card p-6 text-center text-sm text-muted">No workouts yet</div>
+          <div className="cut bg-card p-6 text-center text-sm text-muted">{t('No workouts yet')}</div>
         ) : (
           <WorkoutList workouts={workouts} />
         )}

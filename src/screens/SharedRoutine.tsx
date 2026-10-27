@@ -9,6 +9,7 @@ import { haptic } from '../lib/haptics';
 import { decodeRoutine, routineLink, saveSharedRoutine } from '../lib/share';
 import { toast } from '../state/dialog';
 import type { Exercise } from '../types';
+import { t } from '../i18n';
 
 type Packed = NonNullable<Awaited<ReturnType<typeof decodeRoutine>>>;
 
@@ -21,12 +22,12 @@ export function SharedRoutine() {
   const [p, setP] = useState<Packed | null | undefined>(undefined);
   useEffect(() => void decodeRoutine(code ?? '').then(setP), [code]);
 
-  if (p === undefined) return <Page pushed><Header back="/workout" title="Shared routine" /></Page>;
+  if (p === undefined) return <Page pushed><Header back="/workout" title={t('Shared routine')} /></Page>;
   if (p === null)
     return (
       <Page pushed>
-        <Header back="/workout" title="Shared routine" />
-        <div className="px-6 py-16 text-center text-muted">This link is broken or incomplete. Ask your friend to send it again.</div>
+        <Header back="/workout" title={t('Shared routine')} />
+        <div className="px-6 py-16 text-center text-muted">{t('This link is broken or incomplete. Ask your friend to send it again.')}</div>
       </Page>
     );
 
@@ -48,10 +49,10 @@ export function SharedRoutine() {
 
   return (
     <Page pushed>
-      <Header back="/workout" title="Shared routine" />
+      <Header back="/workout" title={t('Shared routine')} />
       <div className="px-4 pb-12">
         <motion.div className="cut grad relative overflow-hidden p-5" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-          <div className="text-xs font-bold uppercase tracking-widest opacity-80">A friend shared a routine</div>
+          <div className="text-xs font-bold uppercase tracking-widest opacity-80">{t('A friend shared a routine')}</div>
           <div className="mt-1 font-display text-3xl font-bold uppercase leading-tight">{p.n}</div>
           <div className="mt-1 text-sm opacity-85">
             {p.e.length} exercises · {sets} sets
@@ -62,29 +63,29 @@ export function SharedRoutine() {
         {inSafari ? (
           <div className="cut mt-3 space-y-3 bg-card p-4 text-sm">
             <div className="flex items-center gap-2 font-semibold">
-              <Link2 size={18} className="text-accent" /> Open it in your Gym Log app
+              <Link2 size={18} className="text-accent" /> {t('Open it in your Gym Log app')}
             </div>
-            <p className="text-white/80">iPhone opens links in Safari, which can’t see the app on your Home Screen. Copy the link, then in the app go to Routines → <b>Paste link</b>.</p>
+            <p className="text-white/80">iPhone opens links in Safari, which can’t see the app on your Home Screen. Copy the link, then in the app go to Routines → <b>{t('Paste link')}</b>.</p>
             <Button
               className="w-full"
               onClick={async () => {
                 await navigator.clipboard.writeText(routineLink(code!, p.n));
-                toast('Copied — now open Gym Log → Routines → Paste link');
+                toast(t('Copied — now open Gym Log → Routines → Paste link'));
               }}
             >
-              <Copy size={18} /> Copy link
+              <Copy size={18} /> {t('Copy link')}
             </Button>
             <button onClick={save} className="w-full py-1 text-center text-xs text-muted underline">
-              Save it in this Safari copy instead
+              {t('Save it in this Safari copy instead')}
             </button>
           </div>
         ) : (
           <Button className="mt-3 w-full !py-3.5 text-lg" onClick={save}>
-            <Download size={20} /> Save to my routines
+            <Download size={20} /> {t('Save to my routines')}
           </Button>
         )}
 
-        <div className="label mb-2 mt-6">Exercises</div>
+        <div className="label mb-2 mt-6">{t('Exercises')}</div>
         <div className="space-y-2">
           {p.e.map((e, i) => {
             const ex = exOf(e.id);
@@ -99,7 +100,7 @@ export function SharedRoutine() {
                 </div>
                 <div className="text-right font-display text-lg font-bold">
                   {e.s.length}
-                  <span className="text-xs font-normal text-muted"> sets</span>
+                  <span className="text-xs font-normal text-muted"> {t('sets')}</span>
                   {e.s[0]?.[2] ? <div className="text-[11px] font-normal text-muted">× {e.s[0][2]} reps</div> : null}
                 </div>
               </motion.div>

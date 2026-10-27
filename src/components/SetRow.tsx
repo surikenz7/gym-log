@@ -6,6 +6,7 @@ import type { PRKind } from '../lib/stats';
 import type { ExerciseType, Settings, WSet } from '../types';
 import { DurationInput, NumInput } from './inputs';
 import { useRotated } from '../lib/orientation';
+import { t } from '../i18n';
 
 export type EditorMode = 'active' | 'routine' | 'edit';
 
@@ -100,7 +101,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
       exit={{ opacity: 0, height: 0, transition: { duration: 0.2 } }}
       className="relative overflow-hidden"
     >
-      <div className="absolute inset-y-0 right-0 flex w-full items-center justify-end bg-danger pr-5 text-sm font-semibold">Delete</div>
+      <div className="absolute inset-y-0 right-0 flex w-full items-center justify-end bg-danger pr-5 text-sm font-semibold">{t('Delete')}</div>
       <motion.div
         drag={rotated ? false : 'x'}
         dragDirectionLock
@@ -137,7 +138,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
           {prev ? fmtSet(prev, type, settings) : '-'}
         </button>
         {fields.map(input)}
-        {showRpe && <NumInput value={set.rpe} placeholder="RPE" onChange={(v) => onChange({ rpe: v == null ? null : Math.min(10, v) })} />}
+        {showRpe && <NumInput value={set.rpe} placeholder={t('RPE')} onChange={(v) => onChange({ rpe: v == null ? null : Math.min(10, v) })} />}
         {mode === 'active' && (
           <motion.button
             key={String(done)}

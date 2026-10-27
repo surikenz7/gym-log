@@ -11,6 +11,7 @@ import { useAllWorkouts } from '../lib/hooks';
 import { exerciseBests, prCounts, workoutSetCount, workoutVolume } from '../lib/stats';
 import { fmtDurationLong, kgTo } from '../lib/units';
 import { useSettings } from '../state/settings';
+import { t } from '../i18n';
 
 const PERIODS = [
   { label: '30 days', days: 30 },
@@ -64,7 +65,7 @@ export function Statistics() {
 
   return (
     <Page pushed>
-      <Header back title="Statistics" />
+      <Header back title={t('Statistics')} />
       <div className="space-y-4 px-4 pb-12">
         <div className="grid grid-cols-4 gap-1 cut-sm bg-card p-1">
           {PERIODS.map((p, i) => (
@@ -92,18 +93,18 @@ export function Statistics() {
         </div>
 
         <div className="cut bg-card p-4">
-          <div className="label !text-white">Muscle distribution</div>
-          <div className="mb-3 text-xs text-muted">Working sets per muscle group</div>
-          {muscles.length === 0 && <div className="py-4 text-center text-sm text-muted">No workouts in this period</div>}
+          <div className="label !text-white">{t('Muscle distribution')}</div>
+          <div className="mb-3 text-xs text-muted">{t('Working sets per muscle group')}</div>
+          {muscles.length === 0 && <div className="py-4 text-center text-sm text-muted">{t('No workouts in this period')}</div>}
           <div className="space-y-2.5">
             {muscles.map(([m, n], i) => (
               <div key={m}>
                 <div className="mb-1 flex justify-between text-sm">
                   <span className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-full" style={{ background: muscleColor(m) }} />
-                    {m}
+                    {t(m)}
                   </span>
-                  <span className="tabular-nums text-muted">{n} sets</span>
+                  <span className="tabular-nums text-muted">{n} {t('sets')}</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-card2">
                   <motion.div
@@ -121,7 +122,7 @@ export function Statistics() {
 
         {main.length > 0 && (
           <div>
-            <div className="label mb-2">Main exercises</div>
+            <div className="label mb-2">{t('Main exercises')}</div>
             <div className="divide-y divide-line overflow-hidden cut bg-card">
               {main.map(({ ex, n, best }) => (
                 <button key={ex.id} onClick={() => nav(`/exercises/${ex.id}`)} className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-card2">

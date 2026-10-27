@@ -29,11 +29,11 @@ async function maybeUpdateRoutine(w: Workout) {
   const sameStructure = structure(r.exercises) === structure(w.exercises);
   if (sameStructure) return;
   const res = await ask({
-    title: 'Update routine?',
+    title: t('Update routine?'),
     message: `You changed exercises or sets compared to "${r.name}". Save these changes to the routine?`,
     actions: [
-      { label: 'Keep Original Routine', value: 'keep', style: 'cancel' },
-      { label: 'Update Routine', value: 'update', style: 'primary' },
+      { label: t('Keep Original Routine'), value: 'keep', style: 'cancel' },
+      { label: t('Update Routine'), value: 'update', style: 'primary' },
     ],
   });
   if (res !== 'update') return;
@@ -42,7 +42,7 @@ async function maybeUpdateRoutine(w: Workout) {
     sets: e.sets.map((s) => newSet(s.type, s)),
   }));
   await db.routines.update(r.id, { exercises, updatedAt: Date.now() });
-  toast('Routine updated');
+  toast(t('Routine updated'));
 }
 
 export function RestWatcher() {
@@ -52,12 +52,12 @@ export function RestWatcher() {
   useEffect(() => {
     if (!rest) return;
     const ms = rest.endAt - Date.now();
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       if (sound) beepRestDone();
-      toast('Rest complete — next set! 💪');
+      toast(t('Rest complete — next set! 💪'));
       skip();
     }, Math.max(0, ms));
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [rest, skip, sound]);
   return null;
 }
@@ -101,7 +101,7 @@ function RestBar() {
               <Timer size={18} className="absolute inset-0 m-auto text-accent" />
             </div>
             <div className="flex-1">
-              <div className="text-xs text-muted">Rest</div>
+              <div className="text-xs text-muted">{t('Rest')}</div>
               <div className="font-display text-3xl font-bold tabular-nums">{fmtDuration(Math.ceil(left))}</div>
             </div>
             <button onClick={() => adjustRest(-15)} className="press rounded-lg bg-card px-3 py-2 text-sm font-semibold">
@@ -111,7 +111,7 @@ function RestBar() {
               +15
             </button>
             <button onClick={skipRest} className="press cut-sm grad px-3 py-2 font-display text-sm font-bold uppercase">
-              Skip
+              {t('Skip')}
             </button>
           </div>
         </motion.div>
@@ -149,7 +149,14 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
   if (!active) return null;
   const w = active.workout;
   const save = async () => {
-    const saved = await finish(name, notes, { photos, tagged });
+    let saved: Workout;
+    try {
+      saved = await finish(name, notes, { photos, tagged });
+    } catch (e) {
+      console.error('save failed', e, (e as { inner?: unknown }).inner);
+      toast(t('Couldn’t save the workout — try again'));
+      return;
+    }
     setPhotos([]);
     setTagged([]);
     nav(`/summary/${saved.id}`);
@@ -164,9 +171,9 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
             <button onClick={onBack} className="text-accent">
               <ChevronLeft size={26} />
             </button>
-            <div className="flex-1 text-center font-display text-[17px] font-semibold uppercase tracking-wider">Save Workout</div>
+            <div className="flex-1 text-center font-display text-[17px] font-semibold uppercase tracking-wider">{t('Save Workout')}</div>
             <button onClick={save} className="press cut-sm grad px-4 py-1.5 font-display text-sm font-bold uppercase">
-              Save
+              {t('Save')}
             </button>
           </div>
           <div className="scroll-area flex-1 px-4 pt-2">
@@ -174,12 +181,12 @@ function SaveScreen({ open, onBack }: { open: boolean; onBack: () => void }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-transparent py-3 text-2xl font-bold outline-none"
-              placeholder="Workout title"
+              placeholder={t('Workout title')}
             />
             <div className="grid grid-cols-3 gap-2 border-y border-line py-4">
-              <Stat label="Duration" value={fmtDuration((Date.now() - w.start) / 1000)} />
-              <Stat label="Volume" value={fmtVolume(workoutVolume(w, typeOf), settings)} />
-              <Stat label="Sets" value={String(workoutSetCount(w))} />
+              <Stat label={t('Duration')} value={fmtDuration((Date.now() - w.start) / 1000)} />
+              <Stat label={t('Volume')} value={fmtVolume(workoutVolume(w, typeOf), settings)} />
+              <Stat label={t('Sets')} value={String(workoutSetCount(w))} />
             </div>
             <textarea
               value={notes}
@@ -257,23 +264,23 @@ export function ActiveWorkout() {
     const done = workoutSetCount(w);
     if (done === 0) {
       const r = await ask({
-        title: 'No completed sets',
-        message: 'Tick the ✓ on the sets you did. Or discard this workout?',
+        title: t('No completed sets'),
+        message: t('Tick the ✓ on the sets you did. Or discard this workout?'),
         actions: [
-          { label: 'Keep Logging', value: 'cancel', style: 'cancel' },
-          { label: 'Discard Workout', value: 'discard', style: 'danger' },
+          { label: t('Keep Logging'), value: 'cancel', style: 'cancel' },
+          { label: t('Discard Workout'), value: 'discard', style: 'danger' },
         ],
       });
       if (r === 'discard') discard();
       return;
     }
     const pending = w.exercises.some((e) => e.sets.some((s) => !s.done && (s.weight != null || s.reps != null || s.duration != null || s.distance != null)));
-    if (pending && !(await confirmDialog('Unfinished sets', 'Sets that are not ticked ✓ will be discarded.', 'Finish Anyway'))) return;
+    if (pending && !(await confirmDialog(t('Unfinished sets'), t('Sets that are not ticked ✓ will be discarded.'), t('Finish Anyway')))) return;
     setSaving(true);
   };
 
   const onDiscard = async () => {
-    if (await confirmDialog('Discard workout?', 'This workout will be deleted and can’t be recovered.', 'Discard', true)) discard();
+    if (await confirmDialog(t('Discard workout?'), t('This workout will be deleted and can’t be recovered.'), t('Discard'), true)) discard();
   };
 
   return (
@@ -292,25 +299,25 @@ export function ActiveWorkout() {
                 <button onClick={() => setOpen(false)} className="press w-20 text-muted">
                   <ChevronDown size={28} />
                 </button>
-                <div className="flex-1 text-center font-display text-[17px] font-semibold uppercase tracking-wider">Log Workout</div>
+                <div className="flex-1 text-center font-display text-[17px] font-semibold uppercase tracking-wider">{t('Log Workout')}</div>
                 <div className="flex w-20 justify-end">
                   <button onClick={onFinish} className="press cut-sm grad px-4 py-1.5 font-display text-sm font-bold uppercase tracking-wider">
-                    Finish
+                    {t('Finish')}
                   </button>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2 px-4 pb-3">
-                <Stat label="Duration" value={fmtDuration((now - w.start) / 1000)} />
-                <Stat label="Volume" value={fmtVolume(workoutVolume(w, typeOf), settings)} />
-                <Stat label="Sets" value={String(workoutSetCount(w))} />
+                <Stat label={t('Duration')} value={fmtDuration((now - w.start) / 1000)} />
+                <Stat label={t('Volume')} value={fmtVolume(workoutVolume(w, typeOf), settings)} />
+                <Stat label={t('Sets')} value={String(workoutSetCount(w))} />
               </div>
               <WorkoutProgress w={w} />
             </div>
             <div className="scroll-area flex-1 pb-40 pt-2">
               {w.exercises.length === 0 && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-8 py-10 text-center">
-                  <div className="font-display text-2xl font-bold uppercase">Get started</div>
-                  <div className="mt-1 text-sm text-muted">Add an exercise to start your workout</div>
+                  <div className="font-display text-2xl font-bold uppercase">{t('Get started')}</div>
+                  <div className="mt-1 text-sm text-muted">{t('Add an exercise to start your workout')}</div>
                 </motion.div>
               )}
               <WorkoutEditor
@@ -328,7 +335,7 @@ export function ActiveWorkout() {
                 }}
                 footer={
                   <Button variant="danger" className="w-full" onClick={onDiscard}>
-                    Discard Workout
+                    {t('Discard Workout')}
                   </Button>
                 }
               />
@@ -368,7 +375,7 @@ export function MiniWorkoutBar() {
               {rest && rest.endAt > now && ` · Rest ${fmtDuration(Math.ceil((rest.endAt - now) / 1000))}`}
             </div>
           </div>
-          <span className="grad rounded-full px-4 py-2 text-sm font-bold">Resume</span>
+          <span className="grad rounded-full px-4 py-2 text-sm font-bold">{t('Resume')}</span>
         </motion.button>
       )}
     </AnimatePresence>

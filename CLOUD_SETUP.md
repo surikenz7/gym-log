@@ -20,23 +20,58 @@ Accounts, cloud backup and friends use a free Firebase project (Spark plan, no c
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // public profile: signed-in users can see it, only you can change it
-    match /users/{uid} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == uid;
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function isPrivate(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.get('private', false) == true;
+    }
+    function approved(uid) {
+      let f = /databases/$(database)/documents/users/$(uid)/followers/$(request.auth.uid);
+      return exists(f) && get(f).data.status == 'accepted';
+    }
+    function canSee(uid) { return signedIn() && (me() == uid || !isPrivate(uid) || approved(uid)); }
 
-      // workouts and routines are visible to signed-in friends
+    match /users/{uid} {
+      // public profile card (name, picture, level, rank) — like Instagram, visible even if private
+      allow read: if signedIn();
+      allow write: if signedIn() && me() == uid;
+
+      // workouts and routines: public profiles → everyone signed in, private → approved followers
       match /workouts/{id} {
-        allow read: if request.auth != null;
-        allow write: if request.auth != null && request.auth.uid == uid;
+        allow read: if canSee(uid);
+        allow write: if signedIn() && me() == uid;
       }
       match /routines/{id} {
-        allow read: if request.auth != null;
-        allow write: if request.auth != null && request.auth.uid == uid;
+        allow read: if canSee(uid);
+        allow write: if signedIn() && me() == uid;
       }
       // measurements, settings, custom exercises: only you
       match /private/{id} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
+        allow read, write: if signedIn() && me() == uid;
+      }
+      // followers / follow requests
+      match /followers/{fid} {
+        allow read: if signedIn();
+        allow create: if signedIn() && me() == fid && (request.resource.data.status == 'pending' || !isPrivate(uid));
+        allow update: if signedIn() && me() == uid;
+        allow delete: if signedIn() && (me() == uid || me() == fid);
+      }
+      // activity: tags, new followers, accepted requests
+      match /inbox/{id} {
+        allow read, update, delete: if signedIn() && me() == uid;
+        allow create: if signedIn() && request.resource.data.from == me();
+      }
+    }
+
+    // direct messages and snaps between two people
+    match /chats/{cid} {
+      allow read: if signedIn() && (resource == null || me() in resource.data.members);
+      allow create: if signedIn() && me() in request.resource.data.members && request.resource.data.members.size() == 2;
+      allow update: if signedIn() && me() in resource.data.members;
+      match /messages/{mid} {
+        allow read, update, delete: if signedIn() && me() in get(/databases/$(database)/documents/chats/$(cid)).data.members;
+        allow create: if signedIn() && request.resource.data.from == me()
+          && me() in get(/databases/$(database)/documents/chats/$(cid)).data.members;
       }
     }
   }

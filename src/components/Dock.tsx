@@ -11,6 +11,7 @@ import { useWorkout } from '../state/workout';
 import { useSettings } from '../state/settings';
 import { useBadges } from '../cloud/socialStore';
 import { Sheet } from './ui';
+import { t } from '../i18n';
 
 export const DOCK_TABS = [
   { to: '/', label: 'Home', icon: HomeIcon },
@@ -41,7 +42,7 @@ function Tab({ to, label, icon: Icon }: (typeof DOCK_TABS)[number]) {
               </motion.span>
             )}
           </span>
-          {labels && <span className={`relative text-[10px] font-semibold leading-none tracking-[0.01em] ${isActive ? 'text-accent' : 'text-white/75'}`}>{label}</span>}
+          {labels && <span className={`relative text-[10px] font-semibold leading-none tracking-[0.01em] ${isActive ? 'text-accent' : 'text-white/75'}`}>{t(label)}</span>}
         </>
       )}
     </NavLink>
@@ -56,16 +57,16 @@ export function StartSheet({ open, onClose }: { open: boolean; onClose: () => vo
     void startWorkout(r);
   };
   return (
-    <Sheet open={open} onClose={onClose} title="Start training">
+    <Sheet open={open} onClose={onClose} title={t('Start training')}>
       <div className="space-y-2 px-4 pt-2">
         <button onClick={() => go()} className="press cut grad stripes flex w-full items-center gap-3 px-4 py-4 text-left">
           <Plus size={24} strokeWidth={3} />
           <div>
-            <div className="font-display text-xl font-bold uppercase leading-none">Empty workout</div>
-            <div className="mt-1 text-xs opacity-80">Add exercises as you go</div>
+            <div className="font-display text-xl font-bold uppercase leading-none">{t('Empty workout')}</div>
+            <div className="mt-1 text-xs opacity-80">{t('Add exercises as you go')}</div>
           </div>
         </button>
-        {routines.length > 0 && <div className="label pt-3">Routines</div>}
+        {routines.length > 0 && <div className="label pt-3">{t('Routines')}</div>}
         {routines.map((r) => (
           <button key={r.id} onClick={() => go(r)} className="press cut flex w-full items-center gap-3 bg-card2 px-4 py-3 text-left">
             <Play size={18} className="shrink-0 text-accent" fill="currentColor" />

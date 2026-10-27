@@ -9,6 +9,7 @@ import { CustomExerciseSheet } from './CustomExerciseSheet';
 import { ExerciseThumb } from './ExerciseImage';
 import { RankChip } from './RankBadge';
 import { Portal, Sheet, SheetItem, spring } from './ui';
+import { t } from '../i18n';
 
 export function ExerciseList({
   query,
@@ -56,8 +57,8 @@ export function ExerciseList({
         <div className="min-w-0 flex-1">
           <div className="truncate font-medium">{e.name}</div>
           <div className="truncate text-sm text-muted">
-            {e.muscle}
-            {e.equipment !== 'None' ? ` · ${e.equipment}` : ''}
+            {t(e.muscle)}
+            {e.equipment !== 'None' ? ` · ${t(e.equipment)}` : ''}
             {e.custom ? ' · Custom' : ''}
           </div>
         </div>
@@ -83,13 +84,13 @@ export function ExerciseList({
     <div>
       {recent.length > 0 && (
         <>
-          <div className="label px-4 pb-1 pt-3">Recent exercises</div>
+          <div className="label px-4 pb-1 pt-3">{t('Recent exercises')}</div>
           {recent.map((e) => row(e, 'r' + e.id))}
-          <div className="label px-4 pb-1 pt-4">All exercises</div>
+          <div className="label px-4 pb-1 pt-4">{t('All exercises')}</div>
         </>
       )}
       {filtered.map((e) => row(e, e.id))}
-      {filtered.length === 0 && <div className="px-4 py-10 text-center text-muted">No exercises found</div>}
+      {filtered.length === 0 && <div className="px-4 py-10 text-center text-muted">{t('No exercises found')}</div>}
     </div>
   );
 }
@@ -112,7 +113,7 @@ export function FilterBar({
   const [sheet, setSheet] = useState<'muscle' | 'equipment' | null>(null);
   const chip = (label: string, active: boolean, onClick: () => void) => (
     <button onClick={onClick} className={`press flex-1 rounded-lg py-2 text-sm font-semibold ${active ? 'bg-accent' : 'bg-card2'}`}>
-      {label}
+      {t(label)}
     </button>
   );
   return (
@@ -122,7 +123,7 @@ export function FilterBar({
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search exercise"
+          placeholder={t('Search exercise')}
           className="w-full bg-transparent py-2.5 outline-none placeholder:text-muted"
           enterKeyHint="search"
         />
@@ -147,7 +148,7 @@ export function FilterBar({
         {(sheet === 'muscle' ? MUSCLES : EQUIPMENT).map((m) => (
           <SheetItem
             key={m}
-            label={m}
+            label={t(m)}
             right={(sheet === 'muscle' ? muscle : equipment) === m ? <Check size={18} className="text-accent" /> : undefined}
             onClick={() => {
               (sheet === 'muscle' ? setMuscle : setEquipment)(m);
@@ -205,11 +206,11 @@ export function ExercisePicker({
             <div className="pt-safe">
               <div className="flex h-12 items-center px-4">
                 <button onClick={close} className="w-16 text-left text-accent">
-                  Cancel
+                  {t('Cancel')}
                 </button>
-                <div className="flex-1 text-center font-semibold">{title}</div>
+                <div className="flex-1 text-center font-semibold">{t(title)}</div>
                 <button onClick={() => setCreating(true)} className="flex w-16 justify-end text-accent">
-                  Create
+                  {t('Create')}
                 </button>
               </div>
               <FilterBar {...{ query, setQuery, muscle, setMuscle, equipment, setEquipment }} />
@@ -237,7 +238,7 @@ export function ExercisePicker({
                   transition={spring}
                 >
                   <button onClick={() => done(selected)} className="press mb-4 flex w-full items-center justify-center gap-2 cut-sm grad py-3.5 font-semibold">
-                    <Plus size={18} /> Add {selected.length} exercise{selected.length > 1 ? 's' : ''}
+                    <Plus size={18} /> {t('Add exercises: {n}', { n: selected.length })}
                   </button>
                 </motion.div>
               )}

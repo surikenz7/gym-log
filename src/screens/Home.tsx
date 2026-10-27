@@ -35,9 +35,9 @@ function RotatingGreeting({ done, name }: { done: boolean; name: string }) {
           <motion.span
             key={`${done}${i}`}
             className="absolute inset-x-0 bottom-0"
-            initial={{ y: '100%', opacity: 0, filter: 'blur(4px)' }}
-            animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-            exit={{ y: '-100%', opacity: 0, filter: 'blur(4px)' }}
+            initial={{ y: '100%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '-100%', opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 26 }}
           >
             {t(quotes[i % quotes.length])}
@@ -121,7 +121,7 @@ export function Home() {
                   <span className="text-grad">{format(new Date(), 'd MMMM')}</span>
                 </>
               ) : (
-                <RotatingGreeting done={trainedToday} name={settings.name.trim() || t('Lifter')} />
+                <RotatingGreeting done={trainedToday} name={settings.name.trim() || t('Champ')} />
               )}
             </h1>
           </div>
@@ -136,10 +136,10 @@ export function Home() {
 
         <div className="cut bg-card p-4">
           <div className="mb-3 flex items-center justify-between">
-            <div className="label">This week</div>
+            <div className="label">{t('This week')}</div>
             {streak > 0 && (
               <div className="flex items-center gap-1 font-display text-sm font-bold uppercase tracking-wider text-orange-400">
-                <Flame size={15} /> {streak} wk streak
+                <Flame size={15} /> {t('{n} wk streak', { n: streak })}
               </div>
             )}
           </div>
@@ -147,15 +147,15 @@ export function Home() {
           <div className="mt-3 grid grid-cols-3 gap-2 border-t border-line pt-3 text-center">
             <div>
               <div className="font-display text-xl font-bold">{week.length}</div>
-              <div className="label !text-[9px]">Sessions</div>
+              <div className="label !text-[9px]">{t('Sessions')}</div>
             </div>
             <div>
               <div className="font-display text-xl font-bold">{weekTime ? fmtDurationLong(Math.round(weekTime / 60) * 60) : '0'}</div>
-              <div className="label !text-[9px]">Time</div>
+              <div className="label !text-[9px]">{t('Time')}</div>
             </div>
             <div>
               <div className="font-display text-xl font-bold">{fmtVolume(weekVol, settings)}</div>
-              <div className="label !text-[9px]">Volume</div>
+              <div className="label !text-[9px]">{t('Volume')}</div>
             </div>
           </div>
         </div>
@@ -165,33 +165,33 @@ export function Home() {
             {overall != null && <div className="absolute inset-0 opacity-25" style={{ background: `radial-gradient(circle at 20% 50%, ${tierOf(overall).c[1]}, transparent 70%)` }} />}
             <RankBadge score={ctx === null ? null : overall} size={44} />
             <div className="relative min-w-0">
-              <div className="label !text-[9px]">Rank</div>
-              {ctx === null ? <div className="text-xs text-white/80">Tap to unlock</div> : <TierName score={overall} className="block truncate text-lg leading-tight" />}
+              <div className="label !text-[9px]">{t('Rank')}</div>
+              {ctx === null ? <div className="text-xs text-white/80">{t('Tap to unlock')}</div> : <TierName score={overall} className="block truncate text-lg leading-tight" />}
               {overall != null && <div className="font-display text-xs text-muted">{overall} pts</div>}
             </div>
           </button>
           <button onClick={() => nav('/profile')} className="press cut bg-card p-3 text-left">
             <div className="label !text-[9px]">Level {lvl.level}</div>
-            <div className="truncate font-display text-lg font-bold uppercase leading-tight">{levelTitle(lvl.level)}</div>
+            <div className="truncate font-display text-lg font-bold uppercase leading-tight">{t(levelTitle(lvl.level))}</div>
             <div className="mt-2 h-1.5 overflow-hidden bg-white/10">
               <motion.div className="grad h-full" initial={{ width: 0 }} animate={{ width: `${(lvl.into / lvl.need) * 100}%` }} transition={{ duration: 0.9 }} />
             </div>
-            <div className="mt-1 text-[10px] text-muted">{lvl.need - lvl.into} XP to go</div>
+            <div className="mt-1 text-[10px] text-muted">{t('{n} XP to go', { n: lvl.need - lvl.into })}</div>
           </button>
         </div>
 
         {workouts && workouts.length === 0 ? (
           <div className="cut bg-card p-5 text-center">
-            <div className="font-display text-xl font-bold uppercase">No sessions yet</div>
-            <div className="mt-1 text-sm text-muted">Log your first workout — or bring your history over from Hevy.</div>
+            <div className="font-display text-xl font-bold uppercase">{t('No sessions yet')}</div>
+            <div className="mt-1 text-sm text-muted">{t('Log your first workout — or bring your history over from Hevy.')}</div>
             <button onClick={() => nav('/import/hevy')} className="press cut-sm mx-auto mt-4 flex items-center gap-2 bg-card2 px-4 py-2.5 font-display font-semibold uppercase tracking-wider">
-              <Upload size={16} /> Import from Hevy
+              <Upload size={16} /> {t('Import from Hevy')}
             </button>
           </div>
         ) : (
           <>
             <div className="label flex items-center gap-2 pt-3">
-              <span className="h-3 w-1 bg-accent" /> Recent sessions
+              <span className="h-3 w-1 bg-accent" /> {t('Recent sessions')}
             </div>
             <WorkoutList workouts={list} />
           </>

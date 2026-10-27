@@ -15,17 +15,18 @@ import { uid } from '../lib/id';
 import { ask, confirmDialog, toast } from '../state/dialog';
 import { cloneExercises, useWorkout } from '../state/workout';
 import type { Folder, Routine } from '../types';
+import { t } from '../i18n';
 
 export async function startWorkout(routine?: Routine) {
   const st = useWorkout.getState();
   if (st.active) {
     const r = await ask({
-      title: 'Workout in progress',
-      message: 'You already have a workout running. Resume it or discard it and start a new one?',
+      title: t('Workout in progress'),
+      message: t('You already have a workout running. Resume it or discard it and start a new one?'),
       actions: [
-        { label: 'Resume Workout', value: 'resume', style: 'primary' },
-        { label: 'Discard & Start New', value: 'new', style: 'danger' },
-        { label: 'Cancel', value: 'cancel', style: 'cancel' },
+        { label: t('Resume Workout'), value: 'resume', style: 'primary' },
+        { label: t('Discard & Start New'), value: 'new', style: 'danger' },
+        { label: t('Cancel'), value: 'cancel', style: 'cancel' },
       ],
     });
     if (r === 'resume') return st.setOpen(true);
@@ -81,7 +82,7 @@ function RoutineCard({ r, last, onMenu, index }: { r: Routine; last?: number; on
             {muscles.slice(0, 4).map((m) => (
               <span key={m} className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: muscleColor(m) + '26', color: muscleColor(m) }}>
                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: muscleColor(m) }} />
-                {m}
+                {t(m)}
               </span>
             ))}
           </div>
@@ -104,14 +105,14 @@ function RoutineCard({ r, last, onMenu, index }: { r: Routine; last?: number; on
         <button
           onClick={async () => {
             const how = await shareRoutine(r);
-            if (how === 'copied') toast('Link copied — send it to a friend');
+            if (how === 'copied') toast(t('Link copied — send it to a friend'));
           }}
           className="press p-2 text-muted"
-          aria-label="Share routine"
+          aria-label={t('Share routine')}
         >
           <Share2 size={19} />
         </button>
-        <button onClick={onMenu} className="press p-2 text-muted" aria-label="Routine menu">
+        <button onClick={onMenu} className="press p-2 text-muted" aria-label={t('Routine menu')}>
           <MoreHorizontal size={21} />
         </button>
       </div>
@@ -138,7 +139,7 @@ function ProgramCarousel() {
             transition={{ delay: i * 0.05 }}
           >
             <Dumbbell size={74} className="absolute -bottom-3 -right-3 rotate-[-25deg] opacity-20" />
-            <div className="text-[10px] font-bold uppercase tracking-widest opacity-80">{p.routines.length} routines</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest opacity-80">{p.routines.length} {t('routines')}</div>
             <div className="mt-0.5 font-display text-xl font-bold uppercase leading-tight">{p.name}</div>
             <div className="mt-1 line-clamp-2 text-[11px] leading-snug opacity-85">{p.level}</div>
           </motion.button>
@@ -198,7 +199,7 @@ export function WorkoutTab() {
       text = window.prompt('Paste the routine link') ?? '';
     }
     const code = codeFromText(text);
-    if (!code) return toast('Copy a Gym Log routine link first');
+    if (!code) return toast(t('Copy a Gym Log routine link first'));
     nav(`/r/${code}`);
   };
 
@@ -215,34 +216,34 @@ export function WorkoutTab() {
   const duplicate = async (r: Routine) => {
     const copy: Routine = { ...r, id: uid(), name: `${r.name} (copy)`, order: Date.now(), createdAt: Date.now(), updatedAt: Date.now(), exercises: cloneExercises(r.exercises, false) };
     await db.routines.add(copy);
-    toast('Routine duplicated');
+    toast(t('Routine duplicated'));
   };
 
   return (
     <Page>
       <Header
-        title="Routines"
+        title={t('Routines')}
         large
         right={
-          <button onClick={newFolder} className="press p-1 text-accent" aria-label="New folder">
+          <button onClick={newFolder} className="press p-1 text-accent" aria-label={t('New folder')}>
             <FolderPlus size={22} />
           </button>
         }
       />
       <div className="px-4 pb-6">
         <div className="grid grid-cols-3 gap-2">
-          <QuickTile icon={<Plus size={20} strokeWidth={2.6} />} label="New" sub="Build your own" color="rgb(var(--accent))" onClick={() => nav('/routine/new')} />
-          <QuickTile icon={<Compass size={20} />} label="Explore" sub="Ready programs" color="#6366f1" onClick={() => nav('/explore')} />
-          <QuickTile icon={<Link2 size={20} />} label="Paste link" sub="From a friend" color="#22c55e" onClick={pasteLink} />
+          <QuickTile icon={<Plus size={20} strokeWidth={2.6} />} label={t('New')} sub={t('Build your own')} color="rgb(var(--accent))" onClick={() => nav('/routine/new')} />
+          <QuickTile icon={<Compass size={20} />} label={t('Explore')} sub={t('Ready programs')} color="#6366f1" onClick={() => nav('/explore')} />
+          <QuickTile icon={<Link2 size={20} />} label={t('Paste link')} sub={t('From a friend')} color="#22c55e" onClick={pasteLink} />
         </div>
 
         <div className="label mt-6 flex items-center gap-2">
-          <Sparkles size={13} className="text-accent" /> Programs
+          <Sparkles size={13} className="text-accent" /> {t('Programs')}
         </div>
         <ProgramCarousel />
 
         {routines && routines.length === 0 && (
-          <Empty icon={<ClipboardList size={48} />} title="No routines yet" text="Create as many as you like, with no limits. Or grab a program above, or paste a link from a friend." />
+          <Empty icon={<ClipboardList size={48} />} title={t('No routines yet')} text={t('Create as many as you like, with no limits. Or grab a program above, or paste a link from a friend.')} />
         )}
 
         {groups.map(({ folder, items }) =>
@@ -272,7 +273,7 @@ export function WorkoutTab() {
                         <RoutineCard key={r.id} r={r} index={i} last={lastDone.get(r.id)} onMenu={() => setMenu(r)} />
                       ))}
                     </AnimatePresence>
-                    {folder && items.length === 0 && <div className="rounded-2xl border border-dashed border-line p-4 text-center text-sm text-muted">Empty folder</div>}
+                    {folder && items.length === 0 && <div className="rounded-2xl border border-dashed border-line p-4 text-center text-sm text-muted">{t('Empty folder')}</div>}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -282,39 +283,39 @@ export function WorkoutTab() {
       </div>
 
       <Sheet open={!!menu} onClose={() => setMenu(null)} title={menu?.name}>
-        <SheetItem icon={<Pencil size={20} />} label="Edit Routine" onClick={() => (setMenu(null), nav(`/routine/${menu!.id}`))} />
+        <SheetItem icon={<Pencil size={20} />} label={t('Edit Routine')} onClick={() => (setMenu(null), nav(`/routine/${menu!.id}`))} />
         <SheetItem
           icon={<Share2 size={20} />}
-          label="Share Routine"
+          label={t('Share Routine')}
           onClick={async () => {
             const r = menu!;
             setMenu(null);
-            if ((await shareRoutine(r)) === 'copied') toast('Link copied — send it to a friend');
+            if ((await shareRoutine(r)) === 'copied') toast(t('Link copied — send it to a friend'));
           }}
         />
-        <SheetItem icon={<Copy size={20} />} label="Duplicate Routine" onClick={() => (setMenu(null), duplicate(menu!))} />
-        <SheetItem icon={<FolderInput size={20} />} label="Move to Folder" onClick={() => (setMenu(null), setMoving(menu))} />
-        <SheetItem icon={<GripVertical size={20} />} label="Reorder Routines" onClick={() => (setMenu(null), setReorder((routines ?? []).map((r) => r.id)))} />
+        <SheetItem icon={<Copy size={20} />} label={t('Duplicate Routine')} onClick={() => (setMenu(null), duplicate(menu!))} />
+        <SheetItem icon={<FolderInput size={20} />} label={t('Move to Folder')} onClick={() => (setMenu(null), setMoving(menu))} />
+        <SheetItem icon={<GripVertical size={20} />} label={t('Reorder Routines')} onClick={() => (setMenu(null), setReorder((routines ?? []).map((r) => r.id)))} />
         <SheetItem
           danger
           icon={<Trash2 size={20} />}
-          label="Delete Routine"
+          label={t('Delete Routine')}
           onClick={async () => {
             const r = menu!;
             setMenu(null);
-            if (await confirmDialog('Delete routine?', `"${r.name}" will be deleted. Your workout history stays.`, 'Delete', true)) await db.routines.delete(r.id);
+            if (await confirmDialog(t('Delete routine?'), `"${r.name}" will be deleted. Your workout history stays.`, 'Delete', true)) await db.routines.delete(r.id);
           }}
         />
       </Sheet>
 
-      <Sheet open={!!moving} onClose={() => setMoving(null)} title="Move to Folder">
-        <SheetItem label="No folder" onClick={async () => (await db.routines.update(moving!.id, { folderId: null }), setMoving(null))} />
+      <Sheet open={!!moving} onClose={() => setMoving(null)} title={t('Move to Folder')}>
+        <SheetItem label={t('No folder')} onClick={async () => (await db.routines.update(moving!.id, { folderId: null }), setMoving(null))} />
         {folders.map((f) => (
           <SheetItem key={f.id} label={f.name} onClick={async () => (await db.routines.update(moving!.id, { folderId: f.id }), setMoving(null))} />
         ))}
         <SheetItem
           icon={<FolderPlus size={20} />}
-          label="New Folder..."
+          label={t('New Folder...')}
           onClick={async () => {
             const name = await promptName('Folder name');
             if (!name) return;
@@ -327,10 +328,10 @@ export function WorkoutTab() {
       </Sheet>
 
       <Sheet open={!!folderMenu} onClose={() => setFolderMenu(null)} title={folderMenu?.name}>
-        <SheetItem icon={<Plus size={20} />} label="Add New Routine" onClick={() => (setFolderMenu(null), nav(`/routine/new?folder=${folderMenu!.id}`))} />
+        <SheetItem icon={<Plus size={20} />} label={t('Add New Routine')} onClick={() => (setFolderMenu(null), nav(`/routine/new?folder=${folderMenu!.id}`))} />
         <SheetItem
           icon={<Pencil size={20} />}
-          label="Rename Folder"
+          label={t('Rename Folder')}
           onClick={async () => {
             const f = folderMenu!;
             setFolderMenu(null);
@@ -341,18 +342,18 @@ export function WorkoutTab() {
         <SheetItem
           danger
           icon={<Trash2 size={20} />}
-          label="Delete Folder"
+          label={t('Delete Folder')}
           onClick={async () => {
             const f = folderMenu!;
             setFolderMenu(null);
-            if (!(await confirmDialog('Delete folder?', 'Routines inside will be moved to My Routines.', 'Delete', true))) return;
+            if (!(await confirmDialog(t('Delete folder?'), t('Routines inside will be moved to My Routines.'), t('Delete'), true))) return;
             await db.routines.where('folderId').equals(f.id).modify({ folderId: null });
             await db.folders.delete(f.id);
           }}
         />
       </Sheet>
 
-      <Sheet open={!!reorder} onClose={() => setReorder(null)} title="Reorder Routines">
+      <Sheet open={!!reorder} onClose={() => setReorder(null)} title={t('Reorder Routines')}>
         {reorder && (
           <Reorder.Group axis="y" values={reorder} onReorder={setReorder} className="divide-y divide-line">
             {reorder.map((id) => {
@@ -369,7 +370,7 @@ export function WorkoutTab() {
               setReorder(null);
             }}
           >
-            Save Order
+            {t('Save Order')}
           </Button>
         </div>
       </Sheet>

@@ -30,6 +30,7 @@ export function ExerciseThumb({ ex, size = 44 }: { ex: Exercise; size?: number }
   }
   return (
     <img
+      crossOrigin="anonymous"
       src={imageUrl(ex.img, 0)}
       loading="lazy"
       decoding="async"
@@ -61,6 +62,7 @@ export function ExerciseDemo({ ex }: { ex: Exercise }) {
       {loaded < 2 && <div className="absolute inset-0 animate-pulse bg-card2" />}
       {([0, 1] as const).map((f) => (
         <motion.img
+          crossOrigin="anonymous"
           key={f}
           src={imageUrl(ex.img!, f)}
           alt=""

@@ -12,6 +12,7 @@ import { fmtNum, kgTo, round, toKg } from '../lib/units';
 import { confirmDialog } from '../state/dialog';
 import { useSettings } from '../state/settings';
 import { MEASURE_FIELDS, type Measure, type MeasureField, type Settings } from '../types';
+import { t } from '../i18n';
 
 const LABELS: Record<MeasureField, string> = {
   weight: 'Bodyweight',
@@ -70,7 +71,7 @@ function MeasureSheet({ open, onClose, editing }: { open: boolean; onClose: () =
     <Sheet open={open} onClose={onClose} title={editing ? 'Edit Measurement' : 'Log Measurement'} tall>
       <div className="px-4 pt-2">
         <label className="block rounded-xl bg-card2 px-3 py-2">
-          <div className="text-xs text-muted">Date</div>
+          <div className="text-xs text-muted">{t('Date')}</div>
           <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-transparent outline-none" />
         </label>
         <div className="mt-3 divide-y divide-line overflow-hidden rounded-xl bg-card2">
@@ -85,19 +86,19 @@ function MeasureSheet({ open, onClose, editing }: { open: boolean; onClose: () =
           ))}
         </div>
         <Button className="mt-4 w-full" onClick={save}>
-          Save
+          {t('Save')}
         </Button>
         {editing && (
           <Button
             variant="danger"
             className="mt-2 w-full"
             onClick={async () => {
-              if (!(await confirmDialog('Delete measurement?', format(editing.date, 'd MMM yyyy'), 'Delete', true))) return;
+              if (!(await confirmDialog(t('Delete measurement?'), format(editing.date, 'd MMM yyyy'), 'Delete', true))) return;
               await db.measures.delete(editing.id);
               onClose();
             }}
           >
-            <Trash2 size={18} /> Delete
+            <Trash2 size={18} /> {t('Delete')}
           </Button>
         )}
       </div>
@@ -118,7 +119,7 @@ export function Measures() {
     <Page pushed>
       <Header
         back
-        title="Measures"
+        title={t('Measures')}
         right={
           <button onClick={() => setSheet({ editing: null })} className="press text-accent">
             <Plus size={26} />
@@ -127,9 +128,9 @@ export function Measures() {
       />
       <div className="space-y-4 px-4 pb-12">
         {list.length === 0 ? (
-          <Empty icon={<Ruler size={48} />} title="No measurements yet" text="Track your bodyweight, body fat and measurements over time.">
+          <Empty icon={<Ruler size={48} />} title={t('No measurements yet')} text={t('Track your bodyweight, body fat and measurements over time.')}>
             <Button onClick={() => setSheet({ editing: null })}>
-              <Plus size={18} /> Log Measurement
+              <Plus size={18} /> {t('Log Measurement')}
             </Button>
           </Empty>
         ) : (
@@ -159,7 +160,7 @@ export function Measures() {
               />
             </div>
             <div>
-              <div className="mb-2 font-semibold">History</div>
+              <div className="mb-2 font-semibold">{t('History')}</div>
               <div className="divide-y divide-line overflow-hidden cut bg-card">
                 <AnimatePresence initial={false}>
                   {list.map((m) => (

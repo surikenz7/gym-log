@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useId } from 'react';
 import { tierIndex, TIERS } from '../lib/ranks';
 import { useExerciseScore } from '../lib/useProgress';
+import { t } from '../i18n';
 
 const SHIELD = 'M60 14 L94 26 V58 C94 80 79 95 60 105 C41 95 26 80 26 58 V26 Z';
 const INNER = 'M60 23 L86 32.5 V58 C86 74 75 86 60 94 C45 86 34 74 34 58 V32.5 Z';
@@ -137,11 +138,11 @@ export function RankBadge({ score, size = 48, shine = true }: { score: number | 
 }
 
 export function TierName({ score, className = '' }: { score: number | null; className?: string }) {
-  if (score == null) return <span className={`font-display text-muted ${className}`}>Unranked</span>;
-  const t = TIERS[tierIndex(score)];
+  if (score == null) return <span className={`font-display text-muted ${className}`}>{t('Unranked')}</span>;
+  const tier = TIERS[tierIndex(score)];
   return (
-    <span className={`tier-text font-display font-bold ${className}`} style={{ color: t.c[1] }}>
-      {t.name}
+    <span className={`tier-text font-display font-bold ${className}`} style={{ color: tier.c[1] }}>
+      {tier.name}
     </span>
   );
 }

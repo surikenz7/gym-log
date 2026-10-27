@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Header, Page } from '../components/ui';
 import { useAllWorkouts } from '../lib/hooks';
 import type { Workout } from '../types';
+import { t } from '../i18n';
 
 function Month({ month, byDay, onDay }: { month: Date; byDay: Map<string, Workout[]>; onDay: (ws: Workout[]) => void }) {
   const days = eachDayOfInterval({ start: startOfWeek(month, { weekStartsOn: 1 }), end: endOfWeek(endOfMonth(month), { weekStartsOn: 1 }) });
@@ -72,7 +73,7 @@ export function CalendarPage() {
 
   return (
     <Page pushed>
-      <Header back title="Calendar" />
+      <Header back title={t('Calendar')} />
       <div className="px-4 pb-12">
         <div className="mb-3 grid grid-cols-2 gap-2">
           <div className="cut bg-card p-4">
@@ -80,7 +81,7 @@ export function CalendarPage() {
             <div className="text-xl font-semibold">{yearCount}</div>
           </div>
           <div className="cut bg-card p-4">
-            <div className="text-xs text-muted">Week streak</div>
+            <div className="text-xs text-muted">{t('Week streak')}</div>
             <div className="text-xl font-semibold">{streak} 🔥</div>
           </div>
         </div>

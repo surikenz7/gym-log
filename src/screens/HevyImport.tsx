@@ -12,6 +12,7 @@ import { getExercise, useLibrary } from '../lib/exercises';
 import { uid } from '../lib/id';
 import { TYPE_LABELS } from '../lib/units';
 import type { Exercise, ExerciseType } from '../types';
+import { t } from '../i18n';
 
 type Target = { id: string; exact: boolean } | { custom: ExerciseType };
 
@@ -88,7 +89,7 @@ export function HevyImport() {
 
   return (
     <Page pushed>
-      <Header back title="Import from Hevy" />
+      <Header back title={t('Import from Hevy')} />
       <div className="px-4 pb-12">
         <AnimatePresence mode="wait">
           {result ? (
@@ -96,14 +97,14 @@ export function HevyImport() {
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 14, delay: 0.1 }}>
                 <CheckCircle2 size={72} className="mx-auto text-done" />
               </motion.div>
-              <div className="mt-4 text-2xl font-bold">Import complete</div>
+              <div className="mt-4 text-2xl font-bold">{t('Import complete')}</div>
               <div className="mt-2 text-muted">
                 {result.added} workouts imported
                 {result.skipped > 0 && <>, {result.skipped} already existed</>}
                 {result.customs > 0 && <>, {result.customs} custom exercises created</>}.
               </div>
               <Button className="mt-8 w-full" onClick={() => nav('/history', { replace: true })}>
-                View History
+                {t('View History')}
               </Button>
             </motion.div>
           ) : !parsed ? (
@@ -113,13 +114,13 @@ export function HevyImport() {
                 <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-white/80">
                   <li>Open Hevy → Profile → ⚙️ Settings</li>
                   <li>Tap “Export & Import Data” → “Export Workouts”</li>
-                  <li>Save the CSV file to Files (iCloud Drive / On My iPhone)</li>
+                  <li>{t('Save the CSV file to Files (iCloud Drive / On My iPhone)')}</li>
                 </ol>
                 <div className="mt-4 font-semibold">2. Choose the file here</div>
-                <div className="mt-1 text-sm text-white/80">Exercises are matched automatically. You can fix any match before importing. Importing the same file twice won’t create duplicates.</div>
+                <div className="mt-1 text-sm text-white/80">{t('Exercises are matched automatically. You can fix any match before importing. Importing the same file twice won’t create duplicates.')}</div>
               </div>
               <Button className="mt-4 w-full" onClick={() => fileRef.current?.click()}>
-                <FileUp size={20} /> Choose Hevy CSV
+                <FileUp size={20} /> {t('Choose Hevy CSV')}
               </Button>
               {error && (
                 <div className="mt-4 flex gap-2 rounded-xl bg-danger/10 p-3 text-sm text-danger">
@@ -148,7 +149,7 @@ export function HevyImport() {
               </div>
 
               <div className="mb-2 mt-5 flex items-center justify-between">
-                <div className="font-semibold">Exercise matching</div>
+                <div className="font-semibold">{t('Exercise matching')}</div>
                 <button onClick={() => setOnlyNew((v) => !v)} className="text-sm text-accent">
                   {onlyNew ? 'Show all' : 'Only needs review'}
                 </button>
@@ -185,7 +186,7 @@ export function HevyImport() {
                 {busy ? 'Importing…' : `Import ${parsed.workouts.length} workouts`}
               </Button>
               <Button variant="ghost" className="mt-1 w-full" onClick={() => setParsed(null)}>
-                Choose another file
+                {t('Choose another file')}
               </Button>
             </motion.div>
           )}
@@ -205,9 +206,9 @@ export function HevyImport() {
       />
 
       <Sheet open={!!editing} onClose={() => setEditing(null)} title={editing ?? ''}>
-        <SheetItem label="Choose from exercise library" onClick={() => (setPicking(editing), setEditing(null))} />
+        <SheetItem label={t('Choose from exercise library')} onClick={() => (setPicking(editing), setEditing(null))} />
         <SheetItem
-          label="Create as new custom exercise"
+          label={t('Create as new custom exercise')}
           onClick={() => {
             const e = parsed!.exercises.find((x) => x.name === editing)!;
             setMapping((m) => ({ ...m, [e.name]: { custom: inferType(e.name, e.fields) } }));
@@ -216,7 +217,7 @@ export function HevyImport() {
         />
         {editing && 'id' in (mapping[editing] ?? {}) && !(mapping[editing] as { exact: boolean }).exact && (
           <SheetItem
-            label="Match looks right ✓"
+            label={t('Match looks right ✓')}
             onClick={() => {
               setMapping((m) => ({ ...m, [editing]: { ...(m[editing] as { id: string }), exact: true } }));
               setEditing(null);
@@ -227,7 +228,7 @@ export function HevyImport() {
       <ExercisePicker
         open={!!picking}
         single
-        title="Match exercise"
+        title={t('Match exercise')}
         onClose={() => setPicking(null)}
         onPick={([id]) => picking && setMapping((m) => ({ ...m, [picking]: { id, exact: true } }))}
       />

@@ -1,4 +1,5 @@
 import type { ExerciseType, Settings, WSet } from '../types';
+import { t } from '../i18n';
 
 export const KG_PER_LB = 0.45359237;
 const M_PER_MI = 1609.344;
@@ -114,9 +115,9 @@ export function fieldHeader(f: Field, type: ExerciseType, s: Settings) {
     case 'weight':
       return (type === 'weighted_bodyweight' ? '+' : type === 'assisted_bodyweight' ? '-' : '') + s.weightUnit.toUpperCase();
     case 'reps':
-      return 'REPS';
+      return t('REPS');
     case 'duration':
-      return 'TIME';
+      return t('TIME');
     case 'distance':
       return distLabel(s.distanceUnit, isShortDistance(type)).toUpperCase();
   }

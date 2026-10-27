@@ -42,19 +42,19 @@ export function AccountSheet({ open, onClose, mode }: { open: boolean; onClose: 
   return (
     <Sheet open={open} onClose={onClose} title={mode === 'signup' ? 'Create account' : 'Log in'}>
       <div className="space-y-2.5 px-4 pt-2">
-        <input value={nick} onChange={(e) => setNick(e.target.value.replace(/\s/g, ''))} placeholder="Nickname" autoCapitalize="none" autoCorrect="off" autoComplete="username" className={input} />
+        <input value={nick} onChange={(e) => setNick(e.target.value.replace(/\s/g, ''))} placeholder={t('Nickname')} autoCapitalize="none" autoCorrect="off" autoComplete="username" className={input} />
         <input
           value={pass}
           onChange={(e) => setPass(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && void submit()}
-          placeholder="Password"
+          placeholder={t('Password')}
           type="password"
           autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
           className={input}
         />
         {err && <div className="text-sm text-danger">{err}</div>}
         <Button className="w-full !py-3.5" onClick={() => void submit()} disabled={busy}>
-          {busy ? 'One moment…' : mode === 'signup' ? 'Create account' : 'Log in'}
+          {busy ? t('One moment…') : mode === 'signup' ? t('Create account') : t('Log in')}
         </Button>
         <p className="pb-2 text-center text-xs text-muted">
           {mode === 'signup'
@@ -110,17 +110,17 @@ export function AccountSection() {
     return (
       <div className="flex items-start gap-3 px-4 py-3 text-sm text-muted">
         <CloudOff size={20} className="mt-0.5 shrink-0" />
-        Accounts and cloud backup aren’t switched on in this version yet.
+        {t('Accounts and cloud backup aren’t switched on in this version yet.')}
       </div>
     );
   if (a.status !== 'signedIn')
     return (
       <>
-        <div className="px-4 py-3 text-sm text-white/80">Create a free account to back up everything to the cloud, use it on other devices and follow friends.</div>
+        <div className="px-4 py-3 text-sm text-white/80">{t('Create a free account to back up everything to the cloud, use it on other devices and follow friends.')}</div>
         <div className="grid grid-cols-2 gap-2 px-4 pb-4">
-          <Button onClick={() => setSheet('signup')}>Create account</Button>
+          <Button onClick={() => setSheet('signup')}>{t('Create account')}</Button>
           <Button variant="secondary" onClick={() => setSheet('login')}>
-            Log in
+            {t('Log in')}
           </Button>
         </div>
         <AccountSheet open={!!sheet} mode={sheet ?? 'login'} onClose={() => setSheet(null)} />
@@ -136,7 +136,7 @@ export function AccountSection() {
             {a.syncing ? 'Syncing…' : a.error ? `Not synced: ${a.error}` : a.lastSync ? `Backed up ${formatDistanceToNowStrict(a.lastSync, { addSuffix: true })}` : 'Waiting to sync'}
           </div>
         </div>
-        <button onClick={() => requestSync(null)} className={`press p-2 text-muted ${a.syncing ? 'animate-spin' : ''}`} aria-label="Sync now">
+        <button onClick={() => requestSync(null)} className={`press p-2 text-muted ${a.syncing ? 'animate-spin' : ''}`} aria-label={t('Sync now')}>
           <RefreshCw size={18} />
         </button>
       </div>
@@ -148,13 +148,13 @@ export function AccountSection() {
       <PrivateRow />
       <button
         onClick={async () => {
-          if (!(await confirmDialog('Log out?', 'Everything is backed up to your account and will be removed from this phone. Log back in any time to get it all back.', 'Log out'))) return;
-          if (!(await backupNow()) && !(await confirmDialog('Not backed up', 'Couldn’t reach the cloud, so changes since the last backup would be lost. Log out anyway?', 'Log out anyway', true))) return;
+          if (!(await confirmDialog(t('Log out?'), t('Everything is backed up to your account and will be removed from this phone. Log back in any time to get it all back.'), t('Log out')))) return;
+          if (!(await backupNow()) && !(await confirmDialog(t('Not backed up'), t('Couldn’t reach the cloud, so changes since the last backup would be lost. Log out anyway?'), t('Log out anyway'), true))) return;
           await signOut();
         }}
         className="flex w-full items-center gap-3 px-4 py-3 text-left text-danger active:bg-card2"
       >
-        <LogOut size={20} /> Log out
+        <LogOut size={20} /> {t('Log out')}
       </button>
     </>
   );

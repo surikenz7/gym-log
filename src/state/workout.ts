@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { db, getKv, KV_ACTIVE, setKv } from '../db/db';
 import { uid } from '../lib/id';
 import type { ActiveWorkout, Routine, WExercise, WSet, Workout } from '../types';
+import { t } from '../i18n';
 
 interface WorkoutState {
   active: ActiveWorkout | null;
@@ -45,9 +46,9 @@ export function cloneExercises(src: WExercise[], keepValuesAsPlaceholder: boolea
 
 function defaultName() {
   const h = new Date().getHours();
-  if (h < 11) return 'Morning Workout';
-  if (h < 17) return 'Afternoon Workout';
-  return 'Evening Workout';
+  if (h < 11) return t('Morning Workout');
+  if (h < 17) return t('Afternoon Workout');
+  return t('Evening Workout');
 }
 
 export const useWorkout = create<WorkoutState>((set, get) => ({

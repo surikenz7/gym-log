@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Header, Page } from '../components/ui';
 import { ACHIEVEMENTS } from '../lib/progress';
 import { useJourney } from '../lib/useProgress';
+import { t } from '../i18n';
 
 export function Trophies() {
   const j = useJourney();
@@ -11,11 +12,11 @@ export function Trophies() {
   const got = j ? ACHIEVEMENTS.filter((a) => j.unlocked.has(a.id)).length : 0;
   return (
     <Page pushed>
-      <Header back title="Trophies" />
+      <Header back title={t('Trophies')} />
       <div className="px-4 pb-12">
         <div className="mb-4 flex items-end justify-between">
           <div>
-            <div className="label">Unlocked</div>
+            <div className="label">{t('Unlocked')}</div>
             <div className="font-display text-4xl font-bold">
               {got}
               <span className="text-xl text-muted"> / {ACHIEVEMENTS.length}</span>
@@ -40,7 +41,7 @@ export function Trophies() {
               >
                 <div className={`text-3xl ${u ? '' : 'opacity-25 grayscale'}`}>{a.icon}</div>
                 <div className={`mt-1 font-display text-[13px] font-semibold uppercase leading-tight ${u ? 'text-white' : 'text-white/50'}`}>{a.name}</div>
-                <div className="mt-0.5 text-[10px] leading-tight text-muted">{a.desc}</div>
+                <div className="mt-0.5 text-[10px] leading-tight text-muted">{t(a.desc)}</div>
                 {u ? (
                   <div className="mt-1 text-[10px] font-semibold text-warn">{format(u.date, 'd MMM yyyy')}</div>
                 ) : (

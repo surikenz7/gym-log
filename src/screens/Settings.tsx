@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
-import { Check, ChevronRight, Copy, Smartphone, Sparkles, Download, ImageDown, Shield, Trash2, Upload } from 'lucide-react';
+import { Check, ChevronRight, Languages, Copy, Smartphone, Sparkles, Download, ImageDown, Shield, Trash2, Upload } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { REST_OPTIONS } from '../components/ExerciseCard';
 import { RankSetup } from '../components/RankParts';
-import { Header, Page, Sheet } from '../components/ui';
+import { detectLang, LANGS } from '../i18n';
+import { Header, Page, Sheet, SheetItem } from '../components/ui';
 import { db } from '../db/db';
 import { exportBackup, importBackup } from '../import/backup';
 import { BUILTIN, imageUrl, useLibrary } from '../lib/exercises';
@@ -22,6 +23,7 @@ import { fanfare } from '../lib/sound';
 import { confirmDialog, toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
 import { useWorkout } from '../state/workout';
+import { t } from '../i18n';
 
 function Section({ title, children, foot }: { title: string; children: ReactNode; foot?: string }) {
   return (
@@ -58,7 +60,7 @@ function Segmented<T extends string>({ value, options, onChange, labels }: { val
       {options.map((o) => (
         <button key={o} onClick={() => onChange(o)} className={`relative z-10 min-w-[52px] px-3 py-1 text-sm font-semibold ${value === o ? 'text-ink' : ''}`}>
           {value === o && <motion.span layoutId={`seg-${options.join()}`} className="absolute inset-0 -z-10 rounded-md bg-accent" />}
-          {labels?.[o] ?? o}
+          {labels?.[o] ? t(labels[o]) : o}
         </button>
       ))}
     </div>
@@ -67,7 +69,7 @@ function Segmented<T extends string>({ value, options, onChange, labels }: { val
 
 async function downloadImages(onProgress: (done: number, total: number) => void) {
   const urls = BUILTIN.filter((e) => e.img).flatMap((e) => [imageUrl(e.img!, 0), imageUrl(e.img!, 1)]);
-  const cache = await caches.open('exercise-images');
+  const cache = await caches.open('exercise-images-v2');
   let done = 0;
   let i = 0;
   const worker = async () => {
@@ -115,6 +117,7 @@ export function Settings() {
   const [img, setImg] = useState<{ done: number; total: number } | null>(null);
   const [rankSheet, setRankSheet] = useState(false);
   const [iconHelp, setIconHelp] = useState(false);
+  const [langSheet, setLangSheet] = useState(false);
   const taps = useRef<number[]>([]);
   // easter egg: tap the version number 7 times quickly
   const tapVersion = () => {
@@ -124,7 +127,7 @@ export function Settings() {
       taps.current = [];
       haptic('success');
       fanfare(true);
-      toast('👾 Secret decoration unlocked: Glitch');
+      toast(t('👾 Secret decoration unlocked: Glitch'));
     }
   };
   const bw = useLatestBodyweight();
@@ -141,47 +144,60 @@ export function Settings() {
 
   return (
     <Page pushed>
-      <Header back title="Settings" />
+      <Header back title={t('Settings')} />
       <div className="space-y-6 px-4 pb-12 pt-2">
-        <Section title="Account">
+        <Section title={t('Account')}>
           <AccountSection />
         </Section>
 
-        <Section title="Profile">
+        <Section title={t('Profile')}>
           <div className="flex items-center gap-4 px-4 py-3">
             <AvatarPicker size={56} />
-            <div className="text-sm text-muted">Tap to change your profile picture or decoration.</div>
+            <div className="text-sm text-muted">{t('Tap to change your profile picture or decoration.')}</div>
           </div>
-          <Row label="Avatar decorations" icon={<Sparkles size={20} />} onClick={() => nav('/decorations')}>
+          <Row label={t('Avatar decorations')} icon={<Sparkles size={20} />} onClick={() => nav('/decorations')}>
             <span className="text-sm text-muted">
               {(s.decos ?? []).length}/{DECORATIONS.length}
             </span>
             <ChevronRight size={18} className="text-muted" />
           </Row>
-          <Row label="Name">
+          <Row label={t('Your name')}>
             <input
               value={s.name}
               onChange={(e) => s.update({ name: e.target.value })}
-              placeholder="Your name"
+              placeholder={t('Your name')}
               className="w-40 bg-transparent text-right outline-none placeholder:text-muted"
             />
           </Row>
-          <Row label="Sex & bodyweight" icon={<Shield size={20} />} onClick={() => setRankSheet(true)}>
+          <Row label={t('Sex & bodyweight')} icon={<Shield size={20} />} onClick={() => setRankSheet(true)}>
             <span className="text-sm text-muted">
-              <span className="capitalize">{s.sex ?? 'Not set'}</span>
+              <span>{s.sex ? t(s.sex === 'male' ? 'Male' : 'Female') : t('Not set')}</span>
               {bw ? ` · ${fmtNum(kgTo(bw, s.weightUnit))} ${s.weightUnit}` : ''}
             </span>
             <ChevronRight size={18} className="text-muted" />
           </Row>
         </Section>
 
-        <Section title="Setup">
-          <Row label="Run the welcome setup again" icon={<Sparkles size={20} />} onClick={() => useOnboardingReplay.setState({ open: true })}>
+        <Section title={t('Language')}>
+          <Row label={t('Language')} icon={<Languages size={20} />} onClick={() => setLangSheet(true)}>
+            <span className="text-sm text-muted">{s.lang && s.lang !== 'auto' ? LANGS.find((l) => l.id === s.lang)?.name : `${t('Automatic')} (${LANGS.find((l) => l.id === detectLang())?.name})`}</span>
+            <ChevronRight size={18} className="text-muted" />
+          </Row>
+        </Section>
+        <Sheet open={langSheet} onClose={() => setLangSheet(false)} title={t('Language')}>
+          <SheetItem label={`${t('Automatic')} · ${LANGS.find((l) => l.id === detectLang())?.name}`} icon={<Smartphone size={20} />} right={!s.lang || s.lang === 'auto' ? <Check size={18} className="text-accent" /> : undefined} onClick={() => (setLangSheet(false), s.update({ lang: 'auto' }))} />
+          {LANGS.map((l) => (
+            <SheetItem key={l.id} label={l.name} icon={<span className="text-xl leading-none">{l.flag}</span>} right={s.lang === l.id ? <Check size={18} className="text-accent" /> : undefined} onClick={() => (setLangSheet(false), s.update({ lang: l.id }))} />
+          ))}
+        </Sheet>
+
+        <Section title={t('Setup')}>
+          <Row label={t('Run the welcome setup again')} icon={<Sparkles size={20} />} onClick={() => useOnboardingReplay.setState({ open: true })}>
             <ChevronRight size={18} className="text-muted" />
           </Row>
         </Section>
 
-        <Section title="Style">
+        <Section title={t('Style')}>
           <div className="grid grid-cols-2 gap-2 p-3">
             {(Object.keys(STYLES) as StyleId[]).map((id) => {
               const on = s.style === id;
@@ -199,9 +215,9 @@ export function Settings() {
                     <span className="h-6 w-6 bg-accent" style={STYLE_PREVIEW[id].shape} />
                   </div>
                   <div className="mt-2 text-sm font-semibold" style={STYLE_PREVIEW[id].font}>
-                    {STYLES[id].name}
+                    {t(STYLES[id].name)}
                   </div>
-                  <div className="text-[11px] leading-tight text-muted">{STYLES[id].desc}</div>
+                  <div className="text-[11px] leading-tight text-muted">{t(STYLES[id].desc)}</div>
                   {on && (
                     <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-accent">
                       <Check size={12} strokeWidth={4} />
@@ -213,7 +229,7 @@ export function Settings() {
           </div>
         </Section>
 
-        <Section title="Mode">
+        <Section title={t('Mode')}>
           <div className="grid grid-cols-4 gap-2 p-3">
             {(Object.keys(MODES) as ModeId[]).map((id) => {
               const p = paletteOf(s.theme, id);
@@ -227,14 +243,14 @@ export function Settings() {
                     <span className="h-2 w-2/3 rounded-full" style={{ background: p.fg, opacity: 0.85 }} />
                     <span className="h-4 w-full rounded-md" style={{ background: p.card }} />
                   </span>
-                  <span className={`text-xs font-semibold ${on ? 'text-white' : 'text-muted'}`}>{MODES[id].name}</span>
+                  <span className={`text-xs font-semibold ${on ? 'text-white' : 'text-muted'}`}>{t(MODES[id].name)}</span>
                 </button>
               );
             })}
           </div>
         </Section>
 
-        <Section title="Colour" foot="Accent, highlights, background tint and the app icon.">
+        <Section title={t('Colour')} foot={t('Accent, highlights, background tint and the app icon.')}>
           <div className="grid grid-cols-4 gap-2 p-3">
             {(Object.keys(THEMES) as ThemeId[]).map((id) => {
               const t = paletteOf(id, s.mode);
@@ -261,11 +277,11 @@ export function Settings() {
               );
             })}
           </div>
-          <Row label="App icon" icon={<Smartphone size={20} />} onClick={() => setIconHelp(true)}>
+          <Row label={t('App icon')} icon={<Smartphone size={20} />} onClick={() => setIconHelp(true)}>
             <img src={`${import.meta.env.BASE_URL}icons/${s.theme}-180.png`} alt="" className="h-9 w-9 rounded-[9px]" />
           </Row>
         </Section>
-        <Sheet open={iconHelp} onClose={() => setIconHelp(false)} title="App icon colour">
+        <Sheet open={iconHelp} onClose={() => setIconHelp(false)} title={t('App icon colour')}>
           <div className="space-y-3 px-5 pb-2 pt-2 text-sm text-white/85">
             <p>
               <b>iOS doesn’t let a Home Screen web app change its own icon.</b> The icon is copied once, when the app is added, and only Apple’s App Store apps can swap it later. So the
@@ -276,68 +292,68 @@ export function Settings() {
               <li>
                 <b>Back up first:</b> Settings → Data → Export backup → Save to Files. Removing the app can erase its data.
               </li>
-              <li>Tap <b>Copy link</b>, open <b>Safari</b>, paste and open it.</li>
+              <li><b>{t('Copy link')}</b> → Safari</li>
               <li>
-                Share → <b>Add to Home Screen</b>, then delete the old icon.
+                Share → <b>{t('Add to Home Screen')}</b>, then delete the old icon.
               </li>
               <li>Open the new icon → Settings → Restore from backup.</li>
             </ol>
             <button
               onClick={() => {
-                void navigator.clipboard?.writeText(themeLink(s.theme)).then(() => toast('Link copied — paste it in Safari'), () => toast(themeLink(s.theme)));
+                void navigator.clipboard?.writeText(themeLink(s.theme)).then(() => toast(t('Link copied — paste it in Safari')), () => toast(themeLink(s.theme)));
               }}
               className="press cut-sm grad flex w-full items-center justify-center gap-2 py-3 font-display text-lg font-bold uppercase tracking-wider"
             >
-              <Copy size={18} /> Copy link
+              <Copy size={18} /> {t('Copy link')}
             </button>
           </div>
         </Sheet>
 
-        <Section title="Display">
-          <Row label="Text size">
+        <Section title={t('Display')}>
+          <Row label={t('Text size')}>
             <Segmented value={s.textSize ?? 'md'} options={['sm', 'md', 'lg']} labels={{ sm: 'S', md: 'M', lg: 'L' }} onChange={(textSize) => s.update({ textSize })} />
           </Row>
-          <Row label="Background glow">
+          <Row label={t('Background glow')}>
             <Toggle on={s.glow !== false} onChange={(glow) => s.update({ glow })} />
           </Row>
-          <Row label="Film grain">
+          <Row label={t('Film grain')}>
             <Segmented value={s.grain ?? 'auto'} options={['auto', 'on', 'off']} labels={{ auto: 'Auto', on: 'On', off: 'Off' }} onChange={(grain) => s.update({ grain })} />
           </Row>
-          <Row label="Tab bar labels">
+          <Row label={t('Tab bar labels')}>
             <Toggle on={s.tabLabels !== false} onChange={(tabLabels) => s.update({ tabLabels })} />
           </Row>
-          <Row label="Reduce motion">
+          <Row label={t('Reduce motion')}>
             <Toggle on={!!s.reduceMotion} onChange={(reduceMotion) => s.update({ reduceMotion })} />
           </Row>
         </Section>
 
-        <Section title="Home screen" foot={s.headline === 'motto' ? 'Your motto shows in big letters at the top of Home.' : undefined}>
-          <Row label="Headline">
+        <Section title={t('Home screen')} foot={s.headline === 'motto' ? 'Your motto shows in big letters at the top of Home.' : undefined}>
+          <Row label={t('Headline')}>
             <Segmented value={s.headline ?? 'greeting'} options={['greeting', 'motto', 'date']} labels={{ greeting: 'Hello', motto: 'Motto', date: 'Date' }} onChange={(headline) => s.update({ headline })} />
           </Row>
           {s.headline === 'motto' && (
-            <Row label="Motto">
+            <Row label={t('Motto')}>
               <input
                 value={s.motto ?? ''}
                 onChange={(e) => s.update({ motto: e.target.value.slice(0, 40) })}
-                placeholder="No days off"
+                placeholder={t('No days off')}
                 className="w-44 bg-transparent text-right outline-none placeholder:text-muted"
               />
             </Row>
           )}
         </Section>
 
-        <Section title="Units">
-          <Row label="Weight">
+        <Section title={t('Units')}>
+          <Row label={t('Weight')}>
             <Segmented value={s.weightUnit} options={['kg', 'lbs']} onChange={(weightUnit) => s.update({ weightUnit })} />
           </Row>
-          <Row label="Distance">
+          <Row label={t('Distance')}>
             <Segmented value={s.distanceUnit} options={['km', 'mi']} onChange={(distanceUnit) => s.update({ distanceUnit })} />
           </Row>
         </Section>
 
-        <Section title="Workout" foot="The rest timer plays a sound when it’s done while the app is open. Vibration works on iOS 18 and newer.">
-          <Row label="Default rest timer">
+        <Section title={t('Workout')} foot={t('The rest timer plays a sound when it’s done while the app is open. Vibration works on iOS 18 and newer.')}>
+          <Row label={t('Default rest timer')}>
             <select value={s.defaultRest} onChange={(e) => s.update({ defaultRest: Number(e.target.value) })} className="appearance-none rounded-lg bg-card2 px-3 py-1.5 text-sm font-semibold outline-none">
               {REST_OPTIONS.map((r) => (
                 <option key={r} value={r}>
@@ -346,27 +362,27 @@ export function Settings() {
               ))}
             </select>
           </Row>
-          <Row label="Rest timer sound">
+          <Row label={t('Rest timer sound')}>
             <Toggle on={s.sound} onChange={(sound) => s.update({ sound })} />
           </Row>
-          <Row label="Keep screen on during workout">
+          <Row label={t('Keep screen on during workout')}>
             <Toggle on={s.keepAwake} onChange={(keepAwake) => s.update({ keepAwake })} />
           </Row>
-          <Row label="Vibration feedback">
+          <Row label={t('Vibration feedback')}>
             <Toggle on={s.haptics} onChange={(haptics) => s.update({ haptics })} />
           </Row>
-          <Row label="Show RPE column">
+          <Row label={t('Show RPE column')}>
             <Toggle on={s.showRpe} onChange={(showRpe) => s.update({ showRpe })} />
           </Row>
-          <Row label="Celebrations (confetti & fanfare)">
+          <Row label={t('Celebrations (confetti & fanfare)')}>
             <Toggle on={s.celebrations !== false} onChange={(celebrations) => s.update({ celebrations })} />
           </Row>
         </Section>
 
-        <Section title="Data" foot="Everything is stored only on this phone. Export a backup now and then (e.g. to iCloud Drive) so you never lose your history.">
-          <Row label="Export backup" icon={<Download size={20} />} onClick={() => exportBackup().catch((e) => toast(String(e.message ?? e)))} />
-          <Row label="Restore from backup" icon={<Upload size={20} />} onClick={() => fileRef.current?.click()} />
-          <Row label="Import from Hevy (CSV)" icon={<Upload size={20} />} onClick={() => nav('/import/hevy')}>
+        <Section title={t('Data')} foot={t('Everything is stored only on this phone. Export a backup now and then (e.g. to iCloud Drive) so you never lose your history.')}>
+          <Row label={t('Export backup')} icon={<Download size={20} />} onClick={() => exportBackup().catch((e) => toast(String(e.message ?? e)))} />
+          <Row label={t('Restore from backup')} icon={<Upload size={20} />} onClick={() => fileRef.current?.click()} />
+          <Row label={t('Import from Hevy (CSV)')} icon={<Upload size={20} />} onClick={() => nav('/import/hevy')}>
             <ChevronRight size={18} className="text-muted" />
           </Row>
         </Section>
@@ -388,7 +404,7 @@ export function Settings() {
           }}
         />
 
-        <Section title="Offline" foot="Exercise pictures load from the internet the first time and are then saved. Download them all once on Wi-Fi to have every picture in the gym (~65 MB).">
+        <Section title={t('Offline')} foot={t('Exercise pictures load from the internet the first time and are then saved. Download them all once on Wi-Fi to have every picture in the gym (~65 MB).')}>
           <Row label={img ? (img.done < img.total ? `Downloading… ${img.done}/${img.total}` : 'All images downloaded ✓') : 'Download all exercise images'} icon={<ImageDown size={20} />} onClick={img && img.done < img.total ? undefined : () => downloadImages((done, total) => setImg({ done, total }))} />
           {img && img.done < img.total && (
             <div className="px-4 pb-3">
@@ -397,7 +413,7 @@ export function Settings() {
               </div>
             </div>
           )}
-          <Row label="Storage used">
+          <Row label={t('Storage used')}>
             <span className="text-sm text-muted">{storage ? `${(storage.usage / 1e6).toFixed(1)} MB${storage.persisted ? ' · protected' : ''}` : '…'}</span>
           </Row>
           {!standalone && (
@@ -405,31 +421,31 @@ export function Settings() {
           )}
         </Section>
 
-        <Section title="Danger zone">
+        <Section title={t('Danger zone')}>
           <Row
-            label={<span className="text-danger">Delete all data</span>}
+            label={<span className="text-danger">{t('Delete all data')}</span>}
             icon={<Trash2 size={20} className="text-danger" />}
             onClick={async () => {
-              if (!(await confirmDialog('Delete everything?', 'All workouts, routines and custom exercises will be permanently deleted. Export a backup first!', 'Delete All', true))) return;
+              if (!(await confirmDialog(t('Delete everything?'), t('All workouts, routines and custom exercises will be permanently deleted. Export a backup first!'), t('Delete All'), true))) return;
               await Promise.all([db.workouts.clear(), db.routines.clear(), db.folders.clear(), db.exercises.clear(), db.measures.clear()]);
               useWorkout.getState().discard();
               await useLibrary.getState().reload();
-              toast('All data deleted');
+              toast(t('All data deleted'));
             }}
           />
         </Section>
 
-        <Sheet open={rankSheet} onClose={() => setRankSheet(false)} title="Sex & bodyweight">
+        <Sheet open={rankSheet} onClose={() => setRankSheet(false)} title={t('Sex & bodyweight')}>
           <div className="px-4 pt-2">
             <RankSetup compact onDone={() => setRankSheet(false)} />
-            <div className="mt-3 text-center text-xs text-muted">Used only for strength ranks. Bodyweight is saved to Measures.</div>
+            <div className="mt-3 text-center text-xs text-muted">{t('Used only for strength ranks. Bodyweight is saved to Measures.')}</div>
           </div>
         </Sheet>
 
         <div className="text-center text-xs text-muted">
           <button onClick={tapVersion}>Gym Log · v{__APP_VERSION__}</button>
           <br />
-          Exercise data & images: free-exercise-db (public domain)
+          {t('Exercise data & images: free-exercise-db (public domain)')}
           <br />
           <ScreenInfo />
         </div>

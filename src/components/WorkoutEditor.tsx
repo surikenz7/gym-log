@@ -12,6 +12,7 @@ import { ExerciseThumb } from './ExerciseImage';
 import { ExercisePicker } from './ExercisePicker';
 import type { EditorMode } from './SetRow';
 import { Button, Sheet, SheetItem } from './ui';
+import { t } from '../i18n';
 
 const SUPERSET_COLORS = ['#a855f7', '#f59e0b', '#14b8a6', '#ec4899', '#84cc16', '#0ea5e9'];
 
@@ -123,7 +124,7 @@ export function WorkoutEditor({
 
       <div className="space-y-2 px-4 pt-4">
         <Button className="w-full" onClick={() => setPicker({})}>
-          <Plus size={20} /> Add Exercise
+          <Plus size={20} /> {t('Add Exercise')}
         </Button>
         {footer}
       </div>
@@ -137,12 +138,12 @@ export function WorkoutEditor({
       />
 
       <Sheet open={!!menu} onClose={() => setMenu(null)} title={menuWex ? getExercise(menuWex.exerciseId).name : ''}>
-        <SheetItem icon={<GripVertical size={20} />} label="Reorder Exercises" onClick={() => (setMenu(null), setReorder(true))} />
-        <SheetItem icon={<ArrowLeftRight size={20} />} label="Replace Exercise" onClick={() => (setMenu(null), setPicker({ replace: menu! }))} />
+        <SheetItem icon={<GripVertical size={20} />} label={t('Reorder Exercises')} onClick={() => (setMenu(null), setReorder(true))} />
+        <SheetItem icon={<ArrowLeftRight size={20} />} label={t('Replace Exercise')} onClick={() => (setMenu(null), setPicker({ replace: menu! }))} />
         {menuWex?.supersetId ? (
           <SheetItem
             icon={<Unlink size={20} />}
-            label="Remove From Superset"
+            label={t('Remove From Superset')}
             onClick={() => {
               const id = menu;
               setMenu(null);
@@ -156,13 +157,13 @@ export function WorkoutEditor({
             }}
           />
         ) : (
-          exercises.length > 1 && <SheetItem icon={<Link2 size={20} />} label="Add To Superset" onClick={() => (setMenu(null), setSuperset(menu))} />
+          exercises.length > 1 && <SheetItem icon={<Link2 size={20} />} label={t('Add To Superset')} onClick={() => (setMenu(null), setSuperset(menu))} />
         )}
-        <SheetItem icon={<Info size={20} />} label="Exercise Info" onClick={() => (setMenu(null), setInfo(menuWex!.exerciseId))} />
+        <SheetItem icon={<Info size={20} />} label={t('Exercise Info')} onClick={() => (setMenu(null), setInfo(menuWex!.exerciseId))} />
         <SheetItem
           danger
           icon={<Trash2 size={20} />}
-          label="Remove Exercise"
+          label={t('Remove Exercise')}
           onClick={() => {
             const id = menu;
             setMenu(null);
@@ -174,7 +175,7 @@ export function WorkoutEditor({
         />
       </Sheet>
 
-      <Sheet open={!!superset} onClose={() => setSuperset(null)} title="Superset with...">
+      <Sheet open={!!superset} onClose={() => setSuperset(null)} title={t('Superset with...')}>
         {exercises
           .filter((e) => e.id !== superset)
           .map((e) => {
@@ -205,7 +206,7 @@ export function WorkoutEditor({
           })}
       </Sheet>
 
-      <Sheet open={reorder} onClose={() => setReorder(false)} title="Reorder Exercises">
+      <Sheet open={reorder} onClose={() => setReorder(false)} title={t('Reorder Exercises')}>
         <Reorder.Group
           axis="y"
           values={exercises.map((e) => e.id)}
@@ -218,7 +219,7 @@ export function WorkoutEditor({
         </Reorder.Group>
         <div className="px-4 pt-4">
           <Button className="w-full" onClick={() => setReorder(false)}>
-            Done
+            {t('Done')}
           </Button>
         </div>
       </Sheet>
