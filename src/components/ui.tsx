@@ -43,18 +43,18 @@ export function Header({
   return (
     <div className="sticky top-0 z-20 bg-bg/85 backdrop-blur-xl pt-safe">
       <div className="pointer-events-none absolute inset-x-0 top-full h-8 bg-gradient-to-b from-bg/85 to-transparent" />
-      <div className="flex h-12 items-center gap-2 px-3">
+      <div className="flex h-14 items-center gap-2 px-3">
         <div className="flex min-w-[64px] items-center">
           {back ? (
             <button className="press -ml-1 flex items-center text-accent" onClick={() => (typeof back === 'string' ? nav(back) : nav(-1))}>
-              <ChevronLeft size={26} />
+              <ChevronLeft size={30} />
             </button>
           ) : (
             left
           )}
         </div>
         <div className={`flex-1 truncate text-center font-display text-[17px] font-semibold uppercase tracking-wider ${large ? 'opacity-0' : ''}`}>{title}</div>
-        <div className="flex min-w-[64px] items-center justify-end gap-3">{right}</div>
+        <div className="flex min-w-[64px] items-center justify-end gap-4 [&_svg]:h-[26px] [&_svg]:w-[26px] [&>button]:p-1">{right}</div>
       </div>
       {large && (
         <h1 className="flex items-center gap-2.5 px-4 pb-2 font-display text-4xl font-bold uppercase tracking-tight">

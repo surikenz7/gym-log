@@ -339,7 +339,7 @@ input::-webkit-inner-spin-button {
   position: absolute;
   inset: 0 0 auto 0;
   z-index: 15;
-  height: calc(var(--sat) + 34px);
+  height: calc(var(--sat) + 6px);
   pointer-events: none;
   background: linear-gradient(to bottom, rgb(var(--bg)) 0%, rgb(var(--bg) / 0.85) 55%, rgb(var(--bg) / 0));
 }

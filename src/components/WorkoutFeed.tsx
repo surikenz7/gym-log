@@ -58,21 +58,25 @@ export function WorkoutCard({ w, prs, index = 0, friend, onOpen, author }: { w: 
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: Math.min(index, 6) * 0.04 }}
       onClick={() => (onOpen ? onOpen() : !friend && nav(`/history/${w.id}`))}
-      className="press cut flex w-full bg-card text-left"
+      className={`press cut w-full text-left ${author ? 'flex flex-col bg-card ring-1 ring-inset ring-sky-400/40' : 'flex bg-card'}`}
+      style={author ? { backgroundImage: 'linear-gradient(135deg, rgb(56 189 248 / 0.16), transparent 60%)' } : undefined}
     >
-      <div className="flex w-[58px] shrink-0 flex-col items-center justify-center gap-0.5 bg-card2 py-3" style={{ boxShadow: 'inset -2px 0 0 rgb(var(--accent))' }}>
+      {author && (
+        <div className="flex items-center gap-3 px-3 pt-3">
+          <Avatar size={44} src={author.avatar ?? null} initial={author.nick} deco={null} />
+          <div className="min-w-0">
+            <div className="truncate text-base font-bold normal-case">@{author.nick}</div>
+            <div className="text-xs text-muted">{formatDistanceToNowStrict(w.end, { addSuffix: true })}</div>
+          </div>
+        </div>
+      )}
+      <div className="flex w-full">
+      {!author && <div className="flex w-[58px] shrink-0 flex-col items-center justify-center gap-0.5 bg-card2 py-3" style={{ boxShadow: 'inset -2px 0 0 rgb(var(--accent))' }}>
         <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-muted">{format(w.start, 'EEE')}</span>
         <span className="font-display text-[28px] font-bold leading-none">{format(w.start, 'd')}</span>
         <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-accent">{format(w.start, isThisYear(w.start) ? 'MMM' : 'MMM yy')}</span>
-      </div>
+      </div>}
       <div className="min-w-0 flex-1 px-3 py-3">
-        {author && (
-          <div className="mb-1.5 flex items-center gap-2">
-            <Avatar size={24} src={author.avatar ?? null} initial={author.nick} deco={null} />
-            <span className="truncate text-sm font-semibold normal-case">@{author.nick}</span>
-            <span className="shrink-0 text-xs text-muted">· {formatDistanceToNowStrict(w.end, { addSuffix: true })}</span>
-          </div>
-        )}
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1 truncate font-display text-xl font-bold uppercase leading-tight">{w.name}</div>
           {prs > 0 && (
@@ -108,6 +112,7 @@ export function WorkoutCard({ w, prs, index = 0, friend, onOpen, author }: { w: 
             {w.tagged?.length ? <span className="truncate text-xs text-muted">👥 {w.tagged.map((f) => '@' + f.nick).join(', ')}</span> : null}
           </div>
         )}
+      </div>
       </div>
     </motion.button>
   );
