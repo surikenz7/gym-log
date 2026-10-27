@@ -97,6 +97,21 @@ service cloud.firestore {
       allow update, delete: if signedIn() && me() in resource.data.members;
     }
 
+    // stories and notes (24 h): whoever may see your workouts; "seen by" only for the owner
+    match /stories/{owner} {
+      allow read: if canSee(owner);
+      allow write: if signedIn() && me() == owner;
+      match /items/{sid} {
+        allow read: if canSee(owner);
+        allow write: if signedIn() && me() == owner;
+        match /views/{vid} {
+          allow read: if signedIn() && (me() == owner || me() == vid);
+          allow create, update: if signedIn() && me() == vid && canSee(owner);
+          allow delete: if signedIn() && me() == owner;
+        }
+      }
+    }
+
     // where to deliver message notifications (only the push relay can actually send to them)
     match /pushSubs/{uid} {
       allow read: if signedIn();

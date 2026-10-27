@@ -38,6 +38,8 @@ const FriendProfile = lazy(() => import('./screens/SocialHub').then((m) => ({ de
 const FriendWorkout = lazy(() => import('./screens/SocialHub').then((m) => ({ default: m.FriendWorkout })));
 const Chat = lazy(() => import('./screens/SocialHub').then((m) => ({ default: m.Chat })));
 const SharedRoutine = lazy(() => import('./screens/SharedRoutine').then((m) => ({ default: m.SharedRoutine })));
+const StoryEditor = lazy(() => import('./screens/StoryEditor').then((m) => ({ default: m.StoryEditor })));
+const StoryViewer = lazy(() => import('./screens/StoryViewer').then((m) => ({ default: m.StoryViewer })));
 const Settings = lazy(() => import('./screens/Settings').then((m) => ({ default: m.Settings })));
 
 
@@ -144,6 +146,8 @@ export default function App() {
           <Route path="/u/:uid" element={<FriendProfile />} />
           <Route path="/u/:uid/w/:wid" element={<FriendWorkout />} />
           <Route path="/chat/:uid" element={<Chat />} />
+          <Route path="/story/new" element={<StoryEditor />} />
+          <Route path="/stories/:uid" element={<StoryViewer />} />
           <Route path="/r/:code" element={<SharedRoutine />} />
           <Route path="/r/:slug/:code" element={<SharedRoutine />} />
           <Route path="/settings" element={<Settings />} />

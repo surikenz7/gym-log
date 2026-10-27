@@ -11,6 +11,10 @@ import { RankBadge, TierName } from '../components/RankBadge';
 import { RatingPill, PhotoStrip, TaggedChips, useFriendProfiles } from '../components/WorkoutExtras';
 import { Avatar, WorkoutCard } from '../components/WorkoutFeed';
 import { ReactionBar } from '../components/Reactions';
+import { NoteBubble, NoteView } from '../components/StoryTray';
+import { useStories, useStoryRing } from '../cloud/storyStore';
+import { liveNote } from '../cloud/stories';
+import { primeAudio } from '../lib/music';
 import { Button, Header, Page, Portal, Sheet } from '../components/ui';
 import { t } from '../i18n';
 import { haptic } from '../lib/haptics';
@@ -263,6 +267,8 @@ function ActivityTab() {
           ? t('commented on “{name}”: {text}', { name: i.workoutName ?? '', text: i.text ?? '' })
           : i.kind === 'quest'
             ? t('started a Friends Quest with you')
+            : i.kind === 'story'
+              ? t('liked your story')
             : i.kind === 'follow'
               ? t('started following you')
               : t('accepted your follow request');
@@ -274,7 +280,9 @@ function ActivityTab() {
           ? `/history/${i.workoutId}`
           : i.kind === 'quest'
             ? '/compete'
-            : `/u/${i.from}`,
+            : i.kind === 'story'
+              ? `/stories/${uid}`
+              : `/u/${i.from}`,
     );
   return (
     <>
@@ -296,7 +304,7 @@ function ActivityTab() {
               <b>@{i.nick}</b> {text(i)}
               <div className="text-xs text-muted">{formatDistanceToNowStrict(i.at, { addSuffix: true })}</div>
             </div>
-            <span className="text-xl">{{ tag: '🏋️', follow: '👋', accepted: '✅', like: '❤️', comment: '💬', quest: '🤝' }[i.kind]}</span>
+            <span className="text-xl">{{ tag: '🏋️', follow: '👋', accepted: '✅', like: '❤️', comment: '💬', quest: '🤝', story: '❤️' }[i.kind]}</span>
           </motion.button>
         ))}
       </div>
@@ -355,11 +363,19 @@ export function FriendProfile() {
   const [routines, setRoutines] = useState<Routine[] | null>(null);
   const [locked, setLocked] = useState(false);
   const me = uid === a.uid;
+  const ring = useStoryRing(uid);
+  const entry = useStories((st) => st.friends.find((f) => f.uid === uid) ?? null);
+  const [noteOpen, setNoteOpen] = useState(false);
 
   const load = async () => {
     const s = await social();
     const prof = await s.getProfile(uid!).catch(() => null);
     setP(prof);
+    // their story / note (also for people you don't follow, if their account is public)
+    if (prof && !me)
+      void import('../cloud/stories')
+        .then((st) => st.getStoryMeta(prof.uid))
+        .then((meta) => meta && useStories.setState((st) => ({ friends: [...st.friends.filter((f) => f.uid !== prof.uid), { uid: prof.uid, nick: prof.nick, avatar: prof.avatar, meta }] })));
     if (a.uid && !me) setStatus(await s.followStatus(a.uid, uid!).catch((): FollowStatus => 'none'));
     try {
       setWorkouts(await s.getWorkouts(uid!));
@@ -404,8 +420,21 @@ export function FriendProfile() {
     <Page pushed>
       <Header back title={`@${p.nick}`} />
       <div className="px-4 pb-12">
-        <div className="flex flex-col items-center pt-8">
-          <Avatar size={104} src={p.avatar ?? null} initial={p.nick} deco={p.deco ?? null} />
+        <div className="flex flex-col items-center">
+          <div className="relative flex flex-col items-center pt-11">
+            <NoteBubble note={liveNote(entry?.meta)} onClick={() => (primeAudio(), setNoteOpen(true))} />
+            <button
+              onClick={() => {
+                if (!ring) return;
+                primeAudio();
+                nav(`/stories/${p.uid}`);
+              }}
+              className="press"
+            >
+              <Avatar size={104} src={p.avatar ?? null} initial={p.nick} deco={ring ? null : (p.deco ?? null)} story={ring} />
+            </button>
+          </div>
+          <NoteView entry={noteOpen ? entry : null} onClose={() => setNoteOpen(false)} />
           <div className="mt-6 flex items-center gap-2 font-display text-3xl font-bold">
             @{p.nick} {p.private && <Lock size={18} className="text-muted" />}
           </div>

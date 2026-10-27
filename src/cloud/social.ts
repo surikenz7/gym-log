@@ -59,7 +59,7 @@ export interface Follower {
 
 export interface InboxItem {
   id: string;
-  kind: 'tag' | 'follow' | 'accepted' | 'like' | 'comment' | 'quest';
+  kind: 'tag' | 'follow' | 'accepted' | 'like' | 'comment' | 'quest' | 'story';
   from: string;
   nick: string;
   avatar?: string | null;

@@ -2,12 +2,15 @@ import { addDays, format, isSameDay, isSameWeek, isToday, startOfWeek } from 'da
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { t } from '../i18n';
-import { Flame, Upload, Zap } from 'lucide-react';
+import { Flame, Plus, Upload, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { RankBadge, TierName } from '../components/RankBadge';
 import { Avatar, WorkoutCard } from '../components/WorkoutFeed';
 import { ReactionBar } from '../components/Reactions';
 import { refreshFeed, useFeed } from '../cloud/socialStore';
+import { useStoryRing } from '../cloud/storyStore';
+import { StoryTray } from '../components/StoryTray';
+import { primeAudio } from '../lib/music';
 import { useAccount } from '../cloud/account';
 import { prCounts } from '../lib/stats';
 import { useNavigate as useNav } from 'react-router-dom';
@@ -157,6 +160,8 @@ export function Home() {
   const lvl = levelFromXp(journey?.xp ?? 0);
   const overall = ranks?.overall ?? null;
   const trainedToday = list.some((w) => isToday(w.start));
+  const myUid = useAccount((a) => (a.status === 'signedIn' ? a.uid : null));
+  const myRing = useStoryRing(myUid);
 
   return (
     <Page>
@@ -179,13 +184,36 @@ export function Home() {
             </h1>
           </div>
           {/* big profile picture filling the right side of the greeting, decoration included */}
-          <button onClick={() => nav('/profile')} className="press relative mr-3 mt-7 shrink-0">
-            <Avatar size={122} ring={overall != null ? tierOf(overall).c[1] : undefined} />
+          {/* tap: your story if you have one up, otherwise your profile; + adds a story */}
+          <button
+            onClick={() => {
+              if (myRing) {
+                primeAudio();
+                nav(`/stories/${myUid}`);
+              } else nav('/profile');
+            }}
+            className="press relative mr-3 mt-7 shrink-0"
+          >
+            <Avatar size={122} ring={overall != null ? tierOf(overall).c[1] : undefined} story={myRing} />
             <span className="grad absolute -bottom-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full px-2.5 py-0.5 font-display text-xs font-bold shadow-lg">
               LVL {lvl.level}
             </span>
+            {myUid && (
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nav('/story/new');
+                }}
+                className="absolute -right-1 bottom-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border-[3px] border-bg bg-accent text-[#fff]"
+                aria-label={t('Add to story')}
+              >
+                <Plus size={17} strokeWidth={3} />
+              </span>
+            )}
           </button>
         </div>
+
+        <StoryTray />
 
         <div className="cut bg-card p-4">
           <div className="mb-3 flex items-center justify-between">

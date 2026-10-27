@@ -1,6 +1,6 @@
 import { formatDistanceToNowStrict } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Heart, MessageCircle, Send, Share2, Trash2 } from 'lucide-react';
+import { CirclePlus, Heart, MessageCircle, Send, Share2, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { create } from 'zustand';
@@ -8,7 +8,8 @@ import { useAccount } from '../cloud/account';
 import type { Comment, Post } from '../cloud/social';
 import { t } from '../i18n';
 import { haptic } from '../lib/haptics';
-import { shareWorkout } from '../lib/shareWorkout';
+import { shareWorkout, workoutImage } from '../lib/shareWorkout';
+import { useStoryDraft } from '../cloud/storyStore';
 import { toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
 import type { Workout } from '../types';
@@ -77,6 +78,14 @@ export function ReactionBar({ owner, w, author, full }: { owner: string | null; 
     await shareWorkout(w, settings, author?.nick ?? useAccount.getState().nick ?? undefined, author ? author.avatar : settings.avatar).catch(() => toast(t('Something went wrong')));
   };
 
+  const toStory = async () => {
+    haptic();
+    const img = await workoutImage(w, settings, author?.nick ?? useAccount.getState().nick ?? undefined, author ? author.avatar : settings.avatar).catch(() => null);
+    if (!img) return toast(t('Something went wrong'));
+    useStoryDraft.setState({ img });
+    nav('/story/new');
+  };
+
   const names = post ? Object.entries(post.likes).filter(([u]) => u !== me) : [];
   // signed out: no likes or comments, just a share button on the workout page
   if (!social_)
@@ -102,7 +111,12 @@ export function ReactionBar({ owner, w, author, full }: { owner: string | null; 
             </button>
           </>
         )}
-        <button onClick={share} className="press ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1.5" aria-label={t('Share')}>
+        {full && (
+          <button onClick={toStory} className="press ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-semibold" aria-label={t('Add to story')}>
+            <CirclePlus size={20} className="text-white/75" /> {t('Story')}
+          </button>
+        )}
+        <button onClick={share} className={`press ${full ? '' : 'ml-auto'} flex items-center gap-1.5 rounded-full px-2.5 py-1.5`} aria-label={t('Share')}>
           <Share2 size={20} className="text-white/75" />
         </button>
       </div>

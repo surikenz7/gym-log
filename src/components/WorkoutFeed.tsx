@@ -4,6 +4,8 @@ import { Timer, Trophy, Weight } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from '../cloud/account';
+import { useStoryRing } from '../cloud/storyStore';
+import { primeAudio } from '../lib/music';
 import { getExercise, typeOf } from '../lib/exercises';
 import { prCounts, workoutVolume } from '../lib/stats';
 import { fmtDurationLong, fmtVolume } from '../lib/units';
@@ -19,7 +21,24 @@ import { t } from '../i18n';
  * Profile picture (or initial) with the equipped decoration around it. `ring` draws a coloured
  * border (e.g. the overall rank's metal) when no decoration is worn; `deco` overrides the equipped one.
  */
-export function Avatar({ size = 40, ring, deco, src, initial }: { size?: number; ring?: string; deco?: string | null; src?: string | null; initial?: string }) {
+/** Instagram-style story ring: colourful while there's an unwatched story, grey once watched. */
+export function StoryRing({ size, state }: { size: number; state: 'new' | 'seen' }) {
+  const th = Math.max(2, size * 0.045);
+  const gap = Math.max(2, size * 0.045);
+  return (
+    <div
+      className="pointer-events-none absolute rounded-full"
+      style={{
+        inset: -(gap + th),
+        background: state === 'new' ? 'conic-gradient(from 210deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5, #feda75)' : 'rgb(var(--muted) / 0.55)',
+        WebkitMask: `radial-gradient(farthest-side, transparent calc(100% - ${th}px), #000 calc(100% - ${th}px))`,
+        mask: `radial-gradient(farthest-side, transparent calc(100% - ${th}px), #000 calc(100% - ${th}px))`,
+      }}
+    />
+  );
+}
+
+export function Avatar({ size = 40, ring, deco, src, initial, story }: { size?: number; ring?: string; deco?: string | null; src?: string | null; initial?: string; story?: 'new' | 'seen' | null }) {
   const myName = useSettings((s) => s.name);
   const myPhoto = useSettings((s) => s.avatar);
   const equipped = useSettings((s) => s.deco);
@@ -29,9 +48,10 @@ export function Avatar({ size = 40, ring, deco, src, initial }: { size?: number;
   const name = initial ?? myName;
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
+      {story && <StoryRing size={size} state={story} />}
       <div
         className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-accent to-[#000] font-display font-bold text-[#fff]"
-        style={{ fontSize: size * 0.42, boxShadow: ring && !worn ? `0 0 0 ${Math.max(2, size / 22)}px rgb(var(--bg)), 0 0 0 ${Math.max(4, size / 11)}px ${ring}` : undefined }}
+        style={{ fontSize: size * 0.42, boxShadow: ring && !worn && !story ? `0 0 0 ${Math.max(2, size / 22)}px rgb(var(--bg)), 0 0 0 ${Math.max(4, size / 11)}px ${ring}` : undefined }}
       >
         {photo ? <img src={photo} alt="" className="h-full w-full object-cover" draggable={false} /> : (name.trim()[0] ?? '🏋').toUpperCase()}
       </div>
@@ -57,6 +77,8 @@ export interface FeedAuthor {
 export function WorkoutCard({ w, prs, index = 0, friend, onOpen, author, footer }: { w: Workout; prs: number; index?: number; friend?: boolean; onOpen?: () => void; author?: FeedAuthor; footer?: ReactNode }) {
   const settings = useSettings();
   const myNick = useAccount((a) => a.nick);
+  const myUid = useAccount((a) => (a.status === 'signedIn' ? a.uid : null));
+  const ring = useStoryRing(author ? author.uid : myUid);
   const nav = useNavigate();
   const shown = w.exercises.slice(0, 4);
   const sets = w.exercises.reduce((n, e) => n + e.sets.filter((s) => s.type !== 'warmup').length, 0);
@@ -70,7 +92,16 @@ export function WorkoutCard({ w, prs, index = 0, friend, onOpen, author, footer 
     >
     <button onClick={() => (onOpen ? onOpen() : !friend && nav(`/history/${w.id}`))} className="press flex w-full flex-col text-left">
       <div className="flex items-center gap-3 px-3 pt-3">
-        {author ? <Avatar size={44} src={author.avatar ?? null} initial={author.nick} deco={author.deco ?? null} /> : <Avatar size={44} />}
+        <span
+          onClick={(e) => {
+            if (!ring) return;
+            e.stopPropagation();
+            primeAudio();
+            nav(`/stories/${author?.uid ?? myUid}`);
+          }}
+        >
+          {author ? <Avatar size={44} src={author.avatar ?? null} initial={author.nick} deco={ring ? null : (author.deco ?? null)} story={ring} /> : <Avatar size={44} story={ring} deco={ring ? null : undefined} />}
+        </span>
         <div className="min-w-0">
           <div className="truncate text-base font-bold normal-case">{author ? '@' + author.nick : myNick ? '@' + myNick : settings.name || t('You')}</div>
           <div className="truncate text-xs text-muted">{when(w)}</div>
