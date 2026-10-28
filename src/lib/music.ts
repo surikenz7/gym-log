@@ -1,4 +1,5 @@
 import { useEffect, useSyncExternalStore } from 'react';
+import { PUSH_URL } from '../cloud/config';
 import { lang } from '../i18n';
 
 /**
@@ -25,13 +26,31 @@ interface ITunesTrack {
   previewUrl?: string;
 }
 
+/*
+ * On iPhones Apple redirects the search to the Music app (musics://), so it goes through our
+ * Cloudflare relay; calling Apple directly is only the fallback (works on computers / Android).
+ */
+async function fetchTracks(term: string, signal?: AbortSignal): Promise<ITunesTrack[]> {
+  const qs = `country=${STORE[lang()] ?? 'us'}&term=${encodeURIComponent(term)}`;
+  const urls = [...(PUSH_URL ? [`${PUSH_URL}/music?${qs}`] : []), `https://itunes.apple.com/search?media=music&entity=song&limit=25&${qs}`];
+  let error: unknown;
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { signal });
+      if (res.ok) return ((await res.json()) as { results: ITunesTrack[] }).results;
+      error = new Error('search failed');
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') throw e;
+      error = e;
+    }
+  }
+  throw error;
+}
+
 export async function searchSongs(q: string, signal?: AbortSignal): Promise<Song[]> {
   const term = q.trim();
   if (!term) return [];
-  const url = `https://itunes.apple.com/search?media=music&entity=song&limit=25&country=${STORE[lang()] ?? 'us'}&term=${encodeURIComponent(term)}`;
-  const res = await fetch(url, { signal });
-  if (!res.ok) throw new Error('search failed');
-  const data = (await res.json()) as { results: ITunesTrack[] };
+  const data = { results: await fetchTracks(term, signal) };
   return data.results
     .filter((r) => r.previewUrl)
     .map((r) => ({ id: r.trackId, title: r.trackName, artist: r.artistName, art: (r.artworkUrl100 ?? '').replace('100x100bb', '300x300bb'), url: r.previewUrl! }));

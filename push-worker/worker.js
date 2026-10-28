@@ -1,6 +1,10 @@
 /*
  * Gym Log push relay — a free Cloudflare Worker that sends Web Push notifications for new chat messages.
  *
+ * It also relays the song search for stories and notes (GET /music?term=…&country=…): Apple's iTunes
+ * Search API redirects requests from iPhones to the Music app (musics://), so the app can't call it
+ * directly there. Only the search goes through here; the 30-second previews play straight from Apple.
+ *
  * The app calls POST /chat { chat } right after sending a message, with the sender's Firebase ID token.
  * The worker reads the chat and the recipient's push subscriptions from Firestore *with that token*, so
  * the security rules decide what it may see: only a member of the chat gets anything sent, and the
@@ -26,7 +30,7 @@ const concat = (...parts) => {
 const ALLOWED = ['https://surikenz7.github.io', 'http://localhost:5173', 'http://localhost:4173'];
 const cors = (origin) => ({
   'Access-Control-Allow-Origin': ALLOWED.includes(origin) ? origin : ALLOWED[0],
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Authorization, Content-Type',
   'Access-Control-Max-Age': '86400',
 });
@@ -37,6 +41,7 @@ export default {
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors(origin) });
     const reply = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors(origin), 'Content-Type': 'application/json' } });
     const url = new URL(req.url);
+    if (req.method === 'GET' && url.pathname === '/music') return music(url, origin, reply);
     if (req.method !== 'POST' || url.pathname !== '/chat') return reply({ error: 'not found' }, 404);
 
     const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer /, '');
@@ -59,6 +64,29 @@ export default {
     return reply({ sent: results.filter((r) => r >= 200 && r < 300).length });
   },
 };
+
+/* ---------------- song search (iTunes) ---------------- */
+
+async function music(url, origin, reply) {
+  const term = (url.searchParams.get('term') ?? '').trim().slice(0, 80);
+  const country = /^[a-z]{2}$/.test(url.searchParams.get('country') ?? '') ? url.searchParams.get('country') : 'us';
+  if (!term) return reply({ results: [] });
+  const api = `https://itunes.apple.com/search?media=music&entity=song&limit=25&country=${country}&term=${encodeURIComponent(term)}`;
+  // same search from anyone → answer from Cloudflare's cache for a day
+  const cache = caches.default;
+  const key = new Request(api);
+  let res = await cache.match(key);
+  if (!res) {
+    const r = await fetch(api, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) GymLog/1.0' } });
+    if (!r.ok) return reply({ error: 'search failed' }, 502);
+    const results = ((await r.json()).results ?? [])
+      .filter((t) => t.previewUrl)
+      .map((t) => ({ trackId: t.trackId, trackName: t.trackName, artistName: t.artistName, artworkUrl100: t.artworkUrl100, previewUrl: t.previewUrl }));
+    res = new Response(JSON.stringify({ results }), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400' } });
+    await cache.put(key, res.clone());
+  }
+  return new Response(res.body, { headers: { ...cors(origin), 'Content-Type': 'application/json' } });
+}
 
 /* ---------------- Firestore REST (document JSON → plain values) ---------------- */
 
