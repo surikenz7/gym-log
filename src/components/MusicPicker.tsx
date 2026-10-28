@@ -33,6 +33,7 @@ export function MusicPicker({ open, onClose, onPick }: { open: boolean; onClose:
   const [q, setQ] = useState('');
   const [list, setList] = useState<Song[] | null>(null);
   const [error, setError] = useState(false);
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
     if (!open) return stopSong();
     const ctl = new AbortController();
@@ -47,7 +48,7 @@ export function MusicPicker({ open, onClose, onPick }: { open: boolean; onClose:
       clearTimeout(id);
       ctl.abort();
     };
-  }, [q, open]);
+  }, [q, open, retry]);
 
   return (
     <Sheet open={open} onClose={onClose} title={t('Add music')} tall>
@@ -59,7 +60,14 @@ export function MusicPicker({ open, onClose, onPick }: { open: boolean; onClose:
       </div>
       <div className="mt-3 space-y-1.5 px-4 pb-6">
         {list === null && !error && <div className="py-10 text-center text-sm text-muted">{t('Search for a song. You get a 30-second clip.')}</div>}
-        {error && <div className="py-10 text-center text-sm text-muted">{t('No internet connection')}</div>}
+        {error && (
+          <div className="py-10 text-center text-sm text-muted">
+            {t('Couldn’t load songs.')}
+            <button onClick={() => setRetry((r) => r + 1)} className="mt-3 block w-full font-semibold text-accent">
+              {t('Try again')}
+            </button>
+          </div>
+        )}
         {list?.length === 0 && <div className="py-10 text-center text-sm text-muted">{t('No songs found')}</div>}
         {list?.map((s) => (
           <SongRow

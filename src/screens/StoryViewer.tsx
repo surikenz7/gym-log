@@ -2,10 +2,10 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Eye, Heart, Music, Send, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAccount } from '../cloud/account';
 import type { Story, StoryView } from '../cloud/stories';
-import { markSeen, refreshStories, storyQueue, useStories } from '../cloud/storyStore';
+import { closeStoryUI, markSeen, refreshStories, storyQueue, useStories } from '../cloud/storyStore';
 import { meRef, replyInChat } from '../components/StoryTray';
 import { Portal, Sheet } from '../components/ui';
 import { Avatar } from '../components/WorkoutFeed';
@@ -26,14 +26,13 @@ async function load(uid: string): Promise<Story[]> {
   return list;
 }
 
-export function StoryViewer() {
-  const { uid } = useParams();
+export function StoryViewer({ uid }: { uid: string }) {
   const nav = useNavigate();
   const me = useAccount((a) => a.uid);
   const myNick = useAccount((a) => a.nick);
   const myAvatar = useSettings((s) => s.avatar);
   const friends = useStories((s) => s.friends);
-  const [queue] = useState(() => storyQueue(uid!));
+  const [queue] = useState(() => storyQueue(uid));
   const [qi, setQi] = useState(0);
   const [si, setSi] = useState(0);
   const [list, setList] = useState<Story[] | null>(null);
@@ -53,7 +52,7 @@ export function StoryViewer() {
 
   const close = () => {
     stopSong();
-    nav(-1);
+    closeStoryUI();
   };
   const next = () => {
     if (list && si < list.length - 1) setSi(si + 1);
@@ -231,7 +230,7 @@ export function StoryViewer() {
               ))}
             </div>
             <div className="pointer-events-auto mt-2.5 flex items-center gap-2.5">
-              <button onClick={() => !mine && (stopSong(), nav(`/u/${owner}`))}>
+              <button onClick={() => !mine && (close(), nav(`/u/${owner}`))}>
                 <Avatar size={34} src={mine ? undefined : (info.avatar ?? null)} initial={mine ? undefined : info.nick} deco={null} />
               </button>
               <div className="min-w-0 flex-1 leading-tight">
@@ -299,7 +298,7 @@ export function StoryViewer() {
         <div className="space-y-1 px-4 pb-6 pt-1">
           {views?.length === 0 && <div className="py-8 text-center text-sm text-muted">{t('Nobody has seen it yet.')}</div>}
           {views?.map((v) => (
-            <button key={v.uid} onClick={() => (stopSong(), nav(`/u/${v.uid}`))} className="press flex w-full items-center gap-3 rounded-xl p-2 text-left">
+            <button key={v.uid} onClick={() => (close(), nav(`/u/${v.uid}`))} className="press flex w-full items-center gap-3 rounded-xl p-2 text-left">
               <Avatar size={40} src={v.avatar ?? null} initial={v.nick} deco={null} />
               <div className="min-w-0 flex-1">
                 <div className="truncate font-semibold">@{v.nick}</div>

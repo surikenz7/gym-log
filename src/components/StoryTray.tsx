@@ -2,11 +2,10 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Music, Plus, Send } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAccount } from '../cloud/account';
 import type { PublicProfile } from '../cloud/social';
 import { hasStory, liveNote, type Note } from '../cloud/stories';
-import { refreshStories, useStories, useStoryRing, type StoryEntry } from '../cloud/storyStore';
+import { openStory, openStoryEditor, refreshStories, useStories, useStoryRing, type StoryEntry } from '../cloud/storyStore';
 import { t } from '../i18n';
 import { haptic } from '../lib/haptics';
 import { playSong, primeAudio, stopSong, type Song } from '../lib/music';
@@ -170,14 +169,13 @@ export function NoteView({ entry, onClose }: { entry: StoryEntry | null; onClose
 }
 
 function TrayItem({ uid, nick, avatar, note, label, mine, onNote }: { uid: string; nick: string; avatar?: string | null; note: Note | null; label: string; mine?: boolean; onNote: () => void }) {
-  const nav = useNavigate();
   const ring = useStoryRing(uid);
   const open = () => {
     haptic();
     if (ring) {
       primeAudio();
-      nav(`/stories/${uid}`);
-    } else if (mine) nav('/story/new');
+      openStory(uid);
+    } else if (mine) openStoryEditor();
     else onNote();
   };
   return (
@@ -190,7 +188,7 @@ function TrayItem({ uid, nick, avatar, note, label, mine, onNote }: { uid: strin
             onClick={(e) => {
               e.stopPropagation();
               haptic();
-              nav('/story/new');
+              openStoryEditor();
             }}
             className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-bg bg-accent text-[#fff]"
           >

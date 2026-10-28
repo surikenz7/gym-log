@@ -4,7 +4,7 @@ import { Timer, Trophy, Weight } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from '../cloud/account';
-import { useStoryRing } from '../cloud/storyStore';
+import { openStory, useStoryRing } from '../cloud/storyStore';
 import { primeAudio } from '../lib/music';
 import { getExercise, typeOf } from '../lib/exercises';
 import { prCounts, workoutVolume } from '../lib/stats';
@@ -97,7 +97,7 @@ export function WorkoutCard({ w, prs, index = 0, friend, onOpen, author, footer 
             if (!ring) return;
             e.stopPropagation();
             primeAudio();
-            nav(`/stories/${author?.uid ?? myUid}`);
+            openStory((author?.uid ?? myUid)!);
           }}
         >
           {author ? <Avatar size={44} src={author.avatar ?? null} initial={author.nick} deco={ring ? null : (author.deco ?? null)} story={ring} /> : <Avatar size={44} story={ring} deco={ring ? null : undefined} />}

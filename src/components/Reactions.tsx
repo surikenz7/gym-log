@@ -9,7 +9,7 @@ import type { Comment, Post } from '../cloud/social';
 import { t } from '../i18n';
 import { haptic } from '../lib/haptics';
 import { shareWorkout, workoutImage } from '../lib/shareWorkout';
-import { useStoryDraft } from '../cloud/storyStore';
+import { openStoryEditor } from '../cloud/storyStore';
 import { toast } from '../state/dialog';
 import { useSettings } from '../state/settings';
 import type { Workout } from '../types';
@@ -82,8 +82,7 @@ export function ReactionBar({ owner, w, author, full }: { owner: string | null; 
     haptic();
     const img = await workoutImage(w, settings, author?.nick ?? useAccount.getState().nick ?? undefined, author ? author.avatar : settings.avatar).catch(() => null);
     if (!img) return toast(t('Something went wrong'));
-    useStoryDraft.setState({ img });
-    nav('/story/new');
+    openStoryEditor(img);
   };
 
   const names = post ? Object.entries(post.likes).filter(([u]) => u !== me) : [];

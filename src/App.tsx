@@ -21,6 +21,7 @@ import { RoutineEditor } from './screens/RoutineEditor';
 import { DecoSync } from './screens/Decorations';
 import { CloudSync } from './cloud/CloudSync';
 import { SocialSync } from './cloud/socialStore';
+import { useStoryUI } from './cloud/storyStore';
 import { MessageBanner } from './components/MessageBanner';
 import { Summary, WorkoutDetail, WorkoutEdit } from './screens/WorkoutDetail';
 import { WorkoutTab } from './screens/WorkoutTab';
@@ -40,6 +41,12 @@ const Chat = lazy(() => import('./screens/SocialHub').then((m) => ({ default: m.
 const SharedRoutine = lazy(() => import('./screens/SharedRoutine').then((m) => ({ default: m.SharedRoutine })));
 const StoryEditor = lazy(() => import('./screens/StoryEditor').then((m) => ({ default: m.StoryEditor })));
 const StoryViewer = lazy(() => import('./screens/StoryViewer').then((m) => ({ default: m.StoryViewer })));
+
+/** Story editor / viewer overlays (see useStoryUI). */
+function StoryHost() {
+  const { editor, viewer } = useStoryUI();
+  return <Suspense fallback={null}>{editor ? <StoryEditor /> : viewer ? <StoryViewer key={viewer} uid={viewer} /> : null}</Suspense>;
+}
 const Settings = lazy(() => import('./screens/Settings').then((m) => ({ default: m.Settings })));
 
 
@@ -146,8 +153,6 @@ export default function App() {
           <Route path="/u/:uid" element={<FriendProfile />} />
           <Route path="/u/:uid/w/:wid" element={<FriendWorkout />} />
           <Route path="/chat/:uid" element={<Chat />} />
-          <Route path="/story/new" element={<StoryEditor />} />
-          <Route path="/stories/:uid" element={<StoryViewer />} />
           <Route path="/r/:code" element={<SharedRoutine />} />
           <Route path="/r/:slug/:code" element={<SharedRoutine />} />
           <Route path="/settings" element={<Settings />} />
@@ -176,6 +181,7 @@ export default function App() {
       <AnimatePresence>{onboarding && <Onboarding key={onboarding} start={onboarding} onDone={() => setOnboarding(null)} />}</AnimatePresence>
       <CloudSync />
       <SocialSync />
+      <StoryHost />
       <MessageBanner />
       <DialogHost />
       <ToastHost />

@@ -12,7 +12,7 @@ import { RatingPill, PhotoStrip, TaggedChips, useFriendProfiles } from '../compo
 import { Avatar, WorkoutCard } from '../components/WorkoutFeed';
 import { ReactionBar } from '../components/Reactions';
 import { NoteBubble, NoteView } from '../components/StoryTray';
-import { useStories, useStoryRing } from '../cloud/storyStore';
+import { openStory, useStories, useStoryRing } from '../cloud/storyStore';
 import { liveNote } from '../cloud/stories';
 import { primeAudio } from '../lib/music';
 import { Button, Header, Page, Portal, Sheet } from '../components/ui';
@@ -273,16 +273,14 @@ function ActivityTab() {
               ? t('started following you')
               : t('accepted your follow request');
   const open = (i: InboxItem) =>
-    nav(
+    i.kind === 'story' ? openStory(uid) : nav(
       i.kind === 'tag' && i.workoutId
         ? `/u/${i.from}/w/${i.workoutId}`
         : (i.kind === 'like' || i.kind === 'comment') && i.workoutId
           ? `/history/${i.workoutId}`
           : i.kind === 'quest'
             ? '/compete'
-            : i.kind === 'story'
-              ? `/stories/${uid}`
-              : `/u/${i.from}`,
+            : `/u/${i.from}`,
     );
   return (
     <>
@@ -427,7 +425,7 @@ export function FriendProfile() {
               onClick={() => {
                 if (!ring) return;
                 primeAudio();
-                nav(`/stories/${p.uid}`);
+                openStory(p.uid);
               }}
               className="press"
             >

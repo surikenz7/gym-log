@@ -8,7 +8,7 @@ import { RankBadge, TierName } from '../components/RankBadge';
 import { Avatar, WorkoutCard } from '../components/WorkoutFeed';
 import { ReactionBar } from '../components/Reactions';
 import { refreshFeed, useFeed } from '../cloud/socialStore';
-import { useStoryRing } from '../cloud/storyStore';
+import { openStory, openStoryEditor, useStoryRing } from '../cloud/storyStore';
 import { StoryTray } from '../components/StoryTray';
 import { primeAudio } from '../lib/music';
 import { useAccount } from '../cloud/account';
@@ -189,7 +189,7 @@ export function Home() {
             onClick={() => {
               if (myRing) {
                 primeAudio();
-                nav(`/stories/${myUid}`);
+                openStory(myUid!);
               } else nav('/profile');
             }}
             className="press relative mr-3 mt-7 shrink-0"
@@ -202,7 +202,7 @@ export function Home() {
               <span
                 onClick={(e) => {
                   e.stopPropagation();
-                  nav('/story/new');
+                  openStoryEditor();
                 }}
                 className="absolute -right-1 bottom-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border-[3px] border-bg bg-accent text-[#fff]"
                 aria-label={t('Add to story')}

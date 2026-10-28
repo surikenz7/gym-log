@@ -82,3 +82,15 @@ export function storyQueue(start: string): string[] {
 
 /** Picture to start the next story with (e.g. "Add to story" on a workout). */
 export const useStoryDraft = create<{ img: Blob | null }>(() => ({ img: null }));
+
+/*
+ * The story editor and viewer are overlays, not routes: as pages they stayed in the browser history,
+ * and iOS's swipe from the right edge ("forward") reopened them after you'd closed them.
+ */
+export const useStoryUI = create<{ editor: boolean; viewer: string | null }>(() => ({ editor: false, viewer: null }));
+export const openStoryEditor = (img?: Blob) => {
+  if (img) useStoryDraft.setState({ img });
+  useStoryUI.setState({ editor: true, viewer: null });
+};
+export const openStory = (uid: string) => useStoryUI.setState({ viewer: uid, editor: false });
+export const closeStoryUI = () => useStoryUI.setState({ editor: false, viewer: null });

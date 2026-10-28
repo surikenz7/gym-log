@@ -61,14 +61,31 @@ export interface MusicLayer extends Base {
   song: Song;
   dark: boolean;
 }
+/** Workout, trophy, challenge or quest card. */
 export interface CardLayer extends Base {
   kind: 'card';
   title: string;
   sub: string;
   stats: [string, string][];
   accent: string;
+  /** small line above the title, e.g. "Trophy unlocked" */
+  label?: string;
+  /** big emoji on the left */
+  icon?: string;
 }
-export type Layer = TextLayer | EmojiLayer | MusicLayer | CardLayer;
+/** A picture placed on the story (collages): cropped to its frame, with rounded corners. */
+export interface PhotoLayer extends Base {
+  kind: 'photo';
+  img: CanvasImageSource;
+  iw: number;
+  ih: number;
+  /** frame size before scaling */
+  w: number;
+  h: number;
+  /** white border */
+  border: boolean;
+}
+export type Layer = TextLayer | EmojiLayer | MusicLayer | CardLayer | PhotoLayer;
 
 export interface Stroke {
   color: string;
@@ -153,9 +170,12 @@ export function layerSize(g: CanvasRenderingContext2D, l: Layer) {
     case 'music':
       return { w: 660, h: 180 };
     case 'card':
-      return { w: 780, h: 340 };
+      return { w: 780, h: cardHeight(l) };
+    case 'photo':
+      return { w: l.w, h: l.h };
   }
 }
+const cardHeight = (l: CardLayer) => (l.stats.length ? 360 : 230);
 
 function drawText(g: CanvasRenderingContext2D, l: TextLayer) {
   const lines = textLines(l);
@@ -222,34 +242,79 @@ function drawMusic(g: CanvasRenderingContext2D, l: MusicLayer, onLoad?: () => vo
 
 function drawCard(g: CanvasRenderingContext2D, l: CardLayer) {
   const w = 780;
-  const h = 340;
+  const h = cardHeight(l);
+  const top = -h / 2;
   g.shadowColor = 'rgba(0,0,0,0.35)';
   g.shadowBlur = 30;
   g.fillStyle = 'rgba(14,14,16,0.92)';
   g.beginPath();
-  g.roundRect(-w / 2, -h / 2, w, h, 36);
+  g.roundRect(-w / 2, top, w, h, 36);
   g.fill();
   g.shadowBlur = 0;
   g.fillStyle = l.accent;
-  g.fillRect(-w / 2, -h / 2 + 40, 12, 110);
+  g.fillRect(-w / 2, top + 40, 12, 150);
+  let x = -w / 2 + 45;
+  if (l.icon) {
+    g.save();
+    g.globalAlpha = 0.22;
+    g.fillStyle = l.accent;
+    g.beginPath();
+    g.arc(x + 70, top + 115, 70, 0, Math.PI * 2);
+    g.fill();
+    g.restore();
+    g.font = '86px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(l.icon, x + 70, top + 120);
+    x += 170;
+  }
+  const max = w / 2 - 40 - x;
   g.textAlign = 'left';
   g.textBaseline = 'alphabetic';
+  if (l.label) {
+    g.fillStyle = l.accent;
+    g.font = '700 26px -apple-system, system-ui, sans-serif';
+    g.fillText(fit(g, l.label.toUpperCase(), max), x, top + 70);
+  }
   g.fillStyle = '#fff';
-  g.font = '700 66px Oswald, Impact, sans-serif';
-  g.fillText(fit(g, l.title.toUpperCase(), w - 90), -w / 2 + 45, -h / 2 + 105);
+  g.font = '700 60px Oswald, Impact, sans-serif';
+  g.fillText(fit(g, l.title.toUpperCase(), max), x, top + (l.label ? 135 : 110));
   g.fillStyle = 'rgba(255,255,255,0.6)';
-  g.font = '500 32px -apple-system, system-ui, sans-serif';
-  g.fillText(fit(g, l.sub, w - 90), -w / 2 + 45, -h / 2 + 152);
-  const cw = (w - 90) / l.stats.length;
+  g.font = '500 30px -apple-system, system-ui, sans-serif';
+  g.fillText(fit(g, l.sub, max), x, top + (l.label ? 182 : 160));
+  const cw = (w - 90) / Math.max(1, l.stats.length);
   l.stats.forEach(([k, v], i) => {
-    const x = -w / 2 + 45 + i * cw;
+    const sx = -w / 2 + 45 + i * cw;
     g.fillStyle = 'rgba(255,255,255,0.5)';
     g.font = '600 26px -apple-system, system-ui, sans-serif';
-    g.fillText(k.toUpperCase(), x, h / 2 - 95);
+    g.fillText(k.toUpperCase(), sx, h / 2 - 95);
     g.fillStyle = '#fff';
     g.font = '700 50px Oswald, Impact, sans-serif';
-    g.fillText(fit(g, v, cw - 16), x, h / 2 - 40);
+    g.fillText(fit(g, v, cw - 16), sx, h / 2 - 40);
   });
+}
+
+function drawPhoto(g: CanvasRenderingContext2D, l: PhotoLayer) {
+  const { w, h } = l;
+  g.shadowColor = 'rgba(0,0,0,0.35)';
+  g.shadowBlur = 26;
+  if (l.border) {
+    g.fillStyle = '#fff';
+    g.beginPath();
+    g.roundRect(-w / 2 - 14, -h / 2 - 14, w + 28, h + 28, 34);
+    g.fill();
+  }
+  g.save();
+  g.beginPath();
+  g.roundRect(-w / 2, -h / 2, w, h, 24);
+  g.fillStyle = '#222';
+  g.fill();
+  g.shadowBlur = 0;
+  g.clip();
+  // cover the frame, centred
+  const k = Math.max(w / l.iw, h / l.ih);
+  g.drawImage(l.img, -(l.iw * k) / 2, -(l.ih * k) / 2, l.iw * k, l.ih * k);
+  g.restore();
 }
 
 export function drawLayer(g: CanvasRenderingContext2D, l: Layer, onLoad?: () => void) {
@@ -264,6 +329,7 @@ export function drawLayer(g: CanvasRenderingContext2D, l: Layer, onLoad?: () => 
     g.textBaseline = 'middle';
     g.fillText(l.emoji, 0, 8);
   } else if (l.kind === 'music') drawMusic(g, l, onLoad);
+  else if (l.kind === 'photo') drawPhoto(g, l);
   else drawCard(g, l);
   g.restore();
 }
@@ -328,6 +394,38 @@ export function hitTest(g: CanvasRenderingContext2D, sc: Scene, x: number, y: nu
 }
 
 /** Scale that makes a picture cover (or, with `contain`, fit inside) the story. */
+/** Collage layouts: cells as [x, y, w, h] fractions of the story. */
+export const LAYOUTS: [number, number, number, number][][] = [
+  [[0, 0, 1, 0.5], [0, 0.5, 1, 0.5]],
+  [[0, 0, 0.5, 1], [0.5, 0, 0.5, 1]],
+  [[0, 0, 1, 0.5], [0, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]],
+  [[0, 0, 0.5, 0.5], [0.5, 0, 0.5, 0.5], [0, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]],
+  [[0, 0, 1, 1 / 3], [0, 1 / 3, 1, 1 / 3], [0, 2 / 3, 1, 1 / 3]],
+  [[0, 0, 0.5, 1 / 3], [0.5, 0, 0.5, 1 / 3], [0, 1 / 3, 0.5, 1 / 3], [0.5, 1 / 3, 0.5, 1 / 3], [0, 2 / 3, 0.5, 1 / 3], [0.5, 2 / 3, 0.5, 1 / 3]],
+];
+
+/** Photo layers filling a collage layout (gap between the cells, inset from the edges). */
+export function collage(layout: [number, number, number, number][], photos: { img: CanvasImageSource; w: number; h: number }[], id: () => string): PhotoLayer[] {
+  const gap = 18;
+  return photos.slice(0, layout.length).map((p, i) => {
+    const [x, y, w, h] = layout[i];
+    return {
+      id: id(),
+      kind: 'photo',
+      img: p.img,
+      iw: p.w,
+      ih: p.h,
+      x: (x + w / 2) * SW,
+      y: (y + h / 2) * SH,
+      w: w * SW - gap * 2,
+      h: h * SH - gap * 2,
+      s: 1,
+      r: 0,
+      border: false,
+    };
+  });
+}
+
 export const fitScale = (w: number, h: number, contain = false) => (contain ? Math.min(SW / w, SH / h) : Math.max(SW / w, SH / h));
 
 /** Renders the scene to a JPEG data URL that fits in a Firestore document. */

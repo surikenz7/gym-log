@@ -1,20 +1,18 @@
 import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Download, ImagePlus, Music, Palette, Pencil, Smile, Sparkles, Trash2, Type, Undo2, X } from 'lucide-react';
+import { Download, ImagePlus, LayoutGrid, Music, Palette, Pencil, Smile, Sparkles, Trash2, Type, Undo2, X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAccount } from '../cloud/account';
-import { refreshStories, useStories, useStoryDraft } from '../cloud/storyStore';
+import { closeStoryUI, refreshStories, useStories, useStoryDraft } from '../cloud/storyStore';
 import { MusicPicker } from '../components/MusicPicker';
-import { Portal, Sheet } from '../components/ui';
+import { StoryStickers } from '../components/StoryStickers';
+import { Portal } from '../components/ui';
 import { Avatar } from '../components/WorkoutFeed';
 import { t } from '../i18n';
-import { typeOf } from '../lib/exercises';
 import { haptic } from '../lib/haptics';
-import { useAllWorkouts } from '../lib/hooks';
 import { stopSong, useStopOnUnmount } from '../lib/music';
-import { workoutVolume } from '../lib/stats';
 import {
+  collage,
   COLORS,
   drawScene,
   emptyScene,
@@ -23,6 +21,7 @@ import {
   FONTS,
   GRADIENTS,
   hitTest,
+  LAYOUTS,
   loadFonts,
   loadPhoto,
   SH,
@@ -32,11 +31,8 @@ import {
   type Stroke,
   type TextLayer,
 } from '../lib/storyCanvas';
-import { fmtDurationLong, fmtVolume } from '../lib/units';
 import { confirmDialog, toast } from '../state/dialog';
-import { useSettings } from '../state/settings';
 
-const EMOJIS = ['💪', '🏋️', '🔥', '⚡', '🏆', '🥇', '💯', '🙌', '😤', '🥵', '😎', '🤝', '❤️', '🎯', '🚀', '⏱️', '🥗', '🍗', '💤', '🧠', '👑', '🦍', '😈', '✅', '📈', '🫡', '🤯', '🥶', '☀️', '🌙', '🎧', '📸'];
 const uid = () => Math.random().toString(36).slice(2, 9);
 const isText = (l: Layer | null | undefined): l is TextLayer => l?.kind === 'text';
 
@@ -53,10 +49,7 @@ interface Gesture {
 }
 
 export function StoryEditor() {
-  const nav = useNavigate();
-  const settings = useSettings();
   const me = useAccount((a) => a.uid);
-  const workouts = useAllWorkouts();
   const scene = useRef<Scene>(emptyScene());
   const canvas = useRef<HTMLCanvasElement>(null);
   const file = useRef<HTMLInputElement>(null);
@@ -64,7 +57,7 @@ export function StoryEditor() {
   const [, render] = useReducer((x: number) => x + 1, 0);
   const [mode, setMode] = useState<'edit' | 'text' | 'draw'>('edit');
   const [editing, setEditing] = useState<{ layer: TextLayer; isNew: boolean } | null>(null);
-  const [stickers, setStickers] = useState(false);
+  const [stickers, setStickers] = useState<false | 'main' | 'layouts'>(false);
   const [music, setMusic] = useState(false);
   const [drag, setDrag] = useState<'none' | 'layer' | 'trash'>('none');
   const [pen, setPen] = useState({ color: COLORS[0], size: 14, neon: false });
@@ -128,11 +121,36 @@ export function StoryEditor() {
     });
   }, []);
 
-  const pickPhoto = async (f: File | undefined) => {
-    if (!f) return;
+  /*
+   * Photos: the first one becomes the background, more become movable photo stickers; with a
+   * collage layout they fill its cells instead.
+   */
+  const layoutFor = useRef<number | null>(null);
+  const choosePhotos = (layout: number | null) => {
+    layoutFor.current = layout;
+    file.current?.click();
+  };
+  const addPhotos = async (files: FileList | null) => {
+    const layout = layoutFor.current;
+    layoutFor.current = null;
+    if (!files?.length) return;
     try {
-      const { img, w, h } = await loadPhoto(f);
-      scene.current.bg = { img, w, h, x: SW / 2, y: SH / 2, s: fitScale(w, h), r: 0 };
+      const photos = await Promise.all([...files].slice(0, 10).map((f) => loadPhoto(f, 1600)));
+      const sc = scene.current;
+      if (layout != null) {
+        // collage cells go underneath text and stickers
+        sc.layers = [...collage(LAYOUTS[layout], photos, uid), ...sc.layers];
+      } else
+        photos.forEach((p, i) => {
+          if (!sc.bg.img && i === 0) {
+            sc.bg = { img: p.img, w: p.w, h: p.h, x: SW / 2, y: SH / 2, s: fitScale(p.w, p.h), r: 0 };
+            return;
+          }
+          const w = SW * 0.6;
+          const h = Math.min(SH * 0.55, (w * p.h) / p.w);
+          sc.layers.push({ id: uid(), kind: 'photo', img: p.img, iw: p.w, ih: p.h, w: Math.min(w, (h * p.w) / p.h), h, x: SW / 2 + (i % 2 ? 60 : -60), y: SH * 0.45 + i * 50, s: 1, r: (i % 2 ? 1 : -1) * 0.05, border: true });
+        });
+      haptic();
       render();
       draw();
     } catch {
@@ -286,6 +304,9 @@ export function StoryEditor() {
       } else if (tg && tg !== 'bg' && tg.kind === 'music') {
         tg.dark = !tg.dark;
         draw();
+      } else if (tg && tg !== 'bg' && tg.kind === 'photo') {
+        tg.border = !tg.border;
+        draw();
       } else if (!tg || tg === 'bg') newText(p);
     }
     render();
@@ -295,7 +316,7 @@ export function StoryEditor() {
   const dirty = () => !!(scene.current.bg.img || scene.current.layers.length || scene.current.strokes.length);
   const close = async () => {
     if (dirty() && !(await confirmDialog(t('Discard story?'), t('Your edits will be lost.'), t('Discard'), true))) return;
-    nav(-1);
+    closeStoryUI();
   };
   const save = async () => {
     try {
@@ -323,31 +344,11 @@ export function StoryEditor() {
       void refreshStories(true);
       haptic('success');
       toast(t('Shared to your story'));
-      nav(-1);
+      closeStoryUI();
     } catch {
       toast(navigator.onLine ? t('Something went wrong') : t('No internet connection'));
       setBusy(false);
     }
-  };
-
-  const latest = workouts?.length ? workouts.reduce((a, b) => (a.start > b.start ? a : b)) : null;
-  const addWorkoutCard = () => {
-    if (!latest) return;
-    const sets = latest.exercises.reduce((n, e) => n + e.sets.filter((s) => s.type !== 'warmup').length, 0);
-    const accent = `rgb(${getComputedStyle(document.documentElement).getPropertyValue('--accent').trim().split(/[\s,]+/).join(' ')})`;
-    addLayer({
-      kind: 'card',
-      title: latest.name,
-      sub: format(latest.start, 'EEEE d MMMM'),
-      accent,
-      stats: [
-        [t('Time'), fmtDurationLong((latest.end - latest.start) / 1000)],
-        [t('Volume'), fmtVolume(workoutVolume(latest, typeOf), settings)],
-        [t('Sets'), String(sets)],
-      ],
-      y: SH * 0.62,
-    });
-    setStickers(false);
   };
 
   const empty = !scene.current.bg.img && !scene.current.layers.length && !scene.current.strokes.length && mode === 'edit';
@@ -377,7 +378,7 @@ export function StoryEditor() {
                 <button onClick={() => newText()} className={tool} aria-label={t('Text')}>
                   <Type size={22} />
                 </button>
-                <button onClick={() => setStickers(true)} className={tool} aria-label={t('Stickers')}>
+                <button onClick={() => setStickers('main')} className={tool} aria-label={t('Stickers')}>
                   <Smile size={22} />
                 </button>
                 <button onClick={() => setMusic(true)} className={tool} aria-label={t('Add music')}>
@@ -497,10 +498,15 @@ export function StoryEditor() {
 
         {/* bottom bar */}
         <div className="flex w-full items-center justify-between gap-3 px-4" style={{ height: 84, maxWidth: Math.max(box.w, 320) }}>
-          <button onClick={() => file.current?.click()} className="press flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff]/15" aria-label={t('Add a photo')}>
-            <ImagePlus size={24} />
-          </button>
-          <input ref={file} type="file" accept="image/*" hidden onChange={(e) => (void pickPhoto(e.target.files?.[0]), (e.target.value = ''))} />
+          <div className="flex gap-2">
+            <button onClick={() => choosePhotos(null)} className="press flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff]/15" aria-label={t('Add a photo')}>
+              <ImagePlus size={24} />
+            </button>
+            <button onClick={() => setStickers('layouts')} className="press flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff]/15" aria-label={t('Collage')}>
+              <LayoutGrid size={22} />
+            </button>
+          </div>
+          <input ref={file} type="file" accept="image/*" multiple hidden onChange={(e) => (void addPhotos(e.target.files), (e.target.value = ''))} />
           {me ? (
             <button onClick={publish} disabled={busy || mode !== 'edit'} className="press flex items-center gap-2 rounded-full bg-[#fff] py-1.5 pl-1.5 pr-5 font-semibold text-black disabled:opacity-50">
               <Avatar size={34} deco={null} />
@@ -514,41 +520,17 @@ export function StoryEditor() {
         </div>
       </div>
 
-      <Sheet open={stickers} onClose={() => setStickers(false)} title={t('Stickers')}>
-        <div className="px-4 pb-6">
-          <div className="grid grid-cols-3 gap-2">
-            <button onClick={() => (setStickers(false), setMusic(true))} className="press flex flex-col items-center gap-1 rounded-xl bg-card2 py-3 text-xs font-semibold">
-              <Music size={22} className="text-accent" /> {t('Music')}
-            </button>
-            <button onClick={addWorkoutCard} disabled={!latest} className="press flex flex-col items-center gap-1 rounded-xl bg-card2 py-3 text-xs font-semibold disabled:opacity-40">
-              <span className="text-xl leading-none">🏋️</span> {t('Last workout')}
-            </button>
-            <button
-              onClick={() => {
-                addLayer({ kind: 'text', text: format(new Date(), 'HH:mm'), color: '#ffffff', font: 'strong', bg: 2, y: SH * 0.3, s: 1.6 } as Layer);
-                setStickers(false);
-              }}
-              className="press flex flex-col items-center gap-1 rounded-xl bg-card2 py-3 text-xs font-semibold"
-            >
-              <span className="text-xl leading-none">🕒</span> {t('Time')}
-            </button>
-          </div>
-          <div className="mt-4 grid grid-cols-8 gap-1">
-            {EMOJIS.map((e) => (
-              <button
-                key={e}
-                onClick={() => {
-                  addLayer({ kind: 'emoji', emoji: e, x: SW / 2 + (Math.random() - 0.5) * 200, y: SH / 2 + (Math.random() - 0.5) * 300 } as Layer);
-                  setStickers(false);
-                }}
-                className="press py-1.5 text-3xl"
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-        </div>
-      </Sheet>
+      <StoryStickers
+        open={!!stickers}
+        start={stickers || 'main'}
+        onClose={() => setStickers(false)}
+        onCard={(c) => addLayer({ kind: 'card', ...c, y: SH * (0.3 + (scene.current.layers.filter((l) => l.kind === 'card').length % 4) * 0.14) } as Layer)}
+        onEmoji={(e) => addLayer({ kind: 'emoji', emoji: e, x: SW / 2 + (Math.random() - 0.5) * 200, y: SH / 2 + (Math.random() - 0.5) * 300 } as Layer)}
+        onMusic={() => setMusic(true)}
+        onPhotos={() => choosePhotos(null)}
+        onCollage={(i) => choosePhotos(i)}
+        onTime={() => addLayer({ kind: 'text', text: format(new Date(), 'HH:mm'), color: '#ffffff', font: 'strong', bg: 2, y: SH * 0.3, s: 1.6 } as Layer)}
+      />
 
       <MusicPicker
         open={music}

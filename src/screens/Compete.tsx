@@ -92,7 +92,7 @@ export function MonthBadge({ m, kind, size = 64, locked }: { m: string; kind: Me
 
 /* ------------------------------------------------------------------ challenges */
 
-function challengeText(c: Challenge, s: Settings) {
+export function challengeText(c: Challenge, s: Settings) {
   switch (c.kind) {
     case 'sessions':
       return t('Train {n} times', { n: c.target });
@@ -114,7 +114,7 @@ function challengeText(c: Challenge, s: Settings) {
       return t('Train every week of the month');
   }
 }
-const ICON: Record<Challenge['kind'], string> = { sessions: '🏋️', volume: '🧱', sets: '🔁', weekend: '☀️', pr: '⚡', legs: '🦵', minutes: '⏱️', exercises: '🎯', weeks: '📅' };
+export const ICON: Record<Challenge["kind"], string> = { sessions: '🏋️', volume: '🧱', sets: '🔁', weekend: '☀️', pr: '⚡', legs: '🦵', minutes: '⏱️', exercises: '🎯', weeks: '📅' };
 const shown = (c: Challenge, s: Settings) => (c.kind === 'volume' ? `${vol(Math.min(c.value, c.target), s)} / ${vol(c.target, s)}` : `${Math.min(c.value, c.target)} / ${c.target}`);
 
 function Bar({ value, target, color = 'grad' }: { value: number; target: number; color?: string }) {
@@ -214,13 +214,13 @@ function useLeagueFriends(active: boolean) {
   return list;
 }
 
-const QUEST_EMOJI: Record<QuestKind, string> = {
+export const QUEST_EMOJI: Record<QuestKind, string> = {
   sessions: '🏋️', sets: '🔁', volume: '⚖️', reps: '🔢', minutes: '⏱️', prs: '🏆',
   legs: '🦵', back: '🦅', chest: '🦍', shoulders: '🥥', arms: '💪', core: '🧱',
   both: '👯', weekend: '🌅', sameday: '📅', tagteam: '🏃',
 };
 
-function questText(kind: QuestKind, goal: number, s: Settings) {
+export function questText(kind: QuestKind, goal: number, s: Settings) {
   const n = { n: goal };
   switch (kind) {
     case 'sessions': return t('Train {n} times between you', n);
