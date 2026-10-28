@@ -184,13 +184,14 @@ export function Home() {
             </h1>
           </div>
           {/* big profile picture filling the right side of the greeting, decoration included */}
-          {/* tap: your story if you have one up, otherwise your profile; + adds a story */}
+          {/* tap: watch your story if one is up, otherwise make one (+ always makes a new one) */}
           <button
             onClick={() => {
               if (myRing) {
                 primeAudio();
                 openStory(myUid!);
-              } else nav('/profile');
+              } else if (myUid) openStoryEditor();
+              else nav('/profile');
             }}
             className="press relative mr-3 mt-7 shrink-0"
           >
