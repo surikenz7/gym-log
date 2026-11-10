@@ -125,7 +125,7 @@ function RoutineCard({ r, last, onMenu, index }: { r: Routine; last?: number; on
 function ProgramCarousel() {
   const nav = useNavigate();
   return (
-    <div className="overflow-x-auto no-scrollbar -mx-4 mt-2 flex snap-x snap-mandatory gap-2.5 px-4 pb-1" data-no-swipe>
+    <div className="overflow-x-auto no-scrollbar -mx-4 mt-2 flex snap-x snap-mandatory scroll-px-4 gap-2.5 px-4 pb-1" data-no-swipe>
       {PROGRAMS.map((p, i) => {
         const [a, b] = PROGRAM_COLORS[i % PROGRAM_COLORS.length];
         return (

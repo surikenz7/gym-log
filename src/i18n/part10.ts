@@ -18,4 +18,6 @@ export const P10: Record<string, string[]> = {
   "Start a Friends Quest in the Compete tab.": ["Začni výpravu s přítelem na kartě Soutěž.", "Začni výpravu s priateľom na karte Súťaž.", "Rozpocznij misję ze znajomym w zakładce Rywalizacja.", "Starte eine Freundes-Quest im Tab Wettkampf.", "Empieza una Misión con amigos en la pestaña Competir.", "Lancez une Quête entre amis dans l’onglet Compétition.", "Inizia una Missione con amici nella scheda Sfida.", "Começa uma Missão com amigos no separador Competir.", "Почни квест із другом на вкладці Змагання."],
   "Pick a layout, then choose your photos.": ["Vyber rozložení a pak fotky.", "Vyber rozloženie a potom fotky.", "Wybierz układ, a potem zdjęcia.", "Wähle ein Layout, dann deine Fotos.", "Elige un diseño y luego tus fotos.", "Choisissez une mise en page, puis vos photos.", "Scegli un layout, poi le foto.", "Escolhe um esquema e depois as fotos.", "Обери макет, потім фото."],
   "{n} photos": ["{n} fotky", "{n} fotky", "{n} zdjęcia", "{n} Fotos", "{n} fotos", "{n} photos", "{n} foto", "{n} fotos", "{n} фото"],
+  "1 REP": ["1 OPAK.", "1 OPAK.", "1 POWT.", "1 WDH.", "1 REP", "1 RÉP.", "1 RIP.", "1 REP", "1 ПОВТ."],
+  "{n} REPS": ["{n} OPAK.", "{n} OPAK.", "{n} POWT.", "{n} WDH.", "{n} REPS", "{n} RÉP.", "{n} RIP.", "{n} REPS", "{n} ПОВТ."],
 };

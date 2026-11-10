@@ -1,5 +1,6 @@
 // Renders the 3D barbell app icon in every theme colour, plus iOS launch screens.
-// Usage: node scripts/icons.mjs
+// Usage: node scripts/icons.mjs            (all themes)
+//        node scripts/icons.mjs classic    (just one new theme; leaves the defaults alone)
 import sharp from 'sharp';
 import fs from 'node:fs';
 
@@ -21,6 +22,7 @@ const THEMES = {
   ice: ['#7dd3fc', '#e0f2fe'],
   mono: ['#f4f4f5', '#a1a1aa'],
   coffee: ['#c08457', '#f5deb3'],
+  classic: ['#2d7ff9', '#5ea2ff'],
 };
 
 const INK = { gold: '#141414', toxic: '#141414', steel: '#141414', inferno: '#ffffff', ice: '#0c2433', mono: '#141414', mint: '#ffffff', sunset: '#ffffff', coffee: '#ffffff' };
@@ -55,16 +57,20 @@ function iconSvg([accent], { rounded = false, ink = '#ffffff' } = {}) {
 </svg>`;
 }
 
+const only = process.argv[2];
+const PICK = only ? { [only]: THEMES[only] } : THEMES;
 fs.mkdirSync('public/icons', { recursive: true });
-for (const [name, colors] of Object.entries(THEMES)) {
+for (const [name, colors] of Object.entries(PICK)) {
   const svg = Buffer.from(iconSvg(colors, { ink: INK[name] }));
   for (const size of [180, 192, 512]) await sharp(svg, { density: 300 }).resize(size, size).png().toFile(`public/icons/${name}-${size}.png`);
 }
 // defaults (manifest / first install) = Blood
+if (!only) {
 fs.copyFileSync('public/icons/blood-180.png', 'public/apple-touch-icon.png');
 fs.copyFileSync('public/icons/blood-192.png', 'public/icon-192.png');
 fs.copyFileSync('public/icons/blood-512.png', 'public/icon-512.png');
 fs.writeFileSync('public/favicon.svg', iconSvg(THEMES.blood, { rounded: true }));
+}
 
 // iPhone portrait launch screens: [css width, css height, pixel ratio]
 export const SPLASH = [
@@ -73,7 +79,7 @@ export const SPLASH = [
 ];
 fs.mkdirSync('public/splash', { recursive: true });
 const BG = '#0b0707';
-for (const [name, colors] of Object.entries({ '': THEMES.blood, ...THEMES })) {
+for (const [name, colors] of Object.entries(only ? PICK : { '': THEMES.blood, ...THEMES })) {
   const dir = name ? `public/splash/${name}` : 'public/splash';
   fs.mkdirSync(dir, { recursive: true });
   const logo = Buffer.from(iconSvg(colors, { rounded: true, ink: INK[name] }));
@@ -88,4 +94,4 @@ for (const [name, colors] of Object.entries({ '': THEMES.blood, ...THEMES })) {
     .toFile(`${dir}/${W}x${H}.png`);
   }
 }
-console.log('icons for', Object.keys(THEMES).join(', '));
+console.log('icons for', Object.keys(PICK).join(', '));

@@ -133,6 +133,16 @@ export interface Settings {
   glow?: boolean;
   /** film grain: auto = only in the Raw style */
   grain?: 'auto' | 'on' | 'off';
+  /** font override ('style' = whatever the style uses) */
+  font?: FontId;
+  /** corner override ('style' = whatever the style uses) */
+  corners?: CornerId;
+  /** your own accent colour (#rrggbb) on top of the colour theme */
+  accentCustom?: string | null;
+  /** colour of ticked-off sets */
+  doneColor?: DoneId;
+  /** Home sections that are switched off */
+  hideHome?: HomeSection[];
   /** labels under the tab-bar icons */
   tabLabels?: boolean;
   /** what the Home screen says at the top */
@@ -158,10 +168,14 @@ export interface Settings {
   duos?: number;
 }
 
-export type StyleId = 'raw' | 'elegant' | 'minimal' | 'playful' | 'cyber' | 'frost' | 'tactical' | 'brutal' | 'terminal';
+export type FontId = 'style' | 'system' | 'rounded' | 'serif' | 'condensed' | 'mono';
+export type CornerId = 'style' | 'sharp' | 'soft' | 'round';
+export type DoneId = 'theme' | 'green' | 'accent';
+export type HomeSection = 'stories' | 'week' | 'cards' | 'feed';
+export type StyleId = 'raw' | 'elegant' | 'minimal' | 'playful' | 'cyber' | 'frost' | 'tactical' | 'brutal' | 'terminal' | 'clean';
 export type ModeId = 'dark' | 'amoled' | 'dim' | 'light';
 
-export type ThemeId = 'blood' | 'inferno' | 'gold' | 'toxic' | 'steel' | 'cobalt' | 'venom' | 'pump' | 'ocean' | 'mint' | 'royal' | 'sunset' | 'forest' | 'ice' | 'mono' | 'coffee';
+export type ThemeId = 'blood' | 'inferno' | 'gold' | 'toxic' | 'steel' | 'cobalt' | 'venom' | 'pump' | 'ocean' | 'mint' | 'royal' | 'sunset' | 'forest' | 'ice' | 'mono' | 'coffee' | 'classic';
 
 export const DEFAULT_SETTINGS: Settings = {
   weightUnit: 'kg',

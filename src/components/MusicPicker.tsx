@@ -4,13 +4,25 @@ import { t } from '../i18n';
 import { playSong, searchSongs, stopSong, usePlaying, type Song } from '../lib/music';
 import { Sheet } from './ui';
 
+/** Album cover, or a note icon when there's none / it doesn't load. */
+function Cover({ src }: { src: string }) {
+  const [bad, setBad] = useState(false);
+  if (!src || bad)
+    return (
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent text-[#fff]">
+        <Music size={20} />
+      </div>
+    );
+  return <img src={src} alt="" onError={() => setBad(true)} className="h-12 w-12 shrink-0 rounded-lg object-cover" />;
+}
+
 /** Cover + title + artist row; the button plays the 30-second preview. */
 export function SongRow({ song, onClick, onRemove }: { song: Song; onClick?: () => void; onRemove?: () => void }) {
   const playing = usePlaying() === song.id;
   return (
     <div className="flex items-center gap-3 rounded-xl bg-card2 p-2">
       <button onClick={onClick} className="flex min-w-0 flex-1 items-center gap-3 text-left" disabled={!onClick}>
-        {song.art ? <img src={song.art} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" /> : <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent"><Music size={20} /></div>}
+        <Cover src={song.art} />
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold">{song.title}</div>
           <div className="truncate text-xs text-muted">{song.artist}</div>
@@ -79,7 +91,7 @@ export function MusicPicker({ open, onClose, onPick }: { open: boolean; onClose:
             }}
           />
         ))}
-        {list && list.length > 0 && <div className="pt-2 text-center text-[10px] text-muted">{t('Previews from Apple Music')}</div>}
+        {list && list.length > 0 && <div className="pt-2 text-center text-[10px] text-muted">{t(list[0].dz ? 'Previews from Deezer' : 'Previews from Apple Music')}</div>}
       </div>
     </Sheet>
   );

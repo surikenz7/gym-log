@@ -149,6 +149,7 @@ export function Home() {
   const workouts = useAllWorkouts();
   const nav = useNavigate();
   const settings = useSettings();
+  const hide = settings.hideHome ?? [];
   const journey = useJourney();
   const { ctx, data: ranks } = useRanks();
   const list = workouts ?? [];
@@ -214,9 +215,10 @@ export function Home() {
           </button>
         </div>
 
-        <StoryTray />
+        {!hide.includes('stories') && <StoryTray />}
 
-        <div className="cut bg-card p-4">
+        {!hide.includes('week') && (
+          <div className="cut bg-card p-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="label">{t('This week')}</div>
             {streak > 0 && (
@@ -240,9 +242,11 @@ export function Home() {
               <div className="label !text-[9px]">{t('Volume')}</div>
             </div>
           </div>
-        </div>
+          </div>
+        )}
 
-        <div className="grid grid-cols-2 gap-3">
+        {!hide.includes('cards') && (
+          <div className="grid grid-cols-2 gap-3">
           <button onClick={() => nav('/ranks')} className="press cut relative flex items-center gap-3 overflow-hidden bg-card p-3 text-left">
             {overall != null && <div className="absolute inset-0 opacity-25" style={{ background: `radial-gradient(circle at 20% 50%, ${tierOf(overall).c[1]}, transparent 70%)` }} />}
             <RankBadge score={ctx === null ? null : overall} size={44} />
@@ -260,7 +264,8 @@ export function Home() {
             </div>
             <div className="mt-1 text-[10px] text-muted">{t('{n} XP to go', { n: lvl.need - lvl.into })}</div>
           </button>
-        </div>
+          </div>
+        )}
 
         {workouts && workouts.length === 0 ? (
           <div className="cut bg-card p-5 text-center">
@@ -270,7 +275,7 @@ export function Home() {
               <Upload size={16} /> {t('Import from Hevy')}
             </button>
           </div>
-        ) : (
+        ) : hide.includes('feed') ? null : (
           <>
             <div className="label flex items-center gap-2 pt-3">
               <span className="h-3 w-1 bg-accent" /> {t('Recent sessions')}

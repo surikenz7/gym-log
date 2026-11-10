@@ -106,6 +106,8 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
   const ti = score != null ? tierIndex(score) : -1;
   const next = TIERS[ti + 1];
   const isWeight = std.metric === 'ratio' || std.metric === 'bw';
+  // rep columns: 1RM / 5 / 10 for big lifts, 8 / 12 / 15 for isolation lifts nobody maxes out on
+  const cols = std.iso ? [8, 12, 15] : [1, 5, 10];
   const target = (min: number, reps: number) => {
     if (isWeight) {
       const kg = weightForScore(exerciseId, min, reps, bw, ctx.sex, factor)!;
@@ -150,7 +152,7 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
                   ? `${bwReps(next.min)} bodyweight reps`
                   : `${target(next.min, 5)} × 5`
                 : isWeight
-                  ? `${target(next.min, 1)} × 1 · ${target(next.min, 5)} × 5`
+                  ? `${target(next.min, cols[0])} × ${cols[0]} · ${target(next.min, cols[1])} × ${cols[1]}`
                   : target(next.min, 1)}
             </span>
           </div>
@@ -164,9 +166,11 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
               <span>{t('RANK')}</span>
               {isWeight ? (
                 <>
-                  <span className="text-right">1 REP</span>
-                  <span className="text-right">5 REPS</span>
-                  <span className="text-right">10 REPS</span>
+                  {cols.map((n) => (
+                    <span key={n} className="text-right">
+                      {n === 1 ? t('1 REP') : t('{n} REPS', { n })}
+                    </span>
+                  ))}
                 </>
               ) : (
                 <span className="text-right">{std.metric === 'seconds' ? 'TIME' : 'REPS'}</span>
@@ -185,9 +189,11 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
                 </span>
                 {isWeight ? (
                   <>
-                    <span className="text-right">{target(t.min, 1)}</span>
-                    <span className="text-right">{target(t.min, 5)}</span>
-                    <span className="text-right">{target(t.min, 10)}</span>
+                    {cols.map((n) => (
+                      <span key={n} className="text-right">
+                        {target(t.min, n)}
+                      </span>
+                    ))}
                   </>
                 ) : (
                   <span className="text-right">{target(t.min, 1)}</span>

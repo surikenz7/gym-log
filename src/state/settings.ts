@@ -17,10 +17,12 @@ export const useSettings = create<SettingsState>((set, get) => ({
 }));
 
 if (typeof document !== 'undefined') {
-  const look = (s: Settings) => applyLook(s.theme, s.style, s.mode, { textSize: s.textSize, glow: s.glow, grain: s.grain });
+  const look = (s: Settings) =>
+    applyLook(s.theme, s.style, s.mode, { textSize: s.textSize, glow: s.glow, grain: s.grain, font: s.font, corners: s.corners, accent: s.accentCustom, done: s.doneColor });
+  const KEYS = ['theme', 'style', 'mode', 'textSize', 'glow', 'grain', 'font', 'corners', 'accentCustom', 'doneColor'] as const;
   look(DEFAULT_SETTINGS);
   useSettings.subscribe((s, prev) => {
-    if (s.theme !== prev.theme || s.style !== prev.style || s.mode !== prev.mode || s.textSize !== prev.textSize || s.glow !== prev.glow || s.grain !== prev.grain) look(s);
+    if (KEYS.some((k) => s[k] !== prev[k])) look(s);
   });
 }
 

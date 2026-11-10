@@ -48,6 +48,7 @@ function StoryHost() {
   return <Suspense fallback={null}>{editor ? <StoryEditor /> : viewer ? <StoryViewer key={viewer} uid={viewer} /> : null}</Suspense>;
 }
 const Settings = lazy(() => import('./screens/Settings').then((m) => ({ default: m.Settings })));
+const Appearance = lazy(() => import('./screens/Appearance').then((m) => ({ default: m.Appearance })));
 
 
 function UpdatePrompt() {
@@ -156,6 +157,7 @@ export default function App() {
           <Route path="/r/:code" element={<SharedRoutine />} />
           <Route path="/r/:slug/:code" element={<SharedRoutine />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/appearance" element={<Appearance />} />
           <Route path="/import/hevy" element={<HevyImport />} />
           <Route path="/routine/new" element={<RoutineEditor />} />
           <Route path="/routine/:id" element={<RoutineEditor />} />

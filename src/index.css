@@ -589,3 +589,64 @@ input::-webkit-inner-spin-button {
   opacity: 0.35;
   background-image: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.35) 0 1px, transparent 1px 3px);
 }
+
+/* ---------- Clean: a plain native iPhone-app look (system type, flat colour, rounded, no frills) ---------- */
+:root[data-style='clean'] {
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  --display-case: none;
+  --display-track: -0.01em;
+  --label-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --label-case: none;
+  --label-track: 0;
+  --label-weight: 600;
+  --r-card: 12px;
+  --r-small: 8px;
+}
+:root[data-style='clean'] body::before {
+  display: none;
+}
+:root[data-style='clean'] .grad,
+:root[data-style='clean'] .stripes,
+:root[data-style='clean'] .grad.stripes {
+  background-image: none;
+}
+:root[data-style='clean'] .text-grad {
+  background: none;
+  color: rgb(var(--accent));
+}
+:root[data-style='clean'] .font-display {
+  font-weight: 600;
+}
+:root[data-style='clean'] .label {
+  font-size: 0.8125rem;
+}
+:root[data-style='clean'] .hex {
+  clip-path: none;
+  border-radius: 999px;
+  box-shadow: none !important;
+}
+:root[data-style='clean'] .tier-text {
+  text-shadow: none;
+}
+
+/* ---------- corner override (Appearance → Corners) ---------- */
+:root[data-corners='sharp'] {
+  --r-card: 0px;
+  --r-small: 0px;
+}
+:root[data-corners='soft'] {
+  --r-card: 12px;
+  --r-small: 8px;
+}
+:root[data-corners='round'] {
+  --r-card: 24px;
+  --r-small: 14px;
+}
+:root[data-corners] .cut,
+:root[data-corners] .cut-sm,
+:root[data-corners] .cut-top {
+  clip-path: none;
+}
+:root[data-corners] .cut {
+  overflow: hidden;
+}

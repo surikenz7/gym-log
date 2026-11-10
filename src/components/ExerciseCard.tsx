@@ -58,7 +58,7 @@ export function ExerciseCard({ wex, mode, excludeWorkoutId, supersetColor, onCha
   const fields = FIELDS[ex.type];
 
   let n = 0;
-  const numbers = wex.sets.map((s) => (s.type === 'warmup' ? 0 : ++n));
+  const numbers = wex.sets.map((s) => (SET_TYPE_STYLE[s.type].label ? 0 : ++n));
 
   const toggle = (set: WSet, i: number) => {
     if (set.done) return onChange((w) => void (w.sets[i].done = false));

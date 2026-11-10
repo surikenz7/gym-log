@@ -1,4 +1,4 @@
-import type { ModeId, StyleId, ThemeId } from '../types';
+import type { CornerId, DoneId, FontId, ModeId, StyleId, ThemeId } from '../types';
 
 export interface Theme {
   name: string;
@@ -34,6 +34,7 @@ export const THEMES: Record<ThemeId, Theme> = {
   forest: { name: 'Forest', accent: '#16a34a', ink: '#ffffff', accent2: '#bef264', done: '#facc15', bg: '#060906', card: '#0f160f', card2: '#172117', line: '#243624' },
   ice: { name: 'Ice', accent: '#7dd3fc', ink: '#04121a', accent2: '#e0f2fe', done: '#5eead4', bg: '#06090c', card: '#0f161c', card2: '#172129', line: '#253441', light: ['#0369a1', '#ffffff'] },
   mono: { name: 'Mono', accent: '#f4f4f5', ink: '#0a0a0a', accent2: '#a1a1aa', done: '#d4d4d8', bg: '#080808', card: '#141414', card2: '#1e1e1e', line: '#2e2e2e', light: ['#18181b', '#ffffff'] },
+  classic: { name: 'Classic', accent: '#2d7ff9', ink: '#ffffff', accent2: '#5ea2ff', done: '#30c158', bg: '#000000', card: '#1c1c1e', card2: '#2c2c2e', line: '#38383a', light: ['#1c6fe8', '#ffffff'] },
   coffee: { name: 'Coffee', accent: '#c08457', ink: '#140b05', accent2: '#f5deb3', done: '#a3e635', bg: '#0b0806', card: '#18120d', card2: '#241b14', line: '#3a2c20', light: ['#92400e', '#ffffff'] },
 };
 
@@ -47,7 +48,48 @@ export const STYLES: Record<StyleId, { name: string; desc: string }> = {
   tactical: { name: 'Tactical', desc: 'Stencil type, corner brackets, hazard' },
   brutal: { name: 'Brutalist', desc: 'Poster type, thick lines, hard shadows' },
   terminal: { name: 'Terminal', desc: 'Monospace, thin outlines, scanlines' },
+  clean: { name: 'Clean', desc: 'Plain iPhone-app look: system type, flat, rounded' },
 };
+
+export const FONTS: Record<FontId, { name: string; css?: string }> = {
+  style: { name: 'Style default' },
+  system: { name: 'System', css: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif" },
+  rounded: { name: 'Rounded', css: "Fredoka, ui-rounded, 'SF Pro Rounded', system-ui, sans-serif" },
+  serif: { name: 'Serif', css: "'Playfair Display', Georgia, serif" },
+  condensed: { name: 'Condensed', css: "Oswald, Impact, 'Arial Narrow', sans-serif" },
+  mono: { name: 'Mono', css: "'JetBrains Mono', ui-monospace, Menlo, monospace" },
+};
+
+export const CORNERS: Record<CornerId, string> = { style: 'Style default', sharp: 'Sharp', soft: 'Soft', round: 'Round' };
+export const DONE_COLORS: Record<DoneId, { name: string; hex?: string }> = {
+  theme: { name: 'Theme' },
+  green: { name: 'Green', hex: '#22c55e' },
+  accent: { name: 'Accent' },
+};
+
+/** One-tap looks: a colour theme, a style, a mode and the extras that go with them. */
+export interface Preset {
+  id: string;
+  name: string;
+  desc: string;
+  theme: ThemeId;
+  style: StyleId;
+  mode: ModeId;
+  glow: boolean;
+  grain: 'auto' | 'on' | 'off';
+  tabLabels: boolean;
+  doneColor?: DoneId;
+}
+export const PRESETS: Preset[] = [
+  { id: 'gymlog', name: 'Gym Log', desc: 'The original: red steel, cut corners', theme: 'blood', style: 'raw', mode: 'dark', glow: true, grain: 'auto', tabLabels: true },
+  { id: 'hevy', name: 'Hevy style', desc: 'Looks like Hevy: blue, clean, iPhone-native', theme: 'classic', style: 'clean', mode: 'dark', glow: false, grain: 'off', tabLabels: true, doneColor: 'green' },
+  { id: 'hevylight', name: 'Hevy style · light', desc: 'The same, on white', theme: 'classic', style: 'clean', mode: 'light', glow: false, grain: 'off', tabLabels: true, doneColor: 'green' },
+  { id: 'neon', name: 'Neon', desc: 'Purple glow on black', theme: 'venom', style: 'cyber', mode: 'amoled', glow: true, grain: 'off', tabLabels: true },
+  { id: 'luxe', name: 'Luxe', desc: 'Gold and serif type', theme: 'gold', style: 'elegant', mode: 'dark', glow: true, grain: 'off', tabLabels: true },
+  { id: 'glass', name: 'Glass', desc: 'Frosted cards over ocean blue', theme: 'ocean', style: 'frost', mode: 'dim', glow: true, grain: 'off', tabLabels: true },
+  { id: 'hacker', name: 'Hacker', desc: 'Green monospace terminal', theme: 'toxic', style: 'terminal', mode: 'amoled', glow: true, grain: 'auto', tabLabels: false },
+  { id: 'poster', name: 'Poster', desc: 'Loud type, hard shadows', theme: 'pump', style: 'brutal', mode: 'light', glow: false, grain: 'off', tabLabels: true },
+];
 
 export const MODES: Record<ModeId, { name: string }> = {
   dark: { name: 'Dark' },
@@ -114,17 +156,55 @@ export interface LookExtras {
   textSize?: 'sm' | 'md' | 'lg';
   glow?: boolean;
   grain?: 'auto' | 'on' | 'off';
+  font?: FontId;
+  corners?: CornerId;
+  accent?: string | null;
+  done?: DoneId;
+}
+
+/** Relative brightness 0..1 (sRGB, good enough to pick black or white text). */
+export const luminance = (hex: string) => {
+  const [r, g, b] = parse(hex);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+};
+
+/** The palette with your own accent / completed-set colour on top. */
+export function customPalette(p: Palette, extras: LookExtras): Palette {
+  let out = { ...p };
+  const custom = extras.accent && /^#[0-9a-f]{6}$/i.test(extras.accent) ? extras.accent.toLowerCase() : null;
+  if (custom) {
+    // pale colours get darker on white so text and buttons stay readable
+    const accent = p.light && luminance(custom) > 0.62 ? mix(custom, '#000000', 0.35) : custom;
+    out = { ...out, accent, accent2: mix(accent, '#ffffff', 0.4), ink: luminance(accent) > 0.62 ? '#0a0a0a' : '#ffffff' };
+  }
+  const d = extras.done ?? 'theme';
+  if (d !== 'theme') {
+    const hex = d === 'accent' ? out.accent : DONE_COLORS[d].hex!;
+    const done = p.light ? mix(hex, '#000000', 0.12) : hex;
+    out = { ...out, done, doneSoft: mix(p.light ? '#ffffff' : p.card, done, 0.2) };
+  }
+  return out;
 }
 
 const TEXT_SIZE = { sm: '15px', md: '16px', lg: '17.5px' };
 
 export function applyLook(id: ThemeId, style: StyleId, mode: ModeId, extras: LookExtras = {}) {
-  const p = paletteOf(id, mode);
+  const p = customPalette(paletteOf(id, mode), extras);
   const el = document.documentElement;
   el.style.fontSize = TEXT_SIZE[extras.textSize ?? 'md'];
   el.dataset.glow = extras.glow === false ? 'off' : 'on';
   el.dataset.grain = extras.grain ?? 'auto';
   const root = el.style;
+  const font = FONTS[extras.font ?? 'style']?.css;
+  if (font) {
+    root.setProperty('--font-display', font);
+    root.setProperty('--label-font', font);
+  } else {
+    root.removeProperty('--font-display');
+    root.removeProperty('--label-font');
+  }
+  if (extras.corners && extras.corners !== 'style') el.dataset.corners = extras.corners;
+  else delete el.dataset.corners;
   root.setProperty('--accent', rgb(p.accent));
   root.setProperty('--accent2', rgb(p.accent2));
   root.setProperty('--ink', rgb(p.ink));

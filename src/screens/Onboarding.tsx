@@ -352,6 +352,7 @@ const STYLE_FONT: Record<StyleId, React.CSSProperties> = {
   tactical: { fontFamily: "'Black Ops One', Impact, sans-serif", textTransform: 'uppercase' },
   brutal: { fontFamily: 'Anton, Impact, sans-serif', textTransform: 'uppercase' },
   terminal: { fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 },
+  clean: { fontFamily: '-apple-system, system-ui, sans-serif', fontWeight: 600 },
 };
 
 function LookStep() {

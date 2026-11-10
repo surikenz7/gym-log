@@ -8,6 +8,7 @@ import { P7 } from './part7';
 import { P8 } from './part8';
 import { P9 } from './part9';
 import { P10 } from './part10';
+import { P11 } from './part11';
 
 /** English text → [cs, sk, pl, de, es, fr, it, pt, uk] */
-export const STRINGS: Record<string, string[]> = { ...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8, ...P9, ...P10 };
+export const STRINGS: Record<string, string[]> = { ...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8, ...P9, ...P10, ...P11 };
