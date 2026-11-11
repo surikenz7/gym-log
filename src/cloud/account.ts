@@ -104,7 +104,7 @@ async function wipeLocalData() {
   });
   await db.kv.delete(KV_ACTIVE);
   useWorkout.getState().discard();
-  useSettings.getState().update({ name: '', avatar: null, sex: null, decos: [], deco: null, shared: false, guest: false, motto: '', medals: [], duos: 0 });
+  useSettings.getState().update({ name: '', avatar: null, sex: null, decos: [], rankPeak: undefined, deco: null, shared: false, guest: false, motto: '', medals: [], duos: 0 });
   await useLibrary.getState().reload();
 }
 

@@ -121,6 +121,8 @@ export interface Settings {
   deco?: string | null;
   /** decorations unlocked so far (kept even if a rank later drops) */
   decos?: string[];
+  /** best overall rank score reached by finishing workouts; rank decorations follow it */
+  rankPeak?: number;
   /** used for strength ranks */
   sex?: 'male' | 'female' | null;
   theme: ThemeId;

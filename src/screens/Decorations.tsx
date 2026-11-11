@@ -6,7 +6,7 @@ import { Check, Gift, Lock } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '../components/WorkoutFeed';
 import { Header, Page } from '../components/ui';
-import { DECORATIONS, decoById, earnedDecorations, fmtPct, HISTORY_BASED, rarityOf, redeemCode, type Decoration } from '../lib/decorations';
+import { DECORATIONS, decoById, earnedDecorations, fmtPct, HISTORY_BASED, RANK_DECOS, rarityOf, redeemCode, type Decoration } from '../lib/decorations';
 import { getExercise, typeOf } from '../lib/exercises';
 import { monthlyBadges } from '../lib/compete';
 import { computeJourney } from '../lib/progress';
@@ -40,13 +40,15 @@ export function unlockDecoration(id: string) {
 export function DecoSync() {
   const journey = useJourney();
   const workouts = useAllWorkouts();
-  const { data, loading, ctx } = useRanks();
+  const { data, from, loading, ctx } = useRanks();
   const settings = useSettings();
   const routines = useLiveQuery(() => db.routines.count(), []);
   const measures = useLiveQuery(() => db.measures.count(), []);
   const account = useAccount((a) => a.status === 'signedIn');
   const following = useAccount((a) => a.following.length);
   const first = useRef(true);
+  /** count + latest end of the workouts, to tell a saved workout apart from a bodyweight/sex change */
+  const lastSig = useRef<string | null>(null);
   useEffect(() => {
     if (!journey || !workouts || loading || routines === undefined || measures === undefined) return;
     const s = useSettings.getState();
@@ -65,11 +67,30 @@ export function DecoSync() {
       duos: s.duos ?? 0,
       monthBadges: monthlyBadges(workouts, { typeOf, muscleOf: (id) => getExercise(id).muscle }).length,
     };
-    const fresh = earnedDecorations(journey, workouts, data?.overall ?? null, extras).filter((id) => !have.has(id));
+    // Rank decorations follow the best overall rank reached by finishing workouts. Trying out another
+    // bodyweight or sex re-ranks you on screen, but doesn't unlock (or keep) them.
+    const ws = from ?? workouts;
+    const sig = `${ws.length}:${ws.reduce((m, w) => Math.max(m, w.end ?? w.start), 0)}`;
+    const lifted = lastSig.current !== null && lastSig.current !== sig;
+    lastSig.current = sig;
+    const overall = data?.overall ?? null;
+    let peak = s.rankPeak;
+    if (overall != null && (peak === undefined || (lifted && overall > peak))) peak = overall;
+    const earned = earnedDecorations(journey, workouts, peak ?? null, extras);
+    const earnedSet = new Set(earned);
+    const revoked = [...have].filter((id) => id in RANK_DECOS && !earnedSet.has(id));
+    const fresh = earned.filter((id) => !have.has(id));
     const firstRun = first.current;
     first.current = false;
-    if (!fresh.length) return;
-    s.update({ decos: [...have, ...fresh] });
+    if (!fresh.length) {
+      if (revoked.length || peak !== s.rankPeak) {
+        const decos = [...have].filter((id) => !revoked.includes(id));
+        s.update({ decos, rankPeak: peak, deco: s.deco && decos.includes(s.deco) ? s.deco : null });
+      }
+      return;
+    }
+    const decos = [...have, ...fresh].filter((id) => !revoked.includes(id));
+    s.update({ decos, rankPeak: peak, deco: s.deco && decos.includes(s.deco) ? s.deco : null });
     // stay quiet during the welcome flow and while an account's history is being restored
     const acct = useAccount.getState();
     if (!s.onboarded || (acct.status === 'signedIn' && (acct.syncing || !acct.lastSync))) return;
@@ -80,7 +101,7 @@ export function DecoSync() {
     haptic('success');
     fanfare();
     toast(`🎁 New decoration: ${fresh.map((id) => decoById(id)?.name).join(', ')}`);
-  }, [journey, workouts, data?.overall, loading, ctx, routines, measures, account, following, settings.name, settings.avatar, settings.shared, settings.medals, settings.duos]);
+  }, [journey, workouts, data?.overall, from, loading, ctx, routines, measures, account, following, settings.name, settings.avatar, settings.shared, settings.medals, settings.duos]);
   return null;
 }
 

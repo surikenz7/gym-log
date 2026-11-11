@@ -72,6 +72,9 @@ export const DECORATIONS: Decoration[] = [
 export const decoById = (id: string) => DECORATIONS.find((d) => d.id === id);
 
 /** Decorations that depend only on workout history (counts, volume, streaks, PRs) — these can be taken back if history shrinks. */
+/** Overall-rank decorations and the tier index each needs (Gold, Diamond, Champion, Titan, Olympian). */
+export const RANK_DECOS: Record<string, number> = { crown: 3, diamond: 5, belt: 6, aura: 7, olympus: 8 };
+
 export const HISTORY_BASED = new Set(['iron_ring', 'hearts', 'sweatband', 'cap', 'laurel', 'viking', 'pillars', 'headphones', 'flames', 'year_ring', 'stars', 'spark', 'lightning', 'plates', 'gold_1m', 'overhead', 'sunburst']);
 
 export function rarityOf(pct: number) {
@@ -140,11 +143,7 @@ export function earnedDecorations(j: Journey, workouts: Workout[], overall: numb
   add('sunburst', levelFromXp(j.xp).level >= 50);
   if (overall != null) {
     const t = tierIndex(overall);
-    add('crown', t >= 3);
-    add('diamond', t >= 5);
-    add('belt', t >= 6);
-    add('aura', t >= 7);
-    add('olympus', t >= 8);
+    for (const [id, tier] of Object.entries(RANK_DECOS)) add(id, t >= tier);
   }
   let santa = false;
   let party = false;

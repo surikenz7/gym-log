@@ -39,11 +39,13 @@ export function computeRanks(workouts: Workout[], ctx: RankCtx) {
 interface RankState {
   ctx: RankCtx | null | undefined;
   data: ReturnType<typeof computeRanks> | null;
+  /** the workouts `data` was computed from */
+  from: Workout[] | null;
   loading: boolean;
 }
 
 /** Ranks are computed once (by <RankSync/>) and shared, so any exercise name can show its rank cheaply. */
-const useRankStore = create<RankState>(() => ({ ctx: undefined, data: null, loading: true }));
+const useRankStore = create<RankState>(() => ({ ctx: undefined, data: null, from: null, loading: true }));
 
 const useJourneyStore = create<{ journey: Journey | null }>(() => ({ journey: null }));
 
@@ -52,7 +54,7 @@ export function RankSync() {
   const ctx = useRankCtx();
   const workouts = useAllWorkouts();
   useEffect(() => {
-    useRankStore.setState({ ctx, data: ctx && workouts ? computeRanks(workouts, ctx) : null, loading: ctx === undefined || !workouts });
+    useRankStore.setState({ ctx, data: ctx && workouts ? computeRanks(workouts, ctx) : null, from: workouts ?? null, loading: ctx === undefined || !workouts });
   }, [ctx, workouts]);
   useEffect(() => {
     if (workouts) useJourneyStore.setState({ journey: computeJourney(workouts, typeOf) });
