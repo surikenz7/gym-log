@@ -105,7 +105,7 @@ export function ExerciseRankCard({ exerciseId, score }: { exerciseId: string; sc
   const bw = ctx.bwAt(Date.now());
   const ti = score != null ? tierIndex(score) : -1;
   const next = TIERS[ti + 1];
-  const isWeight = std.metric === 'ratio' || std.metric === 'bw';
+  const isWeight = std.metric === 'kg' || std.metric === 'bw';
   // rep columns: 1RM / 5 / 10 for big lifts, 8 / 12 / 15 for isolation lifts nobody maxes out on
   const cols = std.iso ? [8, 12, 15] : [1, 5, 10];
   const target = (min: number, reps: number) => {

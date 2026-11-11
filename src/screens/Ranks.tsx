@@ -147,11 +147,11 @@ export function Ranks() {
             <div className="label mb-2 mt-8">{t('How ranks work')}</div>
             <div className="cut-sm bg-card p-4 text-sm text-white/80">
               <p>
-                Every working set gets a score from 0 to 1000 based on your estimated one-rep max (Epley) compared with your bodyweight and sex. Each exercise is ranked by its best
+                Every working set gets a score from 0 to 1000 based on your estimated one-rep max (Epley) compared with lifters of your current bodyweight and sex, so changing your bodyweight re-ranks every lift. Each exercise is ranked by its best
                 set; warm-ups and sets over 30 reps don’t count. A muscle group takes its best exercise, and your overall rank averages your ranked groups.
               </p>
               <p className="mt-2 text-muted">
-                Standards are based on public strength standards ({LEVEL_NAMES.slice(1, 6).join(' → ').toLowerCase()}) — {Object.keys(STANDARDS).length} exercises are ranked.
+                Standards come from crowd-sourced bodyweight tables of millions of logged lifts ({LEVEL_NAMES.slice(1, 6).join(' → ').toLowerCase()}, stronger than about 5 / 20 / 50 / 80 / 95 % of lifters). Olympian is beyond elite. {Object.keys(STANDARDS).length} exercises are ranked.
               </p>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {TIERS.map((t) => (

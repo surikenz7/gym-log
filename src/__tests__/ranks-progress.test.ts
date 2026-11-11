@@ -20,21 +20,30 @@ const workout = (id: string, start: number, exerciseId: string, sets: WSet[]): W
 
 describe('ranks', () => {
   it('maps standard levels to 150-point steps and inverts cleanly', () => {
-    const a = anchors(STANDARDS[BENCH], 'male');
+    const a = anchors(STANDARDS[BENCH], 'male', 80);
     expect(scoreFor(a[1], a)).toBeCloseTo(150); // beginner
     expect(scoreFor(a[3], a)).toBeCloseTo(450); // intermediate = Gold
     expect(scoreFor(a[5], a)).toBeCloseTo(750); // elite = Champion
     expect(scoreFor(0, a)).toBe(0);
-    expect(scoreFor(99, a)).toBe(1000);
+    expect(scoreFor(a[6] * 1.5, a)).toBe(1000);
     for (const s of [37, 200, 455, 820, 950]) expect(scoreFor(valueForScore(s, a), a)).toBeCloseTo(s);
   });
 
-  it('scores a set from the estimated 1RM relative to bodyweight', () => {
-    // 80 kg man, 100 kg × 5 → e1RM 116.7 = 1.46 × BW → between intermediate and advanced
+  it('scores a set from the estimated 1RM against tables for the bodyweight', () => {
+    // 80 kg man, 100 kg × 5 → e1RM 116.7: intermediate 98, advanced 124 → about 558
     const sc = setScore(BENCH, set(100, 5), 80, 'male');
-    expect(tierOf(sc).name).toBe('Gold');
-    expect(sc).toBeGreaterThan(470);
-    expect(sc).toBeLessThan(490);
+    expect(tierOf(sc).name).toBe('Platinum');
+    expect(sc).toBeGreaterThan(550);
+    expect(sc).toBeLessThan(566);
+    // the table's own points come back exactly
+    expect(anchors(STANDARDS[BENCH], 'male', 60)[3]).toBeCloseTo(72);
+    expect(anchors(STANDARDS[BENCH], 'male', 100)[5]).toBeCloseTo(179);
+    expect(anchors(STANDARDS[BENCH], 'female', 60)[3]).toBeCloseTo(47);
+    // heavier lifters need more, lighter ones less
+    expect(setScore(BENCH, set(100, 5), 100, 'male')).toBeLessThan(sc - 60);
+    expect(setScore(BENCH, set(100, 5), 65, 'male')).toBeGreaterThan(sc + 60);
+    // a 50 kg × 10 leg curl is mid-pack, nowhere near Olympian
+    expect(tierOf(setScore('Lying_Leg_Curls', set(50, 10), 80, 'male')).name).toBe('Gold');
     // same lift is worth more for a woman of the same bodyweight
     expect(setScore(BENCH, set(100, 5), 80, 'female')).toBeGreaterThan(sc);
     // warm-ups and 30+ rep sets never count
@@ -70,7 +79,7 @@ describe('ranks', () => {
     expect(overallScore(groups.slice(0, 1))).toBeNull();
   });
 
-  it('uses the bodyweight logged closest before each workout', () => {
+  it('finds the bodyweight logged closest before a moment', () => {
     const bw = bodyweightTimeline([
       { date: 100, weight: 90 },
       { date: 10, weight: 80 },

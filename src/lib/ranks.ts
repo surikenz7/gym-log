@@ -4,31 +4,33 @@ import { epley1RM } from './stats';
 /**
  * Liftoff-style strength ranks.
  *
- * Every working set gets a score from 0 to 1000; an exercise's rank is its best set.
- * Scores come from public bodyweight-ratio strength standards (beginner → elite), not from
- * Liftoff's private curves. Each standard level is worth 150 points:
+ * Every working set gets a score from 0 to 1000 from its estimated 1RM, your current bodyweight
+ * and sex, like Liftoff; an exercise's rank is its best set. Liftoff's curves are private, so the
+ * standards are public crowd-sourced ones (see STANDARDS). Each level is worth 150 points:
  *
- *   untrained 0 · beginner 150 · novice 300 · intermediate 450 · advanced 600 · elite 750 · legend 900
+ *   untrained 0 · beginner 150 · novice 300 · intermediate 450 · advanced 600 · elite 750 · Olympian 900
  *
- * where "legend" sits 0.6 of an advanced→elite step above elite.
+ * where Olympian sits LEGEND_STEP of an advanced→elite step above elite.
  */
 
 export type Sex = 'male' | 'female';
 export type RankGroup = 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'core';
 /**
- * ratio:   estimated 1RM ÷ bodyweight (dumbbells per hand), scaled to a reference bodyweight
+ * kg:      estimated 1RM in kg (dumbbells per hand), compared with tables for your bodyweight
  * bw:      (bodyweight + added weight) 1RM ÷ bodyweight, for pull-ups/dips
  * reps:    max reps in one set
  * seconds: longest hold
  */
-export type RankMetric = 'ratio' | 'bw' | 'reps' | 'seconds';
+export type RankMetric = 'kg' | 'bw' | 'reps' | 'seconds';
 
 interface Std {
   group: RankGroup;
   metric: RankMetric;
-  /** male [beginner, novice, intermediate, advanced, elite] */
-  m: number[];
-  /** female levels when they don't follow the group factor */
+  /** kg: 1RM tables [beginner … elite] for men at 60 / 80 / 100 kg and women at 60 kg bodyweight */
+  kg?: [number[], number[], number[], number[]];
+  /** other metrics: male [beginner, novice, intermediate, advanced, elite] */
+  m?: number[];
+  /** female levels (rep standards default to 65 % of the male ones) */
   f?: number[];
   /** isolation lift: nobody tests a 1-rep max on these, so targets are shown for 8-15 reps */
   iso?: boolean;
@@ -43,103 +45,127 @@ export const GROUPS: { id: RankGroup; label: string }[] = [
   { id: 'core', label: 'Core' },
 ];
 
-/** How female standards compare to male ones per group (ratio metrics). */
-const FEMALE_FACTOR: Record<RankGroup, number> = { chest: 0.55, shoulders: 0.55, arms: 0.6, back: 0.62, legs: 0.75, core: 0.7 };
-/** Strength grows with ~bodyweight^(2/3), so ratios are normalised to these bodyweights. */
+/** Bodyweight used when none is given (rep and time standards don't depend on it). */
 const REF_BW: Record<Sex, number> = { male: 80, female: 62 };
 
-const r = (group: RankGroup, m: number[], iso = false): Std => ({ group, metric: 'ratio', m, iso });
+/** Olympian sits this many advanced -> elite steps above elite. */
+const LEGEND_STEP = 0.8;
+
+const L = (s: string) => s.split('/').map(Number);
+/**
+ * A weight standard: estimated 1RM in kg for [beginner, novice, intermediate, advanced, elite]
+ * for men at 60 / 80 / 100 kg and women at 60 kg bodyweight. `x` scales a table borrowed from a
+ * close variation.
+ */
+const w = (group: RankGroup, m60: string, m80: string, m100: string, f60: string, iso = false, x = 1): Std => ({
+  group,
+  metric: 'kg',
+  iso,
+  kg: [m60, m80, m100, f60].map((s) => L(s).map((v) => v * x)) as Std['kg'],
+});
 
 /*
- * Male standards. Compound lifts follow published bodyweight-ratio tables (Strength Level /
- * Symmetric Strength style). Isolation and machine lifts are set from what lifters really move
- * for 8-12 reps (turned into a 1RM): an advanced lifter does about 40 kg x 10 on a rope pushdown
- * and an elite one about 35 kg x 10 on an overhead rope extension, not 100+ kg.
+ * Weight standards are Strength Level's bodyweight tables (lifts logged by millions of gym-goers,
+ * the same kind of tracking crowd Liftoff ranks against; Liftoff's own published medians, such as
+ * a 45 kg pushdown or a 79 kg lat pulldown for men, land in the same place). Their levels mean
+ * stronger than about 5 / 20 / 50 / 80 / 95 % of lifters.
  */
+type Table = [string, string, string, string];
+const SMITH_BENCH: Table = ['36/52/72/94/119', '53/72/95/120/148', '68/89/115/143/173', '16/28/43/62/83'];
+const CHEST_PRESS: Table = ['27/45/70/100/134', '39/61/89/123/160', '50/74/105/142/181', '11/21/36/54/75'];
+const CABLE_ROW: Table = ['33/49/68/90/115', '47/65/87/112/140', '59/79/104/131/160', '21/32/45/62/79'];
+const LATERAL: Table = ['3/7/13/20/29', '5/10/16/25/34', '7/12/19/28/39', '3/6/9/13/17'];
+const HIP_THRUST: Table = ['32/63/107/163/227', '56/96/149/213/285', '80/126/186/257/335', '35/63/100/147/199'];
+const CABLE_CRUNCH: Table = ['19/34/56/83/113', '26/44/68/97/130', '32/51/77/108/143', '15/29/47/70/95'];
+
 export const STANDARDS: Record<string, Std> = {
   // Chest
-  'Barbell_Bench_Press_-_Medium_Grip': r('chest', [0.74, 1.03, 1.38, 1.79, 2.24]),
-  Dumbbell_Bench_Press: r('chest', [0.2, 0.32, 0.46, 0.62, 0.8]),
-  'Barbell_Incline_Bench_Press_-_Medium_Grip': r('chest', [0.6, 0.85, 1.13, 1.47, 1.84]),
-  Incline_Dumbbell_Press: r('chest', [0.17, 0.28, 0.4, 0.55, 0.71]),
-  Decline_Barbell_Bench_Press: r('chest', [0.75, 1.05, 1.4, 1.8, 2.25]),
-  Smith_Machine_Bench_Press: r('chest', [0.6, 0.88, 1.2, 1.57, 1.97]),
-  Smith_Machine_Incline_Bench_Press: r('chest', [0.5, 0.75, 1.03, 1.35, 1.7]),
-  Machine_Bench_Press: r('chest', [0.42, 0.66, 0.95, 1.28, 1.65]),
-  Leverage_Incline_Chest_Press: r('chest', [0.38, 0.6, 0.88, 1.2, 1.55]),
-  Butterfly: r('chest', [0.25, 0.43, 0.65, 0.9, 1.18], true),
-  Dumbbell_Flyes: r('chest', [0.07, 0.13, 0.2, 0.28, 0.37], true),
-  Cable_Crossover: r('chest', [0.06, 0.12, 0.19, 0.27, 0.36], true),
+  'Barbell_Bench_Press_-_Medium_Grip': w('chest', '37/53/72/95/119', '56/75/98/124/151', '73/95/120/149/179', '19/31/47/66/88'),
+  Dumbbell_Bench_Press: w('chest', '13/20/30/42/55', '19/28/40/53/68', '25/36/48/63/79', '7/12/19/28/38'),
+  'Barbell_Incline_Bench_Press_-_Medium_Grip': w('chest', '32/45/62/82/103', '50/66/87/109/134', '66/86/108/134/160', '14/25/39/56/76'),
+  Incline_Dumbbell_Press: w('chest', '14/21/29/39/49', '22/29/39/50/62', '28/37/48/60/73', '7/12/19/26/35'),
+  Decline_Barbell_Bench_Press: w('chest', '36/53/75/99/127', '58/79/104/133/164', '77/101/130/162/197', '19/32/50/71/95'),
+  Smith_Machine_Bench_Press: w('chest', ...SMITH_BENCH),
+  Smith_Machine_Incline_Bench_Press: w('chest', ...SMITH_BENCH, false, 0.88),
+  Machine_Bench_Press: w('chest', ...CHEST_PRESS),
+  Leverage_Incline_Chest_Press: w('chest', ...CHEST_PRESS, false, 0.9),
+  Butterfly: w('chest', '29/46/68/95/124', '42/63/89/119/152', '55/78/107/140/175', '13/23/37/54/74', true),
+  Dumbbell_Flyes: w('chest', '5/10/18/28/39', '8/15/24/35/47', '11/19/29/41/54', '4/7/11/17/23', true),
+  // Strength Level logs both handles together; ranked per handle here
+  Cable_Crossover: w('chest', '4/12/26/46/69', '8/19/36/58/84', '13/26/45/69/98', '3/9/19/29/43', true, 0.5),
   Pushups: { group: 'chest', metric: 'reps', m: [5, 15, 30, 45, 60], f: [2, 8, 18, 28, 40] },
-  'Dips_-_Chest_Version': { group: 'chest', metric: 'bw', m: [1.1, 1.3, 1.55, 1.85, 2.2], f: [1.0, 1.12, 1.28, 1.48, 1.72] },
+  // (bodyweight + added weight) ÷ bodyweight, from Liftoff's weighted-dip standards
+  'Dips_-_Chest_Version': { group: 'chest', metric: 'bw', m: [0.95, 1.22, 1.6, 2.0, 2.45], f: [0.75, 0.97, 1.3, 1.68, 2.1] },
 
   // Back
-  Barbell_Deadlift: r('back', [1.19, 1.6, 2.08, 2.63, 3.2]),
-  Sumo_Deadlift: r('back', [1.15, 1.55, 2.05, 2.6, 3.15]),
-  Bent_Over_Barbell_Row: r('back', [0.56, 0.8, 1.08, 1.42, 1.78]),
-  x_pendlay_row: r('back', [0.56, 0.8, 1.08, 1.42, 1.78]),
-  'One-Arm_Dumbbell_Row': r('back', [0.2, 0.34, 0.5, 0.68, 0.88]),
-  'T-Bar_Row_with_Handle': r('back', [0.45, 0.7, 1.0, 1.35, 1.75]),
-  'Wide-Grip_Lat_Pulldown': r('back', [0.45, 0.65, 0.9, 1.18, 1.48]),
-  'Close-Grip_Front_Lat_Pulldown': r('back', [0.45, 0.65, 0.9, 1.18, 1.48]),
-  Seated_Cable_Rows: r('back', [0.45, 0.66, 0.92, 1.22, 1.55]),
-  x_cable_row_wide: r('back', [0.42, 0.62, 0.86, 1.14, 1.45]),
-  Leverage_Iso_Row: r('back', [0.4, 0.62, 0.9, 1.22, 1.58]),
-  Pullups: { group: 'back', metric: 'bw', m: [1.03, 1.17, 1.4, 1.7, 2.0], f: [1.0, 1.07, 1.2, 1.38, 1.6] },
-  'Chin-Up': { group: 'back', metric: 'bw', m: [1.05, 1.2, 1.43, 1.73, 2.03], f: [1.0, 1.08, 1.22, 1.4, 1.62] },
-  Barbell_Shrug: r('back', [0.7, 1.05, 1.45, 1.9, 2.4], true),
-  Dumbbell_Shrug: r('back', [0.25, 0.4, 0.58, 0.78, 1.0], true),
+  Barbell_Deadlift: w('back', '61/86/117/153/191', '89/119/155/196/239', '114/148/188/232/279', '40/60/86/116/149'),
+  Sumo_Deadlift: w('back', '72/100/134/174/216', '102/135/174/218/265', '128/165/208/256/307', '47/68/93/122/154'),
+  Bent_Over_Barbell_Row: w('back', '31/46/65/87/111', '48/66/88/114/141', '63/84/108/136/166', '18/29/43/59/78'),
+  x_pendlay_row: w('back', '36/50/67/87/109', '53/70/91/114/138', '69/88/111/137/164', '25/36/49/65/82'),
+  'One-Arm_Dumbbell_Row': w('back', '12/21/32/46/61', '19/30/43/59/76', '26/38/53/70/89', '9/14/21/29/38'),
+  'T-Bar_Row_with_Handle': w('back', '24/39/60/85/114', '38/58/82/111/143', '52/74/102/134/169', '15/26/42/62/84'),
+  'Wide-Grip_Lat_Pulldown': w('back', '35/50/69/90/113', '47/64/85/108/133', '57/76/98/123/150', '23/33/46/60/76'),
+  'Close-Grip_Front_Lat_Pulldown': w('back', '41/57/75/96/119', '54/71/92/115/139', '65/84/106/131/157', '27/37/51/66/82'),
+  Seated_Cable_Rows: w('back', ...CABLE_ROW),
+  x_cable_row_wide: w('back', ...CABLE_ROW, false, 0.95),
+  Leverage_Iso_Row: w('back', '31/52/80/113/151', '47/72/104/142/184', '62/90/125/167/211', '21/34/51/72/96'),
+  // from Liftoff's weighted pull-up standards
+  Pullups: { group: 'back', metric: 'bw', m: [1.0, 1.12, 1.4, 1.75, 2.1], f: [0.66, 0.88, 1.15, 1.45, 1.78] },
+  'Chin-Up': { group: 'back', metric: 'bw', m: [1.02, 1.15, 1.43, 1.78, 2.13], f: [0.68, 0.9, 1.17, 1.47, 1.8] },
+  Barbell_Shrug: w('back', '30/55/89/130/178', '53/85/126/175/230', '76/113/159/214/274', '17/35/61/95/134', true),
+  Dumbbell_Shrug: w('back', '10/20/33/50/69', '17/28/44/63/84', '23/36/54/74/97', '6/14/24/37/52', true),
 
   // Shoulders
-  Standing_Military_Press: r('shoulders', [0.49, 0.68, 0.9, 1.18, 1.48]),
-  Seated_Barbell_Military_Press: r('shoulders', [0.5, 0.7, 0.93, 1.2, 1.5]),
-  Dumbbell_Shoulder_Press: r('shoulders', [0.15, 0.25, 0.36, 0.49, 0.63]),
-  Machine_Shoulder_Military_Press: r('shoulders', [0.3, 0.48, 0.7, 0.95, 1.24]),
-  Arnold_Dumbbell_Press: r('shoulders', [0.13, 0.21, 0.31, 0.43, 0.56]),
-  Side_Lateral_Raise: r('shoulders', [0.05, 0.09, 0.14, 0.2, 0.27], true),
-  Cable_Seated_Lateral_Raise: r('shoulders', [0.03, 0.06, 0.1, 0.15, 0.2], true),
-  Face_Pull: r('shoulders', [0.15, 0.26, 0.4, 0.56, 0.74], true),
-  Upright_Barbell_Row: r('shoulders', [0.33, 0.5, 0.72, 0.97, 1.25]),
-  Front_Dumbbell_Raise: r('shoulders', [0.06, 0.1, 0.16, 0.23, 0.3], true),
-  Reverse_Flyes: r('shoulders', [0.04, 0.08, 0.13, 0.19, 0.26], true),
+  Standing_Military_Press: w('shoulders', '23/33/46/61/77', '35/47/63/80/98', '46/61/78/97/117', '15/22/31/42/54'),
+  Seated_Barbell_Military_Press: w('shoulders', '21/34/49/68/89', '36/51/71/93/117', '50/68/90/115/142', '9/18/30/45/62'),
+  Dumbbell_Shoulder_Press: w('shoulders', '10/15/23/32/43', '15/22/31/42/54', '20/28/39/50/63', '6/10/15/20/27'),
+  Machine_Shoulder_Military_Press: w('shoulders', '17/33/56/84/116', '29/50/76/109/145', '41/64/94/130/170', '8/17/30/47/66'),
+  Arnold_Dumbbell_Press: w('shoulders', '7/12/19/27/37', '10/16/24/34/44', '13/20/29/39/50', '6/8/12/16/21'),
+  Side_Lateral_Raise: w('shoulders', ...LATERAL, true),
+  // one handle; Strength Level's cable numbers mix in two-handed raises and light pulleys
+  Cable_Seated_Lateral_Raise: w('shoulders', '2/6/13/22/34', '3/8/16/27/39', '4/10/19/30/44', '2/5/10/17/25', true, 0.6),
+  Face_Pull: w('shoulders', '10/21/37/57/80', '15/29/47/69/95', '21/35/55/80/107', '10/19/32/47/65', true, 0.85),
+  Upright_Barbell_Row: w('shoulders', '15/27/45/66/91', '23/39/59/84/111', '31/49/71/98/128', '11/19/30/42/57'),
+  Front_Dumbbell_Raise: w('shoulders', '2/7/13/22/32', '4/10/17/27/38', '6/12/21/31/44', '3/5/9/14/19', true),
+  Reverse_Flyes: w('shoulders', ...LATERAL, true, 0.9),
 
   // Arms
-  Barbell_Curl: r('arms', [0.25, 0.4, 0.58, 0.8, 1.03], true),
-  'EZ-Bar_Curl': r('arms', [0.25, 0.39, 0.57, 0.78, 1.0], true),
-  Dumbbell_Bicep_Curl: r('arms', [0.1, 0.17, 0.26, 0.37, 0.48], true),
-  Hammer_Curls: r('arms', [0.11, 0.19, 0.28, 0.4, 0.52], true),
-  Standing_Biceps_Cable_Curl: r('arms', [0.2, 0.33, 0.49, 0.68, 0.88], true),
-  Preacher_Curl: r('arms', [0.18, 0.31, 0.46, 0.64, 0.84], true),
-  Concentration_Curls: r('arms', [0.08, 0.14, 0.22, 0.31, 0.41], true),
-  Incline_Dumbbell_Curl: r('arms', [0.07, 0.13, 0.2, 0.28, 0.37], true),
-  'Close-Grip_Barbell_Bench_Press': r('arms', [0.6, 0.85, 1.15, 1.5, 1.88]),
-  'EZ-Bar_Skullcrusher': r('arms', [0.17, 0.28, 0.42, 0.59, 0.77], true),
-  Triceps_Pushdown: r('arms', [0.2, 0.34, 0.51, 0.71, 0.93], true),
-  'Triceps_Pushdown_-_Rope_Attachment': r('arms', [0.17, 0.29, 0.44, 0.62, 0.82], true),
-  Cable_Rope_Overhead_Triceps_Extension: r('arms', [0.12, 0.21, 0.32, 0.45, 0.6], true),
-  Standing_Dumbbell_Triceps_Extension: r('arms', [0.1, 0.17, 0.26, 0.37, 0.49], true),
-  'Dips_-_Triceps_Version': { group: 'arms', metric: 'bw', m: [1.1, 1.3, 1.55, 1.85, 2.2], f: [1.0, 1.12, 1.28, 1.48, 1.72] },
+  Barbell_Curl: w('arms', '15/24/36/50/66', '22/33/46/63/80', '28/40/55/73/92', '8/14/23/34/47', true),
+  'EZ-Bar_Curl': w('arms', '18/26/37/49/62', '25/35/46/60/75', '31/42/55/70/85', '11/17/25/35/45', true),
+  Dumbbell_Bicep_Curl: w('arms', '6/11/18/26/36', '8/14/22/32/42', '11/17/26/36/48', '4/7/12/18/24', true),
+  Hammer_Curls: w('arms', '7/12/18/26/34', '11/16/24/33/42', '14/21/29/39/49', '5/8/12/17/22', true),
+  Standing_Biceps_Cable_Curl: w('arms', '13/25/41/61/83', '20/33/51/73/98', '25/41/60/84/110', '7/15/24/37/51', true),
+  Preacher_Curl: w('arms', '14/23/35/50/66', '20/31/45/61/78', '26/38/53/70/89', '8/15/23/34/46', true),
+  Concentration_Curls: w('arms', '6/11/17/25/33', '9/14/22/30/40', '12/18/25/35/45', '4/7/12/17/22', true),
+  Incline_Dumbbell_Curl: w('arms', '7/10/15/21/27', '10/14/20/26/33', '12/17/23/30/38', '5/8/11/15/19', true),
+  'Close-Grip_Barbell_Bench_Press': w('arms', '35/49/66/86/107', '55/72/93/116/140', '73/93/116/142/169', '20/31/46/63/82'),
+  'EZ-Bar_Skullcrusher': w('arms', '12/20/31/45/60', '20/30/43/59/76', '27/39/54/71/90', '7/12/20/29/40', true),
+  Triceps_Pushdown: w('arms', '14/26/43/64/89', '22/36/56/80/107', '29/46/67/93/122', '9/17/28/42/59', true),
+  'Triceps_Pushdown_-_Rope_Attachment': w('arms', '11/21/35/53/74', '17/30/46/66/89', '23/37/56/78/102', '8/15/24/35/49', true),
+  Cable_Rope_Overhead_Triceps_Extension: w('arms', '8/18/31/49/70', '14/26/43/64/87', '21/35/53/76/101', '6/12/20/32/45', true),
+  Standing_Dumbbell_Triceps_Extension: w('arms', '3/8/16/26/38', '6/12/22/33/47', '9/16/27/40/54', '3/7/12/17/24', true),
+  'Dips_-_Triceps_Version': { group: 'arms', metric: 'bw', m: [0.95, 1.22, 1.6, 2.0, 2.45], f: [0.75, 0.97, 1.3, 1.68, 2.1] },
 
   // Legs
-  Barbell_Squat: r('legs', [0.98, 1.33, 1.75, 2.25, 2.8]),
-  Front_Barbell_Squat: r('legs', [0.8, 1.1, 1.45, 1.88, 2.35]),
-  Trap_Bar_Deadlift: r('legs', [1.25, 1.7, 2.2, 2.75, 3.35]),
-  Leg_Press: r('legs', [1.3, 2.0, 2.85, 3.8, 4.85]),
-  Hack_Squat: r('legs', [0.75, 1.2, 1.75, 2.4, 3.1]),
-  Smith_Machine_Squat: r('legs', [0.8, 1.13, 1.5, 1.93, 2.4]),
-  Goblet_Squat: r('legs', [0.15, 0.25, 0.37, 0.5, 0.65]),
-  x_bulgarian_split_squat: r('legs', [0.08, 0.15, 0.25, 0.37, 0.5]),
-  Barbell_Lunge: r('legs', [0.45, 0.68, 0.95, 1.27, 1.62]),
-  Dumbbell_Lunges: r('legs', [0.12, 0.21, 0.32, 0.45, 0.6]),
-  Romanian_Deadlift: r('legs', [0.8, 1.13, 1.5, 1.93, 2.4]),
-  'Stiff-Legged_Dumbbell_Deadlift': r('legs', [0.2, 0.32, 0.47, 0.64, 0.83]),
-  Leg_Extensions: r('legs', [0.35, 0.58, 0.85, 1.17, 1.52], true),
-  Lying_Leg_Curls: r('legs', [0.25, 0.41, 0.6, 0.82, 1.06], true),
-  Seated_Leg_Curl: r('legs', [0.3, 0.48, 0.7, 0.95, 1.22], true),
-  Barbell_Hip_Thrust: r('legs', [0.7, 1.12, 1.62, 2.2, 2.85]),
-  Barbell_Glute_Bridge: r('legs', [0.6, 0.98, 1.42, 1.95, 2.52]),
-  Standing_Calf_Raises: r('legs', [0.55, 0.9, 1.32, 1.8, 2.35], true),
-  Seated_Calf_Raise: r('legs', [0.3, 0.55, 0.85, 1.2, 1.58], true),
+  Barbell_Squat: w('legs', '49/71/98/129/162', '75/101/132/168/206', '98/128/163/203/244', '32/49/72/99/129'),
+  Front_Barbell_Squat: w('legs', '40/57/79/104/130', '59/79/104/133/163', '76/99/127/158/190', '31/44/60/79/99'),
+  Trap_Bar_Deadlift: w('legs', '72/98/130/167/206', '99/130/166/207/251', '123/157/197/242/288', '48/68/93/121/152'),
+  Leg_Press: w('legs', '71/115/173/242/319', '109/162/230/309/395', '144/205/280/366/460', '49/87/140/204/277'),
+  Hack_Squat: w('legs', '41/73/117/171/231', '63/102/152/213/280', '84/127/183/249/321', '24/50/87/135/190'),
+  Smith_Machine_Squat: w('legs', '37/60/89/124/163', '57/84/118/158/202', '75/106/144/187/234', '22/38/61/88/119'),
+  Goblet_Squat: w('legs', '11/21/34/51/70', '15/26/41/59/80', '19/31/47/66/88', '10/17/26/37/49'),
+  x_bulgarian_split_squat: w('legs', '8/15/25/38/52', '13/22/33/47/63', '18/28/40/56/72', '7/12/20/30/41'),
+  Barbell_Lunge: w('legs', '20/37/61/89/122', '34/55/82/116/153', '47/71/102/138/179', '19/32/49/69/92'),
+  Dumbbell_Lunges: w('legs', '6/13/23/37/52', '10/18/30/45/62', '13/23/36/52/70', '6/11/19/28/39'),
+  Romanian_Deadlift: w('legs', '43/65/93/127/163', '65/92/125/163/203', '85/115/152/194/238', '31/47/67/90/116'),
+  'Stiff-Legged_Dumbbell_Deadlift': w('legs', '12/21/33/48/65', '19/30/44/61/79', '25/37/53/71/91', '10/17/27/39/52'),
+  Leg_Extensions: w('legs', '36/57/85/119/156', '48/72/103/140/180', '58/85/119/158/201', '22/38/59/86/115', true),
+  Lying_Leg_Curls: w('legs', '21/34/52/73/96', '30/46/66/90/116', '39/57/79/105/133', '15/24/36/51/67', true),
+  Seated_Leg_Curl: w('legs', '29/45/67/94/123', '39/58/83/112/144', '48/69/96/127/161', '19/31/47/67/88', true),
+  Barbell_Hip_Thrust: w('legs', ...HIP_THRUST),
+  Barbell_Glute_Bridge: w('legs', ...HIP_THRUST, false, 0.85),
+  Standing_Calf_Raises: w('legs', '31/63/110/168/236', '49/88/141/207/282', '65/110/169/240/320', '21/47/84/133/190', true),
+  Seated_Calf_Raise: w('legs', '20/41/73/112/158', '31/57/93/138/188', '42/71/111/159/213', '14/34/63/102/147', true),
   x_wall_sit: { group: 'legs', metric: 'seconds', m: [30, 60, 100, 150, 220] },
 
   // Core
@@ -148,8 +174,8 @@ export const STANDARDS: Record<string, Std> = {
   Crunches: { group: 'core', metric: 'reps', m: [10, 25, 45, 70, 100] },
   x_leg_raise_lying: { group: 'core', metric: 'reps', m: [8, 18, 30, 45, 65] },
   Hanging_Leg_Raise: { group: 'core', metric: 'reps', m: [3, 8, 14, 20, 28], f: [2, 6, 11, 16, 22] },
-  Cable_Crunch: r('core', [0.25, 0.42, 0.62, 0.85, 1.1], true),
-  Ab_Crunch_Machine: r('core', [0.25, 0.43, 0.65, 0.9, 1.18], true),
+  Cable_Crunch: w('core', ...CABLE_CRUNCH, true),
+  Ab_Crunch_Machine: w('core', ...CABLE_CRUNCH, true),
 };
 
 /**
@@ -185,7 +211,7 @@ export function loadMissing(ex: Pick<Exercise, 'id' | 'equipment' | 'load'>) {
  * exercise still needs its load setup (so nobody gets a better rank from ambiguous numbers).
  */
 export function loadFactor(ex: Pick<Exercise, 'id' | 'equipment' | 'load'>): number | null {
-  if (!STANDARDS[ex.id] || STANDARDS[ex.id].metric !== 'ratio') return 1;
+  if (!STANDARDS[ex.id] || STANDARDS[ex.id].metric !== 'kg') return 1;
   if (loadMissing(ex)) return null;
   const q = loadQuestions(ex);
   let f = 1;
@@ -237,17 +263,32 @@ export function standardFor(exerciseId: string) {
   return STANDARDS[exerciseId];
 }
 
-/** Metric values at each scoring anchor (0, beginner … elite, legend) for this sex. */
-export function anchors(std: Std, sex: Sex): number[] {
-  let lv = std.m;
-  if (sex === 'female') {
-    if (std.f) lv = std.f;
-    else if (std.metric === 'ratio') lv = std.m.map((x) => x * FEMALE_FACTOR[std.group]);
-    else if (std.metric === 'reps') lv = std.m.map((x) => x * 0.65);
+/** Standard levels [beginner … elite] for this sex at this bodyweight. */
+function levels(std: Std, sex: Sex, bw: number): number[] {
+  if (std.metric !== 'kg') {
+    if (sex === 'male') return std.m!;
+    if (std.f) return std.f;
+    return std.metric === 'reps' ? std.m!.map((x) => x * 0.65) : std.m!;
   }
+  const [m60, m80, m100, f60] = std.kg!;
+  const b = Math.min(160, Math.max(40, bw));
+  // men: power curve through the 60/80 or 80/100 kg points, extended past the ends
+  const male = (i: number, x: number) => {
+    const [lo, hi] = x <= 80 ? [m60[i], m80[i]] : [m80[i], m100[i]];
+    const e = Math.log(hi / lo) / Math.log(x <= 80 ? 80 / 60 : 100 / 80);
+    return m80[i] * (x / 80) ** e;
+  };
+  // women: the 60 kg table, following the men's curve (60 kg woman ~ 80 kg man)
+  const lv = m60.map((_, i) => (sex === 'male' ? male(i, b) : (f60[i] * male(i, (b * 80) / 60)) / m80[i]));
+  for (let i = 1; i < lv.length; i++) lv[i] = Math.max(lv[i], lv[i - 1] * 1.05);
+  return lv;
+}
+
+/** Metric values at each scoring anchor (0, beginner … elite, Olympian) for this sex and bodyweight. */
+export function anchors(std: Std, sex: Sex, bw = REF_BW[sex]): number[] {
+  const lv = levels(std, sex, bw);
   const zero = std.metric === 'bw' ? Math.min(0.85, lv[0] - 0.1) : 0;
-  // legend: 0.6 of an advanced -> elite step above elite (world class, but humanly possible)
-  return [zero, ...lv, lv[4] + 0.6 * (lv[4] - lv[3])];
+  return [zero, ...lv, lv[4] + LEGEND_STEP * (lv[4] - lv[3])];
 }
 
 export function scoreFor(value: number, a: number[]) {
@@ -268,16 +309,14 @@ export function valueForScore(score: number, a: number[]) {
   return a[n] + ((score - POINTS[n]) * (a[n] - a[n - 1])) / (POINTS[n] - POINTS[n - 1]);
 }
 
-const bwScale = (bw: number, sex: Sex) => Math.cbrt(bw / REF_BW[sex]);
-
 /** The metric value one set reaches, or null if it can't be ranked. */
-export function setValue(set: Pick<WSet, 'weight' | 'reps' | 'duration'>, std: Std, bw: number, sex: Sex): number | null {
+export function setValue(set: Pick<WSet, 'weight' | 'reps' | 'duration'>, std: Std, bw: number): number | null {
   const reps = set.reps ?? 0;
   const kg = set.weight ?? 0;
   switch (std.metric) {
-    case 'ratio':
+    case 'kg':
       if (kg <= 0 || reps < 1 || reps > 30) return null;
-      return (epley1RM(kg, reps) / bw) * bwScale(bw, sex);
+      return epley1RM(kg, reps);
     case 'bw':
       if (reps < 1 || reps > 30) return null;
       return epley1RM(bw + Math.max(0, kg), reps) / bw;
@@ -292,9 +331,9 @@ export function setValue(set: Pick<WSet, 'weight' | 'reps' | 'duration'>, std: S
 export function weightForScore(exerciseId: string, score: number, reps: number, bw: number, sex: Sex, factor = 1): number | null {
   const std = STANDARDS[exerciseId];
   if (!std) return null;
-  const v = valueForScore(score, anchors(std, sex));
+  const v = valueForScore(score, anchors(std, sex, bw));
   const f = reps === 1 ? 1 : 1 + reps / 30;
-  if (std.metric === 'ratio') return (v * bw) / bwScale(bw, sex) / f / factor;
+  if (std.metric === 'kg') return v / f / factor;
   if (std.metric === 'bw') return (v * bw) / f - bw;
   return null;
 }
@@ -303,6 +342,16 @@ export function weightForScore(exerciseId: string, score: number, reps: number, 
 export function targetForScore(exerciseId: string, score: number, sex: Sex) {
   const std = STANDARDS[exerciseId];
   return std ? valueForScore(score, anchors(std, sex)) : 0;
+}
+
+const cache = new WeakMap<Std, Map<string, number[]>>();
+function anchorsCached(std: Std, sex: Sex, bw: number) {
+  let m = cache.get(std);
+  if (!m) cache.set(std, (m = new Map()));
+  const k = sex + bw;
+  let a = m.get(k);
+  if (!a) m.set(k, (a = anchors(std, sex, bw)));
+  return a;
 }
 
 export interface RankCtx {
@@ -316,8 +365,8 @@ export interface RankCtx {
 export function setScore(exerciseId: string, set: WSet, bw: number, sex: Sex, factor: number | null = 1) {
   const std = STANDARDS[exerciseId];
   if (!std || set.type === 'warmup' || factor == null) return 0;
-  const v = setValue(factor === 1 ? set : { ...set, weight: (set.weight ?? 0) * factor }, std, bw, sex);
-  return v == null ? 0 : Math.round(scoreFor(v, anchors(std, sex)));
+  const v = setValue(factor === 1 ? set : { ...set, weight: (set.weight ?? 0) * factor }, std, bw);
+  return v == null ? 0 : Math.round(scoreFor(v, anchorsCached(std, sex, bw)));
 }
 
 export interface ExerciseRank {

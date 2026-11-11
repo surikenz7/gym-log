@@ -16,9 +16,10 @@ export function useRankCtx(): RankCtx | null | undefined {
   const lib = useLibrary((s) => s.map);
   return useMemo(() => {
     if (!measures) return undefined;
-    const bwAt = bodyweightTimeline(measures);
+    // like Liftoff, every set is scored at your current bodyweight, so updating it re-ranks you
+    const latest = bodyweightTimeline(measures)?.(Infinity);
     const factor = (id: string) => (lib[id] ? loadFactor(lib[id]) : 1);
-    return sex && bwAt ? { sex, bwAt, factor } : null;
+    return sex && latest ? { sex, bwAt: () => latest, factor } : null;
   }, [sex, measures, lib]);
 }
 
